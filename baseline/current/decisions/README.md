@@ -1,9 +1,7 @@
 # Decisions
 
-Хранилище ADR-style решений для canonical baseline.
+Здесь лежат короткие baseline-level ADR/decision notes, объясняющие почему current baseline зафиксирован именно так.
 
-## Suggested first decisions
-- initiative-centric domain backbone
-- dynamic approval route instead of predefined approval routes
-- scorecards as standalone aggregate with versioning
-- limited MVP lineage for `simulation_based` deployment
+## Основные файлы
+
+- `2026-04-24-legacy-normalization.md` — решение о том, как использовать imported legacy snapshot, baseline и feature layers.

@@ -1,9 +1,13 @@
 # Canonical UI
 
-Этот каталог предназначен для current-state UI baseline.
+Этот каталог хранит обзорную карту уже существующего интерфейса deployed-системы.
 
-## Current source pointers
-- raw prototypes: `context/source-materials/current-system/prototypes/raw/`
-- working feature prototypes: `features/*/planning/scope-prototype/` и `features/*/slices/*/delivery-prototype/`
+## Основные файлы
 
-После релиза сюда должны попадать канонические navigation/screen/component notes.
+- `navigation.md` — страницы, маршруты и host screens current baseline.
+- `simulations.md` — отдельная фиксация existing simulation UI coverage.
+
+## Граница ответственности
+
+- Детальные handoff-макеты живут в `features/*/slices/*/delivery-prototype/`.
+- Здесь фиксируем только current-state navigation и ключевые UI-секции.

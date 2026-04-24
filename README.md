@@ -1,6 +1,6 @@
 # changeswork-copy
 
-Это копия и частичная раскладка legacy-проекта `changesWork` под новый workflow.
+Это копия и раскладка legacy-проекта `changesWork` под новый workflow.
 
 ## Быстрый вход для работы с LLM
 
@@ -44,14 +44,16 @@ RSCON-2445 завершена вчера.
 - `context/source-materials/` — сырые импортированные материалы и evidence
 
 ## Что уже сделано
-- raw requirements, diagrams и prototypes скопированы в `context/source-materials/current-system/`
-- полный полезный snapshot legacy-репозитория сохранён в `context/source-materials/legacy/changeswork-full/`
+- raw snapshot legacy-репозитория перенесён полностью в `context/source-materials/legacy/changeswork-full/`
+- полнота snapshot перепроверена сравнением с `/home/reutov/Documents/AI/changesWork`
+- current-system requirements / diagrams / prototypes разложены в `context/source-materials/current-system/`
 - основные feature и slice-контейнеры созданы в `features/`
-- legacy planning-артефакты скопированы в `planning/2026-Q2/imported-source/`
+- legacy planning-артефакты вынесены в `planning/2026-Q2/imported-source/`
 - canonical baseline domain model разложена в `baseline/current/domain/`
-- добавлен release package skeleton для `releases/2026-Q2/rscon-2438/`
+- добавлены обзорные baseline summaries для `requirements`, `ui`, `api`, `data`, `decisions`
+- release package skeleton добавлен для `releases/2026-Q2/rscon-2438/`
 
 ## Что ещё требует доработки
-- промоушен итоговых требований из feature-level living docs в canonical baseline
-- детальная раскладка current-state API/UI/data baseline
+- дальнейшая детализация baseline/current на уровне full post-page contracts при необходимости
+- promotion итоговых delivered требований из feature-level living docs в canonical baseline
 - заполнение release package по фактическим delivered изменениям

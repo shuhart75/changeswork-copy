@@ -1,12 +1,13 @@
 # Canonical API
 
-Этот каталог предназначен для current-state API baseline.
+Этот каталог хранит обзорную карту действующих API-контрактов deployed-системы.
 
-## Current source pointers
-- scorecards and packages API constraints сейчас зафиксированы в feature-level requirements:
-  - `features/scorecards/slices/workspace/requirements/backend.md`
-  - `features/packages/slices/page/requirements/backend.md`
-  - `features/approvals/slices/*/requirements/backend.md`
-  - `features/deployments/slices/*/requirements/backend.md`
+## Основные файлы
 
-После релизной фиксации API контракты должны промоутиться сюда как canonical baseline.
+- `endpoints.md` — группировка endpoint'ов current baseline.
+- `simulations.md` — отдельная фиксация existing simulation API coverage и её legacy-особенностей.
+
+## Граница ответственности
+
+- Детальные контракты по change-level работе остаются в feature requirement packs.
+- Raw требования и OpenAPI-фрагменты лежат в `context/source-materials/current-system/requirements/raw/final-spec/`.

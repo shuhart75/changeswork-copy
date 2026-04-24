@@ -1,11 +1,13 @@
 # Canonical Requirements
 
-Этот каталог предназначен для итоговых current-state требований после промоушена релиза в baseline.
+Этот каталог хранит каноническое описание уже deployed-системы на обзорном уровне.
 
-## Current status
-- В проекте уже есть feature-level living requirements в `features/*/slices/*/requirements/`.
-- После релиза итоговые версии требований должны сначала фиксироваться в `releases/<quarter>/<release>/final-requirements/`, затем становиться частью baseline.
+## Основные файлы
 
-## Source materials
-- `context/source-materials/current-system/requirements/`
-- `features/*/slices/*/requirements/`
+- `current-state-overview.md` — карта текущего функционального baseline по областям.
+
+## Граница ответственности
+
+- Здесь фиксируем только то, что уже считаем частью текущего baseline.
+- Детальные change-level requirement packs остаются в `features/<feature>/slices/*/requirements/` до релизной фиксации.
+- Raw-источники лежат в `context/source-materials/current-system/requirements/raw/`.

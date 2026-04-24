@@ -1,8 +1,11 @@
 # Canonical Data Model
 
-## Source pointers
-- `context/source-materials/current-system/diagrams/raw/spec_data_model.puml`
-- `context/source-materials/current-system/diagrams/raw/data_model.puml`
+Этот каталог хранит обзорную модель данных текущего deployed baseline.
 
-## Baseline note
-Текущий baseline data model ещё не разложен детально по сущностям. Следующий шаг — промоутить ER-структуру и persistence constraints в canonical markdown внутри этого каталога.
+## Основные файлы
+
+- `model-overview.md` — карта таблиц, агрегатов и ключевых инвариантов хранения.
+
+## Граница ответственности
+
+- Детальные ER и raw field-level описания остаются в `context/source-materials/current-system/diagrams/raw/` и feature/backend requirements.
