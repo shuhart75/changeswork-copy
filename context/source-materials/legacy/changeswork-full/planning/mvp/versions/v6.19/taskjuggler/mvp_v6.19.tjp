@@ -1,0 +1,347 @@
+# TaskJuggler plan: MVP v6.18 (derived from PlantUML gantt current, v6.18)
+# Constraints:
+# - Uses ONLY tasks/durations/resources present in planning/mvp/current/gantt/mvp_gantt_chart_current.puml
+# - Does NOT change any estimates
+# - FE2 (F2) productivity capped at 50% via efficiency 0.5
+# - Calendar mirrors PlantUML: Mon-Fri workdays, plus specified holidays
+# - non-MVP tasks are allowed to start as soon as the resource is free (no hard gate on QA_REG)
+#
+# NOTE: This is a planning model (not a perfect 1:1 renderer of PlantUML semantics).
+# It is intended to represent the same work items and sequencing logic.
+
+project mvp_v618 "MVP optimized (v6.18)" 2026-03-30 +14w {
+  timezone "Europe/Moscow"
+  scenario plan "Plan"
+}
+
+# ---- Calendar
+shift work "Work" {
+  workinghours mon - fri 9:00 - 18:00
+}
+
+vacation "MayDay" 2026-05-01
+vacation "VictoryDay" 2026-05-09
+vacation "RussiaDay" 2026-06-12
+
+# ---- Resources
+resource A1 "Analyst 1" { efficiency 1.0 }
+resource A2 "Analyst 2" { efficiency 1.0 }
+
+resource B1 "Backend Dev 1" { efficiency 1.0 }
+resource B2 "Backend Dev 2" { efficiency 1.0 }
+resource B3 "Backend Dev 3" { efficiency 1.0 }
+
+resource F1 "Frontend Dev 1" { efficiency 1.0 }
+resource F2 "Frontend Dev 2 (50%)" { efficiency 0.5 }
+
+resource Q1 "QA" { efficiency 1.0 }
+
+# ---- Tasks (IDs mirror PlantUML codes)
+
+# 1) Roles
+task AN_ROLES "AN новые роли: роли/права/матрица" { duration 1d allocate A1 }
+
+# 2) Artifacts
+task AN_ART_BE "AN артефакты (BE): модель/контракты/права" { duration 1d allocate A2 }
+
+task BE_ART "BE артефакты (ссылки на документы) - БД + API" {
+  duration 3d
+  depends AN_ART_BE
+  allocate B2
+}
+
+task AN_FE_PILOT_ART "AN блок артефактов (FE): пилоты" { duration 1d depends AN_ART_BE allocate A2 }
+
+task FE_PILOT_ART "FE пилоты - блок артефакты + UI под ЖЦ" {
+  duration 4d
+  depends AN_FE_PILOT_ART, BE_ART
+  allocate F1
+}
+
+task AN_FE_SIM_ART "AN блок артефактов (FE): симуляции" { duration 1d depends AN_FE_PILOT_ART allocate A2 }
+
+task FE_SIM_ART "FE симуляции - блок артефакты" {
+  duration 1d
+  depends AN_FE_SIM_ART, BE_ART
+  # PlantUML also has "starts at FE_PILOT_ART's start"; we model it as depending on FE_PILOT_ART
+  depends FE_PILOT_ART
+  allocate F2
+}
+
+# 3) Approvals + Packages
+
+task AN_AP_CORE "AN процесс согласования/утверждения (BE core)" { duration 2d depends AN_ROLES allocate A1 }
+
+task BE_AP_CORE "BE процесс согласования и утверждения - БД+логика" { duration 10d depends AN_AP_CORE allocate B1 }
+
+task AN_PILOT_LC_AP "AN ЖЦ пилота: согласование/утверждение (BE)" {
+  duration 1d
+  depends AN_AP_CORE
+  depends AN_FE_SIM_ART
+  allocate A2
+}
+
+task BE_PILOT_LC_AP "BE ЖЦ пилота - согласование/утверждение" {
+  duration 5d
+  depends BE_ART, AN_PILOT_LC_AP, BE_AP_CORE
+  allocate B2
+}
+
+task AN_AP_PAGE_BE "AN страница \"Согласования\" (BE): контракты/фильтры/действия" { duration 1d depends AN_AP_CORE allocate A1 }
+
+task BE_AP_PAGE "BE страница \"Согласования\" - API, логика" {
+  duration 3d
+  depends AN_AP_PAGE_BE, BE_AP_CORE
+  allocate B1
+}
+
+task AN_AP_PAGE_FE "AN страница \"Согласования\" (FE): UX/компоненты/edge-cases" {
+  duration 1d
+  depends AN_AP_PAGE_BE, AN_PILOT_LC_AP
+  allocate A2
+}
+
+task FE_AP_PAGE "FE страница \"Согласования\"" {
+  duration 10d
+  depends AN_AP_PAGE_FE, FE_PILOT_ART
+  allocate F1
+}
+
+task AN_PKG_BE "AN страница \"Пакеты\" (BE): контракты/массовые действия" { duration 1d depends AN_AP_PAGE_BE allocate A1 }
+
+task AN_PKG_FE "AN страница \"Пакеты\" (FE): UX/компоненты/edge-cases" {
+  duration 1d
+  depends AN_PKG_BE
+  depends AN_AP_PAGE_FE
+  allocate A2
+}
+
+task FE_PKG_PAGE "FE страница \"Пакеты\"" {
+  duration 10d
+  depends AN_PKG_FE, FE_SIM_ART
+  allocate F2
+}
+
+# 4) Deployments
+
+task AN_DEP_BE "AN внедрения (BE): модель/контракты/права" { duration 1d depends AN_PKG_FE allocate A1 }
+
+task BE_DEP_API "BE внедрения - БД+API" {
+  duration 3d
+  depends AN_DEP_BE
+  depends BE_ART
+  allocate B3
+}
+
+task AN_DEP_LC "AN ЖЦ внедрений (BE)" { duration 1d depends AN_DEP_BE allocate A2 }
+
+task BE_DEP_LC "BE ЖЦ внедрений" {
+  duration 3d
+  depends AN_DEP_LC
+  depends BE_DEP_API
+  allocate B3
+}
+
+task AN_FE_DEP_LIST "AN список внедрений (FE)" { duration 1d depends AN_DEP_LC allocate A2 }
+
+# v6.17 optimization (matches PlantUML): FE_DEP_LIST should not wait for FE_SCD
+# It starts after Packages FE page + BE deployments API + AN list spec.
+
+task FE_DEP_LIST "FE список внедрений" {
+  duration 5d
+  depends AN_FE_DEP_LIST, BE_DEP_API, FE_PKG_PAGE
+  allocate F1
+}
+
+task AN_FE_DEP_FORM "AN форма внедрения (создание/редактирование) (FE)" { duration 1d depends AN_DEP_LC allocate A1 }
+
+task FE_DEP_FORM "FE форма внедрения (создание/редактирование)" {
+  duration 5d
+  depends AN_FE_DEP_FORM, BE_DEP_LC, FE_DEP_LIST
+  allocate F1
+}
+
+# 5) Scorecards (detail + form)
+
+task AN_SC_BE "AN скоркарты (BE): модель/шаблоны/валидаторы" { duration 1d depends AN_DEP_BE allocate A1 }
+
+task BE_SC_API "BE скоркарты (включая шаблоны) - БД + API" {
+  duration 10d
+  depends AN_SC_BE
+  depends BE_ART
+  allocate B2
+}
+
+task AN_SCD_BE "AN детальная скоркарты (BE)" {
+  duration 1d
+  depends AN_SC_BE
+  depends AN_FE_DEP_LIST
+  allocate A2
+}
+
+task AN_SCD_FE "AN детальная скоркарты (FE)" {
+  duration 1d
+  depends AN_SCD_BE
+  depends AN_FE_DEP_FORM
+  allocate A1
+}
+
+task FE_SCD "FE детальная скоркарты" {
+  duration 10d
+  depends AN_SCD_FE
+  depends FE_AP_PAGE
+  allocate F1
+}
+
+task AN_SCF_BE "AN форма скоркарты (BE)" { duration 1d depends AN_SCD_BE allocate A2 }
+
+task BE_SCF "BE форма создания/редактирования скоркарты" {
+  duration 5d
+  depends AN_SCF_BE
+  depends BE_AP_PAGE
+  depends BE_SC_API
+  allocate B1
+}
+
+task AN_SCF_FE "AN форма скоркарты (FE)" { duration 1d depends AN_SCF_BE allocate A1 }
+
+task FE_SCF "FE форма создания/редактирования скоркарты" {
+  duration 10d
+  depends AN_SCF_FE
+  depends BE_SCF
+  depends FE_PKG_PAGE
+  allocate F2
+}
+
+# 6) Notifications
+
+task AN_NOT "AN уведомления: шаблоны/триггеры/получатели" { duration 1d depends AN_SCF_BE allocate A2 }
+
+task BE_NOT "BE уведомления" { duration 3d depends AN_NOT allocate B3 }
+
+# 7) Trace
+
+task AN_TRACE_BE "AN Trace (BE): модель связей/запросы/производительность" { duration 1d depends AN_SCF_FE allocate A1 }
+
+task BE_TRACE "BE Trace - БД + логика + API" {
+  duration 2d
+  depends AN_TRACE_BE
+  depends BE_SC_API
+  allocate B2
+}
+
+task AN_TRACE_FE "AN Trace (FE): виджет блока связей" { duration 1d depends AN_TRACE_BE allocate A2 }
+
+task FE_TRACE "FE Trace - пилоты/симуляции/внедрения: блок связи" {
+  duration 3d
+  depends AN_TRACE_FE
+  depends BE_TRACE
+  depends FE_DEP_FORM
+  allocate F1
+}
+
+# QA
+
+task QA_SETUP "QA подготовка (тест-план, тестовые данные, стенд)" { duration 2d allocate Q1 }
+
+task QA_ART "QA Артефакты" {
+  duration 2d
+  depends QA_SETUP
+  depends BE_ART
+  depends FE_PILOT_ART
+  depends FE_SIM_ART
+  allocate Q1
+}
+
+task QA_AP "QA Согласования + Пакеты" {
+  duration 3d
+  depends QA_ART
+  depends BE_AP_CORE
+  depends BE_AP_PAGE
+  depends FE_AP_PAGE
+  depends FE_PKG_PAGE
+  allocate Q1
+}
+
+task QA_SC "QA Скоркарты (деталка+форма)" {
+  duration 3d
+  depends QA_AP
+  depends BE_SC_API
+  depends BE_SCF
+  depends FE_SCD
+  depends FE_SCF
+  allocate Q1
+}
+
+task QA_TRACE "QA Trace (блок связей)" {
+  duration 1d
+  depends QA_SC
+  depends BE_TRACE
+  depends FE_TRACE
+  allocate Q1
+}
+
+task QA_REG "QA Регрессия + E2E smoke" {
+  duration 5d
+  depends FE_TRACE
+  depends FE_SCF
+  depends QA_TRACE
+  depends QA_SC
+  allocate Q1
+}
+
+task MVP_DONE "Milestone: MVP завершен" { milestone depends QA_REG }
+
+# Out of MVP (kept from gantt)
+
+task BE_AI_CHAT "BE чата AI - интеграция" {
+  duration 5d
+  # v6.18: start as soon as B1 is free (no dependency on QA_REG)
+  allocate B1
+}
+
+task FE_AI_CHAT_UI "FE UI для чата с AI агентом" {
+  duration 3d
+  depends BE_AI_CHAT
+  # keep F1 sequential: start after the MVP FE chain ends
+  depends FE_TRACE
+  allocate F1
+}
+
+task BE_RISK_TABLE "BE табличных риск-параметров" {
+  duration 5d
+  # v6.18: start as soon as B2 is free (no dependency on QA_REG)
+  depends BE_TRACE
+  allocate B2
+}
+
+task FE_RISK_TABLE "FE табличных риск-параметров" {
+  duration 10d
+  depends BE_RISK_TABLE
+  # keep F2 sequential at 50%
+  depends FE_SCF
+  allocate F2
+}
+
+task BE_STAT_SIM "BE статусной модели симуляции" {
+  duration 10d
+  # v6.18: start as soon as B3 is free (no dependency on QA_REG)
+  depends BE_NOT
+  allocate B3
+}
+
+task FE_STAT_SIM "FE статусной модели симуляции" {
+  duration 3d
+  depends BE_STAT_SIM
+  depends FE_AI_CHAT_UI
+  allocate F1
+}
+
+task BE_SIM_SNAP "BE симуляции снепшотов" { duration 10d depends BE_AI_CHAT allocate B1 }
+
+task FE_SIM_SNAP "FE симуляции снепшотов" {
+  duration 10d
+  depends BE_SIM_SNAP
+  depends FE_STAT_SIM
+  allocate F1
+}

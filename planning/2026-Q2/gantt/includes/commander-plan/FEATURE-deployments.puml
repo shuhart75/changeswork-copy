@@ -1,0 +1,20 @@
+' FEATURE: deployments
+[Deployments: backend foundation] as [DEP_CMD_API] lasts 8 days
+[DEP_CMD_API] starts 2026/04/14
+[DEP_CMD_API] is colored in LightBlue
+
+[Deployments: lifecycle] as [DEP_CMD_LC] lasts 8 days
+[DEP_CMD_LC] starts 2026/04/15
+[DEP_CMD_LC] is colored in LightBlue
+
+[Deployments: list] as [DEP_CMD_LIST] lasts 8 days
+[DEP_CMD_LIST] starts 2026/04/20
+[DEP_CMD_LIST] is colored in LightCoral
+
+[Deployments: form editing] as [DEP_CMD_FORM] lasts 15 days
+[DEP_CMD_FORM] starts 2026/04/20
+[DEP_CMD_FORM] is colored in LightCoral
+
+[Deployments: detail and related blocks] as [DEP_CMD_DETAIL] lasts 20 days
+[DEP_CMD_DETAIL] starts 2026/04/21
+[DEP_CMD_DETAIL] is colored in LightCoral

@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления внедрениями риск-стратегий</title>
+
+    <!-- Distinctive Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <!-- React and Material-UI -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* Refined Color Palette */
+            --color-navy: #0a1628;
+            --color-navy-light: #1e4d7b;
+            --color-gold: #d4af37;
+            --color-gold-light: #e8c968;
+            --color-bg: #faf9f7;
+            --color-surface: #f5f3ef;
+            --color-surface-elevated: #ffffff;
+            --color-text: #2d2d2d;
+            --color-text-secondary: #6b6b6b;
+            --color-text-tertiary: #9a9a9a;
+            --color-border: rgba(45, 45, 45, 0.12);
+            --color-success: #2d5016;
+            --color-warning: #c45500;
+            --color-error: #8b1538;
+
+            /* Typography */
+            --font-display: 'Crimson Pro', serif;
+            --font-body: 'Work Sans', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(10, 22, 40, 0.08), 0 1px 2px rgba(10, 22, 40, 0.06);
+            --shadow-md: 0 4px 6px rgba(10, 22, 40, 0.07), 0 2px 4px rgba(10, 22, 40, 0.06);
+            --shadow-lg: 0 10px 15px rgba(10, 22, 40, 0.1), 0 4px 6px rgba(10, 22, 40, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-body);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Subtle texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.03' /%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #root {
+            height: 100vh;
+            display: flex;
+        }
+
+        /* Refined Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--color-navy) 0%, #0d1f35 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-right: 1px solid rgba(212, 175, 55, 0.15);
+            position: relative;
+        }
+
+        .sidebar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                var(--color-gold) 20%,
+                var(--color-gold) 80%,
+                transparent 100%);
+            opacity: 0.3;
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-xl) var(--spacing-lg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-header h1 {
+            font-family: var(--font-display);
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 var(--spacing-xs) 0;
+            color: var(--color-gold);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-header p {
+            font-size: 13px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 300;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: var(--spacing-md) 0;
+        }
+
+        .sidebar-item {
+            padding: 14px var(--spacing-lg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: rgba(255, 255, 255, 0.75);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 15px;
+            font-weight: 400;
+            position: relative;
+        }
+
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: var(--color-gold);
+            transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+        }
+
+        .sidebar-item:hover::before {
+            height: 60%;
+        }
+
+        .sidebar-item.active {
+            background-color: rgba(212, 175, 55, 0.12);
+            color: var(--color-gold-light);
+            font-weight: 500;
+        }
+
+        .sidebar-item.active::before {
+            height: 100%;
+        }
+
+        .sidebar-item .material-icons {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .sidebar-subitem {
+            padding: 11px var(--spacing-lg) 11px 58px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .sidebar-subitem::before {
+            content: '—';
+            position: absolute;
+            left: 42px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-subitem:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sidebar-subitem.active {
+            background-color: rgba(212, 175, 55, 0.08);
+            color: var(--color-gold-light);
+            font-weight: 500;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Refined Top Bar */
+        .top-bar {
+            background: var(--color-surface-elevated);
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .top-bar-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--color-navy);
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: var(--spacing-xl);
+        }
+
+        /* Refined Status Chips */
+        .status-chip {
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 500;
+            height: 26px;
+            border-radius: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-surface);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(10, 22, 40, 0.2);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 22, 40, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const {
+            Box, Container, Grid, Paper, Card, CardContent, CardActions,
+            Button, Chip, TextField, Select, MenuItem, FormControl, InputLabel,
+            Dialog, DialogTitle, DialogContent, DialogActions, Tabs, Tab,
+            List, ListItem, ListItemText, ListItemAvatar, Avatar, Divider,
+            IconButton, Stack, Typography, Table, TableBody, TableCell,
+            TableContainer, TableHead, TableRow, ThemeProvider, createTheme,
+            Collapse, Checkbox, FormControlLabel, FormLabel, RadioGroup, Radio,
+            Accordion, AccordionSummary, AccordionDetails,
+            Stepper, Step, StepLabel, Badge, Tooltip, Alert
+        } = MaterialUI;
+
+        const React = window.React;
+        const { useState, useEffect } = React;
+
+        // Refined Theme
+        const theme = createTheme({
+            palette: {
+                primary: {
+                    main: '#0a1628',
+                    light: '#1e4d7b',
+                    dark: '#050b14',
+                },
+                secondary: {
+                    main: '#d4af37',
+                    light: '#e8c968',
+                    dark: '#a68929',
+                },
+                background: {
+                    default: '#faf9f7',
+                    paper: '#ffffff',
+                },
+                text: {
+                    primary: '#2d2d2d',
+                    secondary: '#6b6b6b',
+                },
+                success: {
+                    main: '#2d5016',
+                    light: '#4a7d2c',
+                },
+                warning: {
+                    main: '#c45500',
+                    light: '#e67a33',
+                },
+                error: {
+                    main: '#8b1538',
+                    light: '#b8315a',
+                },
+            },
+            typography: {
+                fontFamily: "'Work Sans', sans-serif",
+                h1: { fontFamily: "'Crimson Pro', serif", fontWeight: 700, letterSpacing: '-0.5px' },
+                h2: { fontFamily: "'Crimson Pro', serif", fontWeight: 700, letterSpacing: '-0.5px' },
+                h3: { fontFamily: "'Crimson Pro', serif", fontWeight: 600, letterSpacing: '-0.3px' },
+                h4: { fontFamily: "'Crimson Pro', serif", fontWeight: 600, letterSpacing: '-0.3px' },
+                h5: { fontFamily: "'Crimson Pro', serif", fontWeight: 600 },
+                h6: { fontFamily: "'Crimson Pro', serif", fontWeight: 600 },
+                button: { fontWeight: 500, letterSpacing: '0.3px' },
+            },
+            components: {
+                MuiButton: {
+                    styleOverrides: {
+                        root: {
+                            textTransform: 'none',
+                            borderRadius: 6,
+                            padding: '10px 20px',
+                            fontWeight: 500,
+                        },
+                        contained: {
+                            boxShadow: '0 2px 4px rgba(10, 22, 40, 0.15)',
+                            '&:hover': { 
+                                boxShadow: '0 4px 8px rgba(10, 22, 40, 0.2)',
+                                transform: 'translateY(-1px)',
+                            },
+                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        },
+                        outlined: {
+                            borderWidth: '1.5px',
+                            '&:hover': { borderWidth: '1.5px' },
+                        },
+                    },
+                },
+                MuiPaper: {
+                    styleOverrides: {
+                        root: { 
+                            boxShadow: '0 1px 3px rgba(10, 22, 40, 0.08), 0 1px 2px rgba(10, 22, 40, 0.06)',
+                            borderRadius: 8,
+                        },
+                        elevation1: {
+                            boxShadow: '0 1px 3px rgba(10, 22, 40, 0.08), 0 1px 2px rgba(10, 22, 40, 0.06)',
+                        },
+                        elevation2: {
+                            boxShadow: '0 4px 6px rgba(10, 22, 40, 0.07), 0 2px 4px rgba(10, 22, 40, 0.06)',
+                        },
+                    },
+                },
+                MuiChip: {
+                    styleOverrides: {
+                        root: { 
+                            borderRadius: 4,
+                            fontWeight: 500,
+                            letterSpacing: '0.3px',
+                        },
+                    },
+                },
+                MuiTableCell: {
+                    styleOverrides: {
+                        head: {
+                            fontWeight: 600,
+                            color: '#2d2d2d',
+                            backgroundColor: '#f5f3ef',
+                        },
+                    },
+                },
+            },
+        });
+
+        // Status utilities with refined colors
+        const getStatusColor = (status) => {
+            const colors = {
+                draft: 'default',
+                active: 'primary',
+                running: 'info',
+                completed: 'success',
+                failed: 'error',
+                requires_activation: 'warning',
+                requires_approval: 'warning',
+                requires_ratification: 'warning',
+                requires_correction: 'warning',
+                in_approval: 'info',
+                in_ratification: 'info',
+                approved: 'success',
+                deployed: 'success',
+                archived: 'default',
+                pending: 'default',
+                in_progress: 'info',
+                rejected: 'error',
+                disabled: 'default',
+            };
+            return colors[status] || 'default';
+        };
+
+        const getStatusStyles = (status) => {
+            const styles = {
+                draft: { bgcolor: '#e8e6e1', color: '#6b6b6b' },
+                archived: { bgcolor: '#e8e6e1', color: '#6b6b6b' },
+                pending: { bgcolor: '#e8e6e1', color: '#6b6b6b' },
+                disabled: { bgcolor: '#e8e6e1', color: '#6b6b6b' },
+                
+                active: { bgcolor: '#d4e3f0', color: '#1e4d7b' },
+                
+                running: { bgcolor: '#cfe2f3', color: '#0a1628' },
+                in_approval: { bgcolor: '#cfe2f3', color: '#0a1628' },
+                in_ratification: { bgcolor: '#cfe2f3', color: '#0a1628' },
+                in_progress: { bgcolor: '#cfe2f3', color: '#0a1628' },
+                
+                requires_activation: { bgcolor: '#fce8d6', color: '#c45500' },
+                requires_approval: { bgcolor: '#fce8d6', color: '#c45500' },
+                requires_ratification: { bgcolor: '#fce8d6', color: '#c45500' },
+                requires_correction: { bgcolor: '#fce8d6', color: '#c45500' },
+                
+                completed: { bgcolor: '#d9ead3', color: '#2d5016' },
+                approved: { bgcolor: '#d9ead3', color: '#2d5016' },
+                deployed: { bgcolor: '#d9ead3', color: '#2d5016' },
+                
+                failed: { bgcolor: '#f4cccc', color: '#8b1538' },
+                rejected: { bgcolor: '#f4cccc', color: '#8b1538' },
+            };
+            return styles[status] || { bgcolor: '#e8e6e1', color: '#6b6b6b' };
+        };
+
+        const getStatusLabel = (status) => {
+            const labels = {
+                draft: 'Черновик',
+                new: 'Новый',
+                active: 'Активен',
+                disabled: 'Выключен',
+                running: 'Выполняется',
+                completed: 'Завершено',
+                failed: 'Ошибка',
+                requires_activation: 'Требует активации',
+                requires_approval: 'Требует одобрения',
+                requires_ratification: 'Требует утверждения',
+                requires_correction: 'Требует корректировки',
+                in_approval: 'На согласовании',
+                in_ratification: 'На утверждении',
+                approved: 'Одобрено',
+                deployed: 'Внедрено',
+                archived: 'Архивировано',
+                pending: 'Ожидание',
+                in_progress: 'В процессе',
+                rejected: 'Отклонено',
+                simulation: 'Симуляция',
+                pilot: 'Пилот',
+                change: 'Внедрение',
+            };
+            return labels[status] || status;
+        };
+
+        const getCriticalityStyles = (criticality) => {
+            if (criticality === 'high') {
+                return { bgcolor: '#f4cccc', color: '#8b1538' };
+            }
+            if (criticality === 'low') {
+                return { bgcolor: '#d9ead3', color: '#2d5016' };
+            }
+            return { bgcolor: '#e8e6e1', color: '#6b6b6b' };
+        };
+
+        const getCriticalityLabel = (criticality) => {
+            const labels = {
+                high: 'высокая',
+                low: 'низкая',
+            };
+            return labels[criticality] || 'низкая';
+        };
+
+        const getPriorityStyles = (priority) => {
+            const styles = {
+                high: { bgcolor: '#f4cccc', color: '#8b1538' },
+                medium: { bgcolor: '#fce8d6', color: '#c45500' },
+                low: { bgcolor: '#e8e6e1', color: '#6b6b6b' },
+            };
+            return styles[priority] || { bgcolor: '#e8e6e1', color: '#6b6b6b' };
+        };
+
+        const getPriorityLabel = (priority) => {
+            const labels = {
+                high: 'Высокий',
+                medium: 'Средний',
+                low: 'Низкий',
+            };
+            return labels[priority] || priority;
+        };
+
+        // Mock Data
+        const products = [
+            {
+                id: 'credit_cards',
+                label: 'Кредитные карты',
+                subproducts: [
+                    { id: 'cc_standard', label: 'Стандартная карта' },
+                    { id: 'cc_premium', label: 'Премиум карта' },
+                    { id: 'cc_cashback', label: 'Карта с кэшбэком' },
+                ]
+            },
+            {
+                id: 'consumer',
+                label: 'Потребительские кредиты',
+                subproducts: [
+                    { id: 'consumer_standard', label: 'Стандартный ПК' },
+                    { id: 'consumer_express', label: 'Экспресс ПК' },
+                ]
+            },
+            {
+                id: 'mortgage',
+                label: 'Жилищное кредитование',
+                subproducts: [
+                    { id: 'mortgage_standard', label: 'Стандартная ипотека' },
+                    { id: 'mortgage_family', label: 'Семейная ипотека' },
+                ]
+            },
+        ];
+
+        const mockInitiatives = [
+            {
+                id: 'INI-001',
+                name: 'Оптимизация скоринга Premium карт',
+                product: 'Кредитные карты',
+                subproduct: 'Премиум карта',
+                status: 'active',
+                priority: 'high',
+                criticality: 'high',
+                owner: 'Иванов И.И.',
+                created: '2026-01-15',
+                simulations: 2,
+                pilots: 1,
+                deployments: 0,
+            },
+            {
+                id: 'INI-002',
+                name: 'Снижение минимального дохода',
+                product: 'Потребительские кредиты',
+                subproduct: 'Стандартный ПК',
+                status: 'in_approval',
+                priority: 'medium',
+                criticality: 'low',
+                owner: 'Петрова А.С.',
+                created: '2026-02-01',
+                simulations: 1,
+                pilots: 1,
+                deployments: 1,
+            },
+            {
+                id: 'INI-003',
+                name: 'Новая модель оценки залога',
+                product: 'Жилищное кредитование',
+                subproduct: 'Стандартная ипотека',
+                status: 'draft',
+                priority: 'low',
+                criticality: 'low',
+                owner: 'Сидоров П.П.',
+                created: '2026-02-20',
+                simulations: 3,
+                pilots: 0,
+                deployments: 0,
+            },
+            {
+                id: 'INI-004',
+                name: 'Ужесточение требований к возрасту',
+                product: 'Кредитные карты',
+                subproduct: 'Карта с кэшбэком',
+                status: 'completed',
+                priority: 'high',
+                criticality: 'high',
+                owner: 'Морозова Е.И.',
+                created: '2025-12-10',
+                simulations: 2,
+                pilots: 2,
+                deployments: 1,
+            },
+        ];
+
+        const mockScorecards = [
+            {
+                id: 'SC-001',
+                name: 'Premium_v2.3',
+                product: 'Кредитные карты',
+                status: 'active',
+                version: '2.3',
+                created: '2026-01-20',
+                usedIn: ['INI-001'],
+            },
+            {
+                id: 'SC-002',
+                name: 'Standard_Consumer_v1.8',
+                product: 'Потребительские кредиты',
+                status: 'active',
+                version: '1.8',
+                created: '2026-02-05',
+                usedIn: ['INI-002'],
+            },
+            {
+                id: 'SC-003',
+                name: 'Mortgage_Base_v3.1',
+                product: 'Жилищное кредитование',
+                status: 'draft',
+                version: '3.1',
+                created: '2026-02-22',
+                usedIn: ['INI-003'],
+            },
+        ];
+
+        // Main App Component
+        function App() {
+            const [currentView, setCurrentView] = useState('initiatives');
+            const [selectedProduct, setSelectedProduct] = useState(null);
+            const [expandedProducts, setExpandedProducts] = useState({});
+
+            const toggleProduct = (productId) => {
+                setExpandedProducts(prev => ({
+                    ...prev,
+                    [productId]: !prev[productId]
+                }));
+            };
+
+            return (
+                <ThemeProvider theme={theme}>
+                    <Box sx={{ display: 'flex', height: '100vh' }}>
+                        {/* Sidebar */}
+                        <Box className="sidebar">
+                            <Box className="sidebar-header">
+                                <h1>Риск-Стратегии</h1>
+                                <p>Система управления внедрениями</p>
+                            </Box>
+                            
+                            <Box className="sidebar-menu">
+                                <Box
+                                    className={`sidebar-item ${currentView === 'initiatives' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('initiatives')}
+                                >
+                                    <span className="material-icons">dashboard</span>
+                                    <span>Инициативы</span>
+                                </Box>
+                                
+                                <Box
+                                    className={`sidebar-item ${currentView === 'scorecards' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('scorecards')}
+                                >
+                                    <span className="material-icons">assessment</span>
+                                    <span>Скоркарты</span>
+                                </Box>
+                                
+                                <Box
+                                    className={`sidebar-item ${currentView === 'approvals' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('approvals')}
+                                >
+                                    <span className="material-icons">check_circle</span>
+                                    <span>Согласования</span>
+                                    <Badge 
+                                        badgeContent={3} 
+                                        color="secondary"
+                                        sx={{ ml: 'auto' }}
+                                    />
+                                </Box>
+                                
+                                <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
+                                
+                                <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                        px: 3, 
+                                        py: 1, 
+                                        display: 'block',
+                                        color: 'rgba(255,255,255,0.5)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Продукты
+                                </Typography>
+                                
+                                {products.map(product => (
+                                    <Box key={product.id}>
+                                        <Box
+                                            className={`sidebar-item ${selectedProduct === product.id ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSelectedProduct(product.id);
+                                                toggleProduct(product.id);
+                                            }}
+                                        >
+                                            <span className="material-icons">
+                                                {expandedProducts[product.id] ? 'expand_more' : 'chevron_right'}
+                                            </span>
+                                            <span>{product.label}</span>
+                                        </Box>
+                                        
+                                        <Collapse in={expandedProducts[product.id]}>
+                                            {product.subproducts.map(sub => (
+                                                <Box
+                                                    key={sub.id}
+                                                    className="sidebar-subitem"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedProduct(sub.id);
+                                                    }}
+                                                >
+                                                    {sub.label}
+                                                </Box>
+                                            ))}
+                                        </Collapse>
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Box>
+
+                        {/* Main Content */}
+                        <Box className="main-content">
+                            <Box className="top-bar">
+                                <h2 className="top-bar-title">
+                                    {currentView === 'initiatives' && 'Инициативы'}
+                                    {currentView === 'scorecards' && 'Скоркарты'}
+                                    {currentView === 'approvals' && 'Согласования'}
+                                </h2>
+                                <Stack direction="row" spacing={2}>
+                                    <Button variant="outlined" startIcon={<span className="material-icons">filter_list</span>}>
+                                        Фильтры
+                                    </Button>
+                                    <Button 
+                                        variant="contained" 
+                                        color="secondary"
+                                        startIcon={<span className="material-icons">add</span>}
+                                    >
+                                        Создать
+                                    </Button>
+                                </Stack>
+                            </Box>
+                            
+                            <Box className="content-wrapper">
+                                {currentView === 'initiatives' && <InitiativesView initiatives={mockInitiatives} />}
+                                {currentView === 'scorecards' && <ScorecardsView scorecards={mockScorecards} />}
+                                {currentView === 'approvals' && <ApprovalsView />}
+                            </Box>
+                        </Box>
+                    </Box>
+                </ThemeProvider>
+            );
+        }
+
+        // Initiatives View Component
+        function InitiativesView({ initiatives }) {
+            return (
+                <Box>
+                    <Stack spacing={3}>
+                        {/* Stats Cards */}
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Paper 
+                                    sx={{ 
+                                        p: 3,
+                                        background: 'linear-gradient(135deg, #0a1628 0%, #1e4d7b 100%)',
+                                        color: 'white',
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                    }}
+                                >
+                                    <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5 }}>
+                                            {initiatives.length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                            Всего инициатив
+                                        </Typography>
+                                    </Box>
+                                    <Box 
+                                        sx={{ 
+                                            position: 'absolute',
+                                            right: -10,
+                                            bottom: -10,
+                                            opacity: 0.1,
+                                        }}
+                                    >
+                                        <span className="material-icons" style={{ fontSize: 80 }}>dashboard</span>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Paper sx={{ p: 3, bgcolor: '#d9ead3', position: 'relative', overflow: 'hidden' }}>
+                                    <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5, color: '#2d5016' }}>
+                                            {initiatives.filter(i => i.status === 'active').length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#2d5016' }}>
+                                            Активных
+                                        </Typography>
+                                    </Box>
+                                    <Box 
+                                        sx={{ 
+                                            position: 'absolute',
+                                            right: -10,
+                                            bottom: -10,
+                                            opacity: 0.15,
+                                        }}
+                                    >
+                                        <span className="material-icons" style={{ fontSize: 80, color: '#2d5016' }}>check_circle</span>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Paper sx={{ p: 3, bgcolor: '#fce8d6', position: 'relative', overflow: 'hidden' }}>
+                                    <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5, color: '#c45500' }}>
+                                            {initiatives.filter(i => i.status === 'in_approval').length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#c45500' }}>
+                                            На согласовании
+                                        </Typography>
+                                    </Box>
+                                    <Box 
+                                        sx={{ 
+                                            position: 'absolute',
+                                            right: -10,
+                                            bottom: -10,
+                                            opacity: 0.15,
+                                        }}
+                                    >
+                                        <span className="material-icons" style={{ fontSize: 80, color: '#c45500' }}>pending</span>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                            
+                            <Grid item xs={12} sm={6} md={3}>
+                                <Paper sx={{ p: 3, bgcolor: '#e8e6e1', position: 'relative', overflow: 'hidden' }}>
+                                    <Box sx={{ position: 'relative', zIndex: 1 }}>
+                                        <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5, color: '#6b6b6b' }}>
+                                            {initiatives.filter(i => i.status === 'draft').length}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: '#6b6b6b' }}>
+                                            Черновиков
+                                        </Typography>
+                                    </Box>
+                                    <Box 
+                                        sx={{ 
+                                            position: 'absolute',
+                                            right: -10,
+                                            bottom: -10,
+                                            opacity: 0.15,
+                                        }}
+                                    >
+                                        <span className="material-icons" style={{ fontSize: 80, color: '#6b6b6b' }}>edit</span>
+                                    </Box>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+
+                        {/* Initiatives Table */}
+                        <Paper sx={{ overflow: 'hidden' }}>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>ID</TableCell>
+                                            <TableCell>Название</TableCell>
+                                            <TableCell>Продукт</TableCell>
+                                            <TableCell>Статус</TableCell>
+                                            <TableCell>Приоритет</TableCell>
+                                            <TableCell>Владелец</TableCell>
+                                            <TableCell align="center">Симуляции</TableCell>
+                                            <TableCell align="center">Пилоты</TableCell>
+                                            <TableCell align="center">Внедрения</TableCell>
+                                            <TableCell>Создана</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {initiatives.map((initiative) => (
+                                            <TableRow 
+                                                key={initiative.id}
+                                                sx={{ 
+                                                    '&:hover': { 
+                                                        bgcolor: 'rgba(10, 22, 40, 0.02)',
+                                                        cursor: 'pointer',
+                                                    },
+                                                    transition: 'background-color 0.2s',
+                                                }}
+                                            >
+                                                <TableCell>
+                                                    <Typography 
+                                                        variant="body2" 
+                                                        sx={{ 
+                                                            fontFamily: 'var(--font-mono)',
+                                                            fontSize: '13px',
+                                                            color: 'primary.main',
+                                                            fontWeight: 500,
+                                                        }}
+                                                    >
+                                                        {initiative.id}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                                        {initiative.name}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {initiative.product}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {initiative.subproduct}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={getStatusLabel(initiative.status)}
+                                                        size="small"
+                                                        sx={{
+                                                            ...getStatusStyles(initiative.status),
+                                                            height: 26,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Chip
+                                                        label={getPriorityLabel(initiative.priority)}
+                                                        size="small"
+                                                        sx={{
+                                                            ...getPriorityStyles(initiative.priority),
+                                                            height: 26,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {initiative.owner}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Chip 
+                                                        label={initiative.simulations} 
+                                                        size="small"
+                                                        sx={{ 
+                                                            minWidth: 32,
+                                                            bgcolor: '#cfe2f3',
+                                                            color: '#0a1628',
+                                                            fontWeight: 600,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Chip 
+                                                        label={initiative.pilots} 
+                                                        size="small"
+                                                        sx={{ 
+                                                            minWidth: 32,
+                                                            bgcolor: '#d4e3f0',
+                                                            color: '#1e4d7b',
+                                                            fontWeight: 600,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Chip 
+                                                        label={initiative.deployments} 
+                                                        size="small"
+                                                        sx={{ 
+                                                            minWidth: 32,
+                                                            bgcolor: '#d9ead3',
+                                                            color: '#2d5016',
+                                                            fontWeight: 600,
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {initiative.created}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Paper>
+                    </Stack>
+                </Box>
+            );
+        }
+
+        // Scorecards View Component
+        function ScorecardsView({ scorecards }) {
+            return (
+                <Box>
+                    <Grid container spacing={3}>
+                        {scorecards.map((scorecard) => (
+                            <Grid item xs={12} md={6} lg={4} key={scorecard.id}>
+                                <Card 
+                                    sx={{ 
+                                        height: '100%',
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        '&:hover': {
+                                            transform: 'translateY(-4px)',
+                                            boxShadow: '0 10px 20px rgba(10, 22, 40, 0.12)',
+                                        },
+                                    }}
+                                >
+                                    <CardContent>
+                                        <Stack spacing={2}>
+                                            <Box>
+                                                <Typography 
+                                                    variant="caption" 
+                                                    sx={{ 
+                                                        fontFamily: 'var(--font-mono)',
+                                                        color: 'text.secondary',
+                                                        fontSize: '11px',
+                                                    }}
+                                                >
+                                                    {scorecard.id}
+                                                </Typography>
+                                                <Typography variant="h6" sx={{ mt: 0.5 }}>
+                                                    {scorecard.name}
+                                                </Typography>
+                                            </Box>
+                                            
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                    {scorecard.product}
+                                                </Typography>
+                                                <Chip
+                                                    label={getStatusLabel(scorecard.status)}
+                                                    size="small"
+                                                    sx={{
+                                                        ...getStatusStyles(scorecard.status),
+                                                        height: 26,
+                                                    }}
+                                                />
+                                            </Box>
+                                            
+                                            <Divider />
+                                            
+                                            <Stack direction="row" spacing={2}>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Версия
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {scorecard.version}
+                                                    </Typography>
+                                                </Box>
+                                                <Box>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Создана
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {scorecard.created}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                            
+                                            <Box>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Используется в инициативах:
+                                                </Typography>
+                                                <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                                                    {scorecard.usedIn.map(ini => (
+                                                        <Chip 
+                                                            key={ini}
+                                                            label={ini} 
+                                                            size="small"
+                                                            sx={{ 
+                                                                fontFamily: 'var(--font-mono)',
+                                                                fontSize: '11px',
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Stack>
+                                            </Box>
+                                        </Stack>
+                                    </CardContent>
+                                    <CardActions sx={{ px: 2, pb: 2 }}>
+                                        <Button size="small" startIcon={<span className="material-icons">visibility</span>}>
+                                            Просмотр
+                                        </Button>
+                                        <Button size="small" startIcon={<span className="material-icons">edit</span>}>
+                                            Редактировать
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            );
+        }
+
+        // Approvals View Component
+        function ApprovalsView() {
+            return (
+                <Box>
+                    <Stack spacing={3}>
+                        <Alert 
+                            severity="info"
+                            sx={{ 
+                                borderRadius: 2,
+                                '& .MuiAlert-icon': {
+                                    color: '#1e4d7b',
+                                },
+                            }}
+                        >
+                            У вас 3 элемента ожидают согласования
+                        </Alert>
+
+                        <Paper sx={{ p: 3 }}>
+                            <Typography variant="h6" gutterBottom>
+                                Ожидают вашего согласования
+                            </Typography>
+                            
+                            <Stack spacing={2} sx={{ mt: 2 }}>
+                                <Box 
+                                    sx={{ 
+                                        p: 2.5,
+                                        border: '1.5px solid',
+                                        borderColor: 'rgba(10, 22, 40, 0.12)',
+                                        borderRadius: 2,
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                            borderColor: 'secondary.main',
+                                            boxShadow: '0 4px 12px rgba(212, 175, 55, 0.15)',
+                                        },
+                                    }}
+                                >
+                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body1" fontWeight={600} gutterBottom>
+                                                Внедрение: Снижение минимального дохода
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                INI-002 • Потребительские кредиты • Стандартный ПК
+                                            </Typography>
+                                            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                                                <Chip 
+                                                    label="Высокий приоритет" 
+                                                    size="small"
+                                                    sx={{ ...getPriorityStyles('high'), height: 24 }}
+                                                />
+                                                <Chip 
+                                                    label="Этап: Approval" 
+                                                    size="small"
+                                                    sx={{ bgcolor: '#cfe2f3', color: '#0a1628', height: 24 }}
+                                                />
+                                            </Stack>
+                                        </Box>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button 
+                                                variant="outlined" 
+                                                color="error"
+                                                size="small"
+                                            >
+                                                Отклонить
+                                            </Button>
+                                            <Button 
+                                                variant="contained" 
+                                                color="success"
+                                                size="small"
+                                            >
+                                                Одобрить
+                                            </Button>
+                                        </Stack>
+                                    </Stack>
+                                </Box>
+
+                                <Box 
+                                    sx={{ 
+                                        p: 2.5,
+                                        border: '1.5px solid',
+                                        borderColor: 'rgba(10, 22, 40, 0.12)',
+                                        borderRadius: 2,
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                            borderColor: 'secondary.main',
+                                            boxShadow: '0 4px 12px rgba(212, 175, 55, 0.15)',
+                                        },
+                                    }}
+                                >
+                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body1" fontWeight={600} gutterBottom>
+                                                Пилот: Тестирование новой модели скоринга
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                INI-001 • Кредитные карты • Премиум карта
+                                            </Typography>
+                                            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                                                <Chip 
+                                                    label="Средний приоритет" 
+                                                    size="small"
+                                                    sx={{ ...getPriorityStyles('medium'), height: 24 }}
+                                                />
+                                                <Chip 
+                                                    label="Этап: Ratification" 
+                                                    size="small"
+                                                    sx={{ bgcolor: '#d4e3f0', color: '#1e4d7b', height: 24 }}
+                                                />
+                                            </Stack>
+                                        </Box>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button 
+                                                variant="outlined" 
+                                                color="error"
+                                                size="small"
+                                            >
+                                                Отклонить
+                                            </Button>
+                                            <Button 
+                                                variant="contained" 
+                                                color="success"
+                                                size="small"
+                                            >
+                                                Утвердить
+                                            </Button>
+                                        </Stack>
+                                    </Stack>
+                                </Box>
+
+                                <Box 
+                                    sx={{ 
+                                        p: 2.5,
+                                        border: '1.5px solid',
+                                        borderColor: 'rgba(10, 22, 40, 0.12)',
+                                        borderRadius: 2,
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                            borderColor: 'secondary.main',
+                                            boxShadow: '0 4px 12px rgba(212, 175, 55, 0.15)',
+                                        },
+                                    }}
+                                >
+                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body1" fontWeight={600} gutterBottom>
+                                                Симуляция: Оценка влияния новых параметров
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                                                INI-003 • Жилищное кредитование • Стандартная ипотека
+                                            </Typography>
+                                            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                                                <Chip 
+                                                    label="Низкий приоритет" 
+                                                    size="small"
+                                                    sx={{ ...getPriorityStyles('low'), height: 24 }}
+                                                />
+                                                <Chip 
+                                                    label="Этап: Approval" 
+                                                    size="small"
+                                                    sx={{ bgcolor: '#cfe2f3', color: '#0a1628', height: 24 }}
+                                                />
+                                            </Stack>
+                                        </Box>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button 
+                                                variant="outlined" 
+                                                color="error"
+                                                size="small"
+                                            >
+                                                Отклонить
+                                            </Button>
+                                            <Button 
+                                                variant="contained" 
+                                                color="success"
+                                                size="small"
+                                            >
+                                                Одобрить
+                                            </Button>
+                                        </Stack>
+                                    </Stack>
+                                </Box>
+                            </Stack>
+                        </Paper>
+                    </Stack>
+                </Box>
+            );
+        }
+
+        // Render App
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

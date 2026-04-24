@@ -1,0 +1,396 @@
+@startgantt
+title MVP - План разработки (source-of-truth: this gantt; v6.19)
+
+' Source-of-truth for dev task decomposition/estimates:
+'   planning/mvp/current/gantt/mvp_gantt_chart_current.puml
+
+Project starts the 30th of march 2026
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+
+'
+' RESOURCES (team)
+'   A1/A2: analysts
+'   B1/B2/B3: backend devs
+'   F1: frontend dev (100%)
+'   F2: frontend dev (50%)
+'   Q1: QA
+
+-- 1) Роли --
+
+[AN новые роли: роли/права/матрица] as [AN_ROLES] on {A1} lasts 1 days
+[AN_ROLES] is colored in lightgreen
+
+-- 2) Артефакты --
+
+[AN артефакты (BE): модель/контракты/права] as [AN_ART_BE] on {A2} lasts 1 days
+[AN_ART_BE] is colored in lightgreen
+
+[BE артефакты (ссылки на документы) - БД + API] as [BE_ART] on {B2} lasts 3 days
+[BE_ART] starts at [AN_ART_BE]'s end
+[BE_ART] is colored in lightblue
+
+[AN блок артефактов (FE): пилоты] as [AN_FE_PILOT_ART] on {A2} lasts 1 days
+[AN_FE_PILOT_ART] starts at [AN_ART_BE]'s end
+[AN_FE_PILOT_ART] is colored in lightgreen
+
+' Note: user request: include pilot lifecycle UI tweaks into this FE task (+3 days).
+[FE пилоты - блок артефакты + UI под ЖЦ] as [FE_PILOT_ART] on {F1} lasts 4 days
+[FE_PILOT_ART] starts at [AN_FE_PILOT_ART]'s end
+[FE_PILOT_ART] starts at [BE_ART]'s end
+[FE_PILOT_ART] is colored in lightcoral
+
+[AN блок артефактов (FE): симуляции] as [AN_FE_SIM_ART] on {A2} lasts 1 days
+[AN_FE_SIM_ART] starts at [AN_FE_PILOT_ART]'s end
+[AN_FE_SIM_ART] is colored in lightgreen
+
+[FE симуляции - блок артефакты] as [FE_SIM_ART] on {F2:50%} lasts 1 days
+[FE_SIM_ART] starts at [AN_FE_SIM_ART]'s end
+[FE_SIM_ART] starts at [FE_PILOT_ART]'s start
+[FE_SIM_ART] starts at [BE_ART]'s end
+[FE_SIM_ART] is colored in lightcoral
+
+-- 3) Согласования/утверждения + Пакеты --
+
+[AN процесс согласования/утверждения (BE core)] as [AN_AP_CORE] on {A1} lasts 2 days
+[AN_AP_CORE] starts at [AN_ROLES]'s end
+[AN_AP_CORE] is colored in lightgreen
+
+[BE процесс согласования и утверждения - БД+логика] as [BE_AP_CORE] on {B1} lasts 10 days
+[BE_AP_CORE] starts at [AN_AP_CORE]'s end
+[BE_AP_CORE] is colored in lightblue
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [AN_PILOT_LC_AP] on {A2} lasts 1 days
+[AN_PILOT_LC_AP] starts at [AN_AP_CORE]'s end
+[AN_PILOT_LC_AP] starts at [AN_FE_SIM_ART]'s end
+[AN_PILOT_LC_AP] is colored in lightgreen
+
+[BE ЖЦ пилота - согласование/утверждение] as [BE_PILOT_LC_AP] on {B2} lasts 5 days
+[BE_PILOT_LC_AP] starts at [BE_ART]'s end
+[BE_PILOT_LC_AP] starts at [AN_PILOT_LC_AP]'s end
+[BE_PILOT_LC_AP] starts at [BE_AP_CORE]'s end
+[BE_PILOT_LC_AP] is colored in lightblue
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [AN_AP_PAGE_BE] on {A1} lasts 1 days
+[AN_AP_PAGE_BE] starts at [AN_AP_CORE]'s end
+[AN_AP_PAGE_BE] is colored in lightgreen
+
+[BE страница "Согласования" - API, логика] as [BE_AP_PAGE] on {B1} lasts 3 days
+[BE_AP_PAGE] starts at [AN_AP_PAGE_BE]'s end
+[BE_AP_PAGE] starts at [BE_AP_CORE]'s end
+[BE_AP_PAGE] is colored in lightblue
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [AN_AP_PAGE_FE] on {A2} lasts 1 days
+[AN_AP_PAGE_FE] starts at [AN_AP_PAGE_BE]'s end
+[AN_AP_PAGE_FE] starts at [AN_PILOT_LC_AP]'s end
+[AN_AP_PAGE_FE] is colored in lightgreen
+
+[FE страница "Согласования"] as [FE_AP_PAGE] on {F1} lasts 10 days
+[FE_AP_PAGE] starts at [AN_AP_PAGE_FE]'s end
+[FE_AP_PAGE] starts at [FE_PILOT_ART]'s end
+[FE_AP_PAGE] is colored in lightcoral
+
+[AN страница "Пакеты" (BE): контракты/массовые действия] as [AN_PKG_BE] on {A1} lasts 1 days
+[AN_PKG_BE] starts at [AN_AP_PAGE_BE]'s end
+[AN_PKG_BE] is colored in lightgreen
+
+[AN страница "Пакеты" (FE): UX/компоненты/edge-cases] as [AN_PKG_FE] on {A2} lasts 1 days
+[AN_PKG_FE] starts at [AN_PKG_BE]'s end
+[AN_PKG_FE] starts at [AN_AP_PAGE_FE]'s end
+[AN_PKG_FE] is colored in lightgreen
+
+[FE страница "Пакеты"] as [FE_PKG_PAGE] on {F2:50%} lasts 10 days
+' FE2 productivity increases to 100% starting May 1st, 2026.
+[FE_PKG_PAGE] ends 2026/05/01
+[FE_PKG_PAGE] is colored in lightcoral
+
+[FE2 100% (from 2026/05/01): форма скоркарты] as [FE_SCF_FE2_100] on {F2} lasts 10 days
+[FE_SCF_FE2_100] starts at [AN_SCF_FE]'s end
+[FE_SCF_FE2_100] starts at [BE_SCF]'s end
+[FE_SCF_FE2_100] starts at [FE_PKG_PAGE]'s end
+[FE_SCF_FE2_100] is colored in lightcoral
+
+[FE2 100% (from 2026/05/01): табличные риск-параметры] as [FE_RISK_TABLE_FE2_100] on {F2} lasts 10 days
+[FE_RISK_TABLE_FE2_100] starts at [BE_RISK_TABLE]'s end
+[FE_RISK_TABLE_FE2_100] starts at [FE_SCF_FE2_100]'s end
+[FE_RISK_TABLE_FE2_100] is colored in lightcoral
+
+' Keep original FE_SCF / FE_RISK_TABLE tasks as milestones for reference (0d)??
+' NOTE: PlantUML doesn't support changing a resource's % mid-task; we split FE2 work after May 1 into new tasks on {F2}.
+
+' (legacy placeholders kept for traceability)
+[FE форма создания/редактирования скоркарты] as [FE_SCF] on {F2:50%} lasts 0 days
+[FE_SCF] starts at [FE_SCF_FE2_100]'s end
+[FE_SCF] is colored in lightcoral
+
+[FE табличных риск-параметров] as [FE_RISK_TABLE] on {F2:50%} lasts 0 days
+[FE_RISK_TABLE] starts at [FE_RISK_TABLE_FE2_100]'s end
+[FE_RISK_TABLE] is colored in lightcoral
+[FE_PKG_PAGE] starts at [AN_PKG_FE]'s end
+[FE_PKG_PAGE] starts at [FE_SIM_ART]'s end
+[FE_PKG_PAGE] is colored in lightcoral
+
+-- 4) Внедрения --
+
+[AN внедрения (BE): модель/контракты/права] as [AN_DEP_BE] on {A1} lasts 1 days
+[AN_DEP_BE] starts at [AN_PKG_FE]'s end
+[AN_DEP_BE] is colored in lightgreen
+
+[BE внедрения - БД+API] as [BE_DEP_API] on {B3} lasts 3 days
+[BE_DEP_API] starts at [AN_DEP_BE]'s end
+[BE_DEP_API] starts at [BE_ART]'s end
+[BE_DEP_API] is colored in lightblue
+
+[AN ЖЦ внедрений (BE)] as [AN_DEP_LC] on {A2} lasts 1 days
+[AN_DEP_LC] starts at [AN_DEP_BE]'s end
+[AN_DEP_LC] is colored in lightgreen
+
+[BE ЖЦ внедрений] as [BE_DEP_LC] on {B3} lasts 3 days
+[BE_DEP_LC] starts at [AN_DEP_LC]'s end
+[BE_DEP_LC] starts at [BE_DEP_API]'s end
+[BE_DEP_LC] is colored in lightblue
+
+[AN список внедрений (FE)] as [AN_FE_DEP_LIST] on {A2} lasts 1 days
+[AN_FE_DEP_LIST] starts at [AN_DEP_LC]'s end
+[AN_FE_DEP_LIST] is colored in lightgreen
+
+[FE список внедрений] as [FE_DEP_LIST] on {F1} lasts 5 days
+[FE_DEP_LIST] starts at [AN_FE_DEP_LIST]'s end
+[FE_DEP_LIST] starts at [BE_DEP_API]'s end
+[FE_DEP_LIST] starts at [FE_PKG_PAGE]'s end
+[FE_DEP_LIST] is colored in lightcoral
+
+[AN форма внедрения (создание/редактирование) (FE)] as [AN_FE_DEP_FORM] on {A1} lasts 1 days
+[AN_FE_DEP_FORM] starts at [AN_DEP_LC]'s end
+[AN_FE_DEP_FORM] is colored in lightgreen
+
+[FE форма внедрения (создание/редактирование)] as [FE_DEP_FORM] on {F1} lasts 5 days
+[FE_DEP_FORM] starts at [AN_FE_DEP_FORM]'s end
+[FE_DEP_FORM] starts at [BE_DEP_LC]'s end
+[FE_DEP_FORM] starts at [FE_DEP_LIST]'s end
+[FE_DEP_FORM] is colored in lightcoral
+
+-- 5) Скоркарты (деталка + создание/редактирование) --
+' Note: scorecards list UI is out of MVP scope.
+
+[AN скоркарты (BE): модель/шаблоны/валидаторы] as [AN_SC_BE] on {A1} lasts 1 days
+[AN_SC_BE] starts at [AN_DEP_BE]'s end
+[AN_SC_BE] is colored in lightgreen
+
+[BE скоркарты (включая шаблоны) - БД + API] as [BE_SC_API] on {B2} lasts 10 days
+[BE_SC_API] starts at [AN_SC_BE]'s end
+[BE_SC_API] starts at [BE_ART]'s end
+[BE_SC_API] is colored in lightblue
+
+[AN детальная скоркарты (BE)] as [AN_SCD_BE] on {A2} lasts 1 days
+[AN_SCD_BE] starts at [AN_SC_BE]'s end
+[AN_SCD_BE] starts at [AN_FE_DEP_LIST]'s end
+[AN_SCD_BE] is colored in lightgreen
+
+
+[AN детальная скоркарты (FE)] as [AN_SCD_FE] on {A1} lasts 1 days
+[AN_SCD_FE] starts at [AN_SCD_BE]'s end
+[AN_SCD_FE] starts at [AN_FE_DEP_FORM]'s end
+[AN_SCD_FE] is colored in lightgreen
+
+[FE детальная скоркарты] as [FE_SCD] on {F1} lasts 10 days
+[FE_SCD] starts at [AN_SCD_FE]'s end
+[FE_SCD] starts at [FE_AP_PAGE]'s end
+[FE_SCD] is colored in lightcoral
+
+[AN форма скоркарты (BE)] as [AN_SCF_BE] on {A2} lasts 1 days
+[AN_SCF_BE] starts at [AN_SCD_BE]'s end
+[AN_SCF_BE] is colored in lightgreen
+
+[BE форма создания/редактирования скоркарты] as [BE_SCF] on {B1} lasts 5 days
+[BE_SCF] starts at [AN_SCF_BE]'s end
+[BE_SCF] starts at [BE_AP_PAGE]'s end
+[BE_SCF] starts at [BE_SC_API]'s end
+[BE_SCF] is colored in lightblue
+
+[AN форма скоркарты (FE)] as [AN_SCF_FE] on {A1} lasts 1 days
+[AN_SCF_FE] starts at [AN_SCF_BE]'s end
+[AN_SCF_FE] is colored in lightgreen
+
+[FE форма создания/редактирования скоркарты] as [FE_SCF] on {F2:50%} lasts 10 days
+[FE_SCF] starts at [AN_SCF_FE]'s end
+[FE_SCF] starts at [BE_SCF]'s end
+[FE_SCF] starts at [FE_PKG_PAGE]'s end
+[FE_SCF] is colored in lightcoral
+
+-- 6) Уведомления --
+
+[AN уведомления: шаблоны/триггеры/получатели] as [AN_NOT] on {A2} lasts 1 days
+[AN_NOT] starts at [AN_SCF_BE]'s end
+[AN_NOT] is colored in lightgreen
+
+[BE уведомления] as [BE_NOT] on {B3} lasts 3 days
+[BE_NOT] starts at [AN_NOT]'s end
+[BE_NOT] is colored in lightblue
+
+-- 7) Trace (связанные сущности) --
+
+[AN Trace (BE): модель связей/запросы/производительность] as [AN_TRACE_BE] on {A1} lasts 1 days
+[AN_TRACE_BE] starts at [AN_SCF_FE]'s end
+[AN_TRACE_BE] is colored in lightgreen
+
+[BE Trace - БД + логика + API] as [BE_TRACE] on {B2} lasts 2 days
+[BE_TRACE] starts at [AN_TRACE_BE]'s end
+[BE_TRACE] starts at [BE_SC_API]'s end
+[BE_TRACE] is colored in lightblue
+
+[AN Trace (FE): виджет блока связей] as [AN_TRACE_FE] on {A2} lasts 1 days
+[AN_TRACE_FE] starts at [AN_TRACE_BE]'s end
+[AN_TRACE_FE] is colored in lightgreen
+
+[FE Trace - пилоты/симуляции/внедрения: блок связи] as [FE_TRACE] on {F1} lasts 3 days
+[FE_TRACE] starts at [AN_TRACE_FE]'s end
+[FE_TRACE] starts at [BE_TRACE]'s end
+[FE_TRACE] starts at [FE_DEP_FORM]'s end
+[FE_TRACE] is colored in lightcoral
+
+-- QA --
+
+[QA подготовка (тест-план, тестовые данные, стенд)] as [QA_SETUP] on {Q1} lasts 2 days
+[QA_SETUP] is colored in gold
+
+[QA Артефакты] as [QA_ART] on {Q1} lasts 2 days
+[QA_ART] starts at [QA_SETUP]'s end
+[QA_ART] starts at [BE_ART]'s end
+[QA_ART] starts at [FE_PILOT_ART]'s end
+[QA_ART] starts at [FE_SIM_ART]'s end
+[QA_ART] is colored in gold
+
+[QA Согласования + Пакеты] as [QA_AP] on {Q1} lasts 3 days
+[QA_AP] starts at [QA_ART]'s end
+[QA_AP] starts at [BE_AP_CORE]'s end
+[QA_AP] starts at [BE_AP_PAGE]'s end
+[QA_AP] starts at [FE_AP_PAGE]'s end
+[QA_AP] starts at [FE_PKG_PAGE]'s end
+[QA_AP] is colored in gold
+
+[QA Скоркарты (деталка+форма)] as [QA_SC] on {Q1} lasts 3 days
+[QA_SC] starts at [QA_AP]'s end
+[QA_SC] starts at [BE_SC_API]'s end
+[QA_SC] starts at [BE_SCF]'s end
+[QA_SC] starts at [FE_SCD]'s end
+[QA_SC] starts at [FE_SCF]'s end
+[QA_SC] is colored in gold
+
+[QA Trace (блок связей)] as [QA_TRACE] on {Q1} lasts 1 days
+[QA_TRACE] starts at [QA_SC]'s end
+[QA_TRACE] starts at [BE_TRACE]'s end
+[QA_TRACE] starts at [FE_TRACE]'s end
+[QA_TRACE] is colored in gold
+
+[QA Регрессия + E2E smoke] as [QA_REG] on {Q1} lasts 5 days
+' Regression starts after the last dev task is done, and after functional QA is complete.
+[QA_REG] starts at [FE_TRACE]'s end
+[QA_REG] starts at [FE_SCF]'s end
+[QA_REG] starts at [QA_TRACE]'s end
+[QA_REG] starts at [QA_SC]'s end
+[QA_REG] is colored in gold
+
+[Milestone: MVP завершен] as [MVP_DONE] happens at [QA_REG]'s end
+
+-- AI агент (за рамками MVP) --
+
+[BE чата AI - интеграция] as [BE_AI_CHAT] on {B1} lasts 5 days
+' v6.18: non-MVP tasks may run in parallel with MVP if they don't increase MVP risk.
+' Start as soon as the resource is available (no hard gate on QA_REG end).
+[BE_AI_CHAT] is colored in lightblue
+
+[FE UI для чата с AI агентом] as [FE_AI_CHAT_UI] on {F1} lasts 3 days
+[FE_AI_CHAT_UI] starts at [BE_AI_CHAT]'s end
+[FE_AI_CHAT_UI] is colored in lightcoral
+
+-- Табличные риск-параметры (за рамками MVP) --
+
+[BE табличных риск-параметров] as [BE_RISK_TABLE] on {B2} lasts 5 days
+' v6.18: start when B2 is free
+[BE_RISK_TABLE] is colored in lightblue
+
+[FE табличных риск-параметров] as [FE_RISK_TABLE] on {F2:50%} lasts 10 days
+[FE_RISK_TABLE] starts at [BE_RISK_TABLE]'s end
+[FE_RISK_TABLE] is colored in lightcoral
+
+-- Доработка статусной модели симуляции (за рамками MVP) --
+
+[BE статусной модели симуляции] as [BE_STAT_SIM] on {B3} lasts 10 days
+' v6.18: start when B3 is free
+[BE_STAT_SIM] is colored in lightblue
+
+[FE статусной модели симуляции] as [FE_STAT_SIM] on {F1} lasts 3 days
+[FE_STAT_SIM] starts at [BE_STAT_SIM]'s end
+[FE_STAT_SIM] is colored in lightcoral
+
+-- Симуляция снепшотов конфигурации (за рамками MVP) --
+
+[BE симуляции снепшотов] as [BE_SIM_SNAP] on {B1} lasts 10 days
+' v6.18: can start when B1 is free (still after BE_AI_CHAT due to same resource leveling below)
+[BE_SIM_SNAP] is colored in lightblue
+
+[FE симуляции снепшотов] as [FE_SIM_SNAP] on {F1} lasts 10 days
+[FE_SIM_SNAP] starts at [BE_SIM_SNAP]'s end
+[FE_SIM_SNAP] is colored in lightcoral
+
+' ============================================================
+' Resource leveling / sequencing constraints (declared after tasks)
+' ============================================================
+
+' B1: keep backend B1 sequential; non-MVP starts when B1 is free.
+[BE_AP_PAGE] starts at [BE_AP_CORE]'s end
+[BE_SCF] starts at [BE_AP_PAGE]'s end
+[BE_AI_CHAT] starts at [BE_SCF]'s end
+[BE_SIM_SNAP] starts at [BE_AI_CHAT]'s end
+
+' B2: keep B2 sequential; non-MVP starts when B2 is free.
+' Scorecards first to unblock FE scorecard form.
+[BE_SC_API] starts at [BE_ART]'s end
+[BE_PILOT_LC_AP] starts at [BE_SC_API]'s end
+[BE_TRACE] starts at [BE_PILOT_LC_AP]'s end
+[BE_RISK_TABLE] starts at [BE_TRACE]'s end
+
+' B3: keep B3 sequential; non-MVP starts when B3 is free.
+[BE_DEP_LC] starts at [BE_DEP_API]'s end
+[BE_NOT] starts at [BE_DEP_LC]'s end
+[BE_STAT_SIM] starts at [BE_NOT]'s end
+
+' F1: keep the main FE sequential; non-MVP starts when F1 is free.
+' NOTE (v6.17): allow FE deployments list/form to start after Packages page.
+[FE_DEP_LIST] starts at [FE_PKG_PAGE]'s end
+' Ensure no overlap with FE_AP_PAGE; after approvals page is ready, we can proceed.
+[FE_DEP_LIST] starts at [FE_AP_PAGE]'s end
+
+[FE_DEP_FORM] starts at [FE_DEP_LIST]'s end
+[FE_SCD] starts at [FE_DEP_FORM]'s end
+[FE_TRACE] starts at [FE_SCD]'s end
+[FE_AI_CHAT_UI] starts at [FE_TRACE]'s end
+[FE_STAT_SIM] starts at [FE_AI_CHAT_UI]'s end
+[FE_SIM_SNAP] starts at [FE_STAT_SIM]'s end
+
+' F2: keep FE2 sequential at 50% (no overlaps).
+[FE_PKG_PAGE] starts at [FE_SIM_ART]'s end
+[FE_SCF] starts at [FE_PKG_PAGE]'s end
+[FE_RISK_TABLE] starts at [FE_SCF]'s end
+
+@endgantt

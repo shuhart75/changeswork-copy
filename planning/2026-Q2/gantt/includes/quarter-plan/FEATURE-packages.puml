@@ -1,0 +1,4 @@
+' FEATURE: packages
+[Packages: страница и пакетирование] as [PKG_STORY_PAGE] lasts 12 days
+[PKG_STORY_PAGE] starts 2026/04/07
+[PKG_STORY_PAGE] is colored in LightCoral

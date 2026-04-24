@@ -1,0 +1,610 @@
+openapi: 3.0.3
+info:
+  title: Scorecards Backend API
+  version: 1.0.0
+  description: API MVP для создания, версионирования и чтения скоркарт.
+tags:
+  - name: Scorecards
+  - name: Scorecard Templates
+paths:
+  /api/v1/scorecards:
+    get:
+      tags: [Scorecards]
+      summary: Получить список скоркарт для выбора в формах
+      operationId: listScorecards
+      parameters:
+        - $ref: '#/components/parameters/ProductIdQuery'
+        - $ref: '#/components/parameters/ScorecardStatusQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Список скоркарт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardListResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      tags: [Scorecards]
+      summary: Создать скоркарту
+      operationId: createScorecard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScorecardCreateRequest'
+      responses:
+        '201':
+          description: Скоркарта создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardDetail'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: Шаблон, родительский объект или источник не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/scorecards/{id}:
+    get:
+      tags: [Scorecards]
+      summary: Получить деталку скоркарты
+      operationId: getScorecard
+      parameters:
+        - $ref: '#/components/parameters/ScorecardIdPath'
+      responses:
+        '200':
+          description: Деталка скоркарты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardDetail'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      tags: [Scorecards]
+      summary: Обновить скоркарту с созданием новой версии
+      operationId: updateScorecard
+      parameters:
+        - $ref: '#/components/parameters/ScorecardIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScorecardUpdateRequest'
+      responses:
+        '200':
+          description: Скоркарта обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardDetail'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/scorecards/{id}/relations:
+    get:
+      tags: [Scorecards]
+      summary: Получить источники и использование скоркарты
+      operationId: getScorecardRelations
+      parameters:
+        - $ref: '#/components/parameters/ScorecardIdPath'
+      responses:
+        '200':
+          description: Источники и использование скоркарты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardRelationsResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /api/v1/scorecard-template-versions:
+    get:
+      tags: [Scorecard Templates]
+      summary: Получить список версий шаблонов скоркарт
+      operationId: listScorecardTemplateVersions
+      parameters:
+        - $ref: '#/components/parameters/ProductIdQuery'
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/PageSizeQuery'
+      responses:
+        '200':
+          description: Список версий шаблонов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScorecardTemplateVersionListResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+  /api/v1/scorecard-template-versions/{id}/default-config:
+    get:
+      tags: [Scorecard Templates]
+      summary: Получить конфигурацию по умолчанию версии шаблона скоркарты
+      operationId: getScorecardTemplateDefaultConfig
+      parameters:
+        - $ref: '#/components/parameters/TemplateVersionIdPath'
+      responses:
+        '200':
+          description: Конфигурация по умолчанию
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultScorecardConfigResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  parameters:
+    ScorecardIdPath:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор скоркарты
+      schema:
+        type: string
+        format: uuid
+    TemplateVersionIdPath:
+      name: id
+      in: path
+      required: true
+      description: Идентификатор версии шаблона скоркарты
+      schema:
+        type: string
+        format: uuid
+    ProductIdQuery:
+      name: product_id
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
+    ScorecardStatusQuery:
+      name: status
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/ScorecardStatus'
+    SearchQuery:
+      name: search
+      in: query
+      required: false
+      schema:
+        type: string
+    PageQuery:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSizeQuery:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    ForbiddenError:
+      description: Недостаточно прав
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFoundError:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Ошибка бизнес-валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Criticality:
+      type: string
+      enum: [low, high]
+    ScorecardStatus:
+      type: string
+      enum: [active, archive]
+    SourceType:
+      type: string
+      enum: [simulation]
+    ParentContextEntityType:
+      type: string
+      enum: [pilot, deployment]
+    RelatedEntityType:
+      type: string
+      enum: [simulation, pilot, deployment]
+    ProductRef:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    UserRef:
+      type: object
+      additionalProperties: false
+      required: [id, full_name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+    DisplayEntityRef:
+      type: object
+      additionalProperties: false
+      required: [entity_type, id, display_id, name, status, url]
+      properties:
+        entity_type:
+          $ref: '#/components/schemas/RelatedEntityType'
+        id:
+          type: string
+          format: uuid
+        display_id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        url:
+          type: string
+    ParentContext:
+      type: object
+      additionalProperties: false
+      required: [entity_type, entity_id]
+      properties:
+        entity_type:
+          $ref: '#/components/schemas/ParentContextEntityType'
+        entity_id:
+          type: string
+          format: uuid
+    ScorecardSourceRef:
+      type: object
+      additionalProperties: false
+      required: [source_type, source_id]
+      properties:
+        source_type:
+          $ref: '#/components/schemas/SourceType'
+        source_id:
+          type: string
+          format: uuid
+    ScorecardListItem:
+      type: object
+      additionalProperties: false
+      required: [id, display_id, name, status, criticality, product]
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_id:
+          type: string
+          description: Человекочитаемый идентификатор, который возвращает API.
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/ScorecardStatus'
+        criticality:
+          $ref: '#/components/schemas/Criticality'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+    ScorecardListResponse:
+      type: object
+      additionalProperties: false
+      required: [count, results]
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScorecardListItem'
+    ScorecardRelationsResponse:
+      type: object
+      additionalProperties: false
+      required: [sources, usage]
+      properties:
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplayEntityRef'
+        usage:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisplayEntityRef'
+    ScorecardDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - display_id
+        - name
+        - version
+        - status
+        - criticality
+        - is_manual
+        - product
+        - configuration
+        - created_by
+        - created_at
+        - updated_at
+        - relations
+        - can_edit
+      properties:
+        id:
+          type: string
+          format: uuid
+        display_id:
+          type: string
+        name:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/ScorecardStatus'
+        criticality:
+          $ref: '#/components/schemas/Criticality'
+        description:
+          type: string
+          nullable: true
+        is_manual:
+          type: boolean
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        configuration:
+          type: object
+          additionalProperties: true
+        financial_effects:
+          type: object
+          additionalProperties: true
+          nullable: true
+        created_by:
+          $ref: '#/components/schemas/UserRef'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        relations:
+          $ref: '#/components/schemas/ScorecardRelationsResponse'
+        can_edit:
+          type: boolean
+    ScorecardCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - criticality
+        - template_version_id
+        - parent_context
+        - configuration
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: Системное название, которое фронт формирует автоматически при создании.
+        criticality:
+          $ref: '#/components/schemas/Criticality'
+        template_version_id:
+          type: string
+          format: uuid
+        parent_context:
+          $ref: '#/components/schemas/ParentContext'
+        configuration:
+          type: object
+          additionalProperties: true
+        financial_effects:
+          type: object
+          additionalProperties: true
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        source_refs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScorecardSourceRef'
+          nullable: true
+    ScorecardUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [criticality, configuration]
+      description: Поле name отсутствует намеренно, так как переименование скоркарты запрещено.
+      properties:
+        criticality:
+          $ref: '#/components/schemas/Criticality'
+        configuration:
+          type: object
+          additionalProperties: true
+        financial_effects:
+          type: object
+          additionalProperties: true
+          nullable: true
+        description:
+          type: string
+          nullable: true
+    ScorecardTemplateVersionListItem:
+      type: object
+      additionalProperties: false
+      required: [id, template_id, template_name, version, product_id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        template_id:
+          type: string
+          format: uuid
+        template_name:
+          type: string
+        version:
+          type: string
+        product_id:
+          type: string
+          format: uuid
+    ScorecardTemplateVersionListResponse:
+      type: object
+      additionalProperties: false
+      required: [count, results]
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScorecardTemplateVersionListItem'
+    IndicatorField:
+      type: object
+      additionalProperties: false
+      required: [code, label, type]
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [boolean]
+    IndicatorSection:
+      type: object
+      additionalProperties: false
+      required: [section_id, title, fields]
+      properties:
+        section_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        empty_text:
+          type: string
+          nullable: true
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndicatorField'
+    FinancialEffectField:
+      type: object
+      additionalProperties: false
+      required: [code, label, type, required]
+      properties:
+        code:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum: [number]
+        required:
+          type: boolean
+        unit:
+          type: string
+          nullable: true
+    CriticalityThresholdRule:
+      type: object
+      additionalProperties: false
+      required: [comparison]
+      properties:
+        comparison:
+          type: string
+          enum: [abs_gte, not_applicable]
+        value:
+          type: number
+          nullable: true
+        result_if_true:
+          $ref: '#/components/schemas/Criticality'
+    DefaultScorecardConfigResponse:
+      type: object
+      additionalProperties: false
+      required: [fields, default_values, criticality_thresholds]
+      properties:
+        fields:
+          type: object
+          additionalProperties: false
+          required: [indicator_sections, financial_effects]
+          properties:
+            indicator_sections:
+              type: array
+              items:
+                $ref: '#/components/schemas/IndicatorSection'
+            financial_effects:
+              type: array
+              items:
+                $ref: '#/components/schemas/FinancialEffectField'
+        default_values:
+          type: object
+          additionalProperties: false
+          required: [configuration, financial_effects]
+          properties:
+            configuration:
+              type: object
+              additionalProperties: true
+            financial_effects:
+              type: object
+              additionalProperties: true
+        criticality_thresholds:
+          type: object
+          additionalProperties: false
+          required: [boolean_indicators_high_if_true, effect_thresholds]
+          properties:
+            boolean_indicators_high_if_true:
+              type: array
+              items:
+                type: string
+            effect_thresholds:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/CriticalityThresholdRule'
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+          nullable: true

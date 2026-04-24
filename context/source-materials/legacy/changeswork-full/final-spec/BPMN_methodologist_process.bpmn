@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_Methodologist_Process"
+                  targetNamespace="http://example.com/bpmn/methodologist-process">
+  <bpmn:process id="Process_Methodologist" name="Methodologist workflow" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_Methodologist">
+      <bpmn:lane id="Lane_Methodologist" name="Методолог">
+        <bpmn:flowNodeRef>StartEvent_ProcessStart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AnalyzeContext</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NeedScorecard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateOrUpdateScorecard</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_FillParameters</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AddArtifacts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ReadyToSubmit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SubmitItem</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_NeedPackage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SelectQueueItems</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SendPackage</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ReworkMaterials</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_ReworkEnd</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Система">
+        <bpmn:flowNodeRef>Task_ResolveProduct</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_LoadTemplate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PrefillFromSimulation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CalcCriticality</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SaveVersion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreateApprovalInstance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_HasApproval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SetInApproval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AutoRatification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SetAwaitingRatification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_StartAutoRatification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_StartIndividualRatification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_CreatePackageAndMoveToRatification</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Approver" name="Approver">
+        <bpmn:flowNodeRef>Task_ApproverReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ApprovalOk</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Ratifier" name="Ratifier">
+        <bpmn:flowNodeRef>Task_RatifierReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RatificationOk</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Done</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <bpmn:startEvent id="StartEvent_ProcessStart" name="Старт">
+      <bpmn:outgoing>Flow_Start_To_Analyze</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:task id="Task_AnalyzeContext" name="Анализировать контекст">
+      <bpmn:incoming>Flow_Start_To_Analyze</bpmn:incoming>
+      <bpmn:outgoing>Flow_Analyze_To_NeedScorecard</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_NeedScorecard" name="Нужна новая или обновленная Scorecard?">
+      <bpmn:incoming>Flow_Analyze_To_NeedScorecard</bpmn:incoming>
+      <bpmn:outgoing>Flow_NeedScorecard_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NeedScorecard_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_CreateOrUpdateScorecard" name="Создать или изменить Scorecard">
+      <bpmn:incoming>Flow_NeedScorecard_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_CreateScorecard_To_ResolveProduct</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_ResolveProduct" name="Определить продукт">
+      <bpmn:incoming>Flow_CreateScorecard_To_ResolveProduct</bpmn:incoming>
+      <bpmn:outgoing>Flow_ResolveProduct_To_LoadTemplate</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_LoadTemplate" name="Загрузить шаблон Scorecard">
+      <bpmn:incoming>Flow_ResolveProduct_To_LoadTemplate</bpmn:incoming>
+      <bpmn:outgoing>Flow_LoadTemplate_To_Prefill</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_PrefillFromSimulation" name="Предзаполнить данные из Simulation">
+      <bpmn:incoming>Flow_LoadTemplate_To_Prefill</bpmn:incoming>
+      <bpmn:outgoing>Flow_Prefill_To_FillParameters</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_FillParameters" name="Заполнить параметры и эффекты">
+      <bpmn:incoming>Flow_Prefill_To_FillParameters</bpmn:incoming>
+      <bpmn:outgoing>Flow_FillParameters_To_CalcCriticality</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_CalcCriticality" name="Рассчитать criticality">
+      <bpmn:incoming>Flow_FillParameters_To_CalcCriticality</bpmn:incoming>
+      <bpmn:outgoing>Flow_CalcCriticality_To_SaveVersion</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_SaveVersion" name="Сохранить новую версию">
+      <bpmn:incoming>Flow_CalcCriticality_To_SaveVersion</bpmn:incoming>
+      <bpmn:outgoing>Flow_SaveVersion_To_AddArtifacts</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_AddArtifacts" name="Добавить артефакты">
+      <bpmn:incoming>Flow_NeedScorecard_No</bpmn:incoming>
+      <bpmn:incoming>Flow_SaveVersion_To_AddArtifacts</bpmn:incoming>
+      <bpmn:outgoing>Flow_AddArtifacts_To_ReadySubmit</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_ReadyToSubmit" name="Версия готова к отправке?">
+      <bpmn:incoming>Flow_AddArtifacts_To_ReadySubmit</bpmn:incoming>
+      <bpmn:outgoing>Flow_ReadySubmit_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ReadySubmit_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_SubmitItem" name="Отправить в процесс">
+      <bpmn:incoming>Flow_ReadySubmit_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_SubmitItem_To_CreateApprovalInstance</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_CreateApprovalInstance" name="Создать ApprovalInstance">
+      <bpmn:incoming>Flow_SubmitItem_To_CreateApprovalInstance</bpmn:incoming>
+      <bpmn:outgoing>Flow_CreateApprovalInstance_To_HasApproval</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_HasApproval" name="Есть этапы Approval?">
+      <bpmn:incoming>Flow_CreateApprovalInstance_To_HasApproval</bpmn:incoming>
+      <bpmn:outgoing>Flow_HasApproval_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_HasApproval_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_SetInApproval" name="Перевести в in_approval">
+      <bpmn:incoming>Flow_HasApproval_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_SetInApproval_To_ApproverReview</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_ApproverReview" name="Рассмотрение Approver">
+      <bpmn:incoming>Flow_SetInApproval_To_ApproverReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApproverReview_To_ApprovalOk</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_ApprovalOk" name="Approval согласован?">
+      <bpmn:incoming>Flow_ApproverReview_To_ApprovalOk</bpmn:incoming>
+      <bpmn:outgoing>Flow_ApprovalOk_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ApprovalOk_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:exclusiveGateway id="Gateway_AutoRatification" name="auto_ratification = true?">
+      <bpmn:incoming>Flow_HasApproval_No</bpmn:incoming>
+      <bpmn:incoming>Flow_ApprovalOk_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoRatification_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AutoRatification_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_StartAutoRatification" name="Перевести в in_ratification автоматически">
+      <bpmn:incoming>Flow_AutoRatification_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_StartAutoRatification_To_RatifierReview</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_SetAwaitingRatification" name="Перевести в awaiting_ratification">
+      <bpmn:incoming>Flow_AutoRatification_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_SetAwaiting_To_NeedPackage</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_NeedPackage" name="Нужно пакетное ratification?">
+      <bpmn:incoming>Flow_SetAwaiting_To_NeedPackage</bpmn:incoming>
+      <bpmn:outgoing>Flow_NeedPackage_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NeedPackage_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_SelectQueueItems" name="Выбрать элементы очереди">
+      <bpmn:incoming>Flow_NeedPackage_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_SelectQueueItems_To_SendPackage</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_SendPackage" name="Отправить пакет">
+      <bpmn:incoming>Flow_SelectQueueItems_To_SendPackage</bpmn:incoming>
+      <bpmn:outgoing>Flow_SendPackage_To_CreatePackage</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_CreatePackageAndMoveToRatification" name="Создать package и перевести в in_ratification">
+      <bpmn:incoming>Flow_SendPackage_To_CreatePackage</bpmn:incoming>
+      <bpmn:outgoing>Flow_CreatePackage_To_RatifierReview</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_StartIndividualRatification" name="Запустить индивидуальное ratification">
+      <bpmn:incoming>Flow_NeedPackage_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_StartIndividualRatification_To_RatifierReview</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="Task_RatifierReview" name="Рассмотрение Ratifier">
+      <bpmn:incoming>Flow_StartAutoRatification_To_RatifierReview</bpmn:incoming>
+      <bpmn:incoming>Flow_CreatePackage_To_RatifierReview</bpmn:incoming>
+      <bpmn:incoming>Flow_StartIndividualRatification_To_RatifierReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_RatifierReview_To_RatificationOk</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="Gateway_RatificationOk" name="Ratification пройдена?">
+      <bpmn:incoming>Flow_RatifierReview_To_RatificationOk</bpmn:incoming>
+      <bpmn:outgoing>Flow_RatificationOk_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RatificationOk_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="Task_ReworkMaterials" name="Доработать материалы">
+      <bpmn:incoming>Flow_ReadySubmit_No</bpmn:incoming>
+      <bpmn:incoming>Flow_ApprovalOk_No</bpmn:incoming>
+      <bpmn:incoming>Flow_RatificationOk_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_Rework_To_EndRework</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="EndEvent_ReworkEnd" name="Возврат на доработку">
+      <bpmn:incoming>Flow_Rework_To_EndRework</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_Done" name="Версия передана дальше по ЖЦ">
+      <bpmn:incoming>Flow_RatificationOk_Yes</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="Flow_Start_To_Analyze" sourceRef="StartEvent_ProcessStart" targetRef="Task_AnalyzeContext"/>
+    <bpmn:sequenceFlow id="Flow_Analyze_To_NeedScorecard" sourceRef="Task_AnalyzeContext" targetRef="Gateway_NeedScorecard"/>
+    <bpmn:sequenceFlow id="Flow_NeedScorecard_Yes" name="Да" sourceRef="Gateway_NeedScorecard" targetRef="Task_CreateOrUpdateScorecard"/>
+    <bpmn:sequenceFlow id="Flow_NeedScorecard_No" name="Нет" sourceRef="Gateway_NeedScorecard" targetRef="Task_AddArtifacts"/>
+    <bpmn:sequenceFlow id="Flow_CreateScorecard_To_ResolveProduct" sourceRef="Task_CreateOrUpdateScorecard" targetRef="Task_ResolveProduct"/>
+    <bpmn:sequenceFlow id="Flow_ResolveProduct_To_LoadTemplate" sourceRef="Task_ResolveProduct" targetRef="Task_LoadTemplate"/>
+    <bpmn:sequenceFlow id="Flow_LoadTemplate_To_Prefill" sourceRef="Task_LoadTemplate" targetRef="Task_PrefillFromSimulation"/>
+    <bpmn:sequenceFlow id="Flow_Prefill_To_FillParameters" sourceRef="Task_PrefillFromSimulation" targetRef="Task_FillParameters"/>
+    <bpmn:sequenceFlow id="Flow_FillParameters_To_CalcCriticality" sourceRef="Task_FillParameters" targetRef="Task_CalcCriticality"/>
+    <bpmn:sequenceFlow id="Flow_CalcCriticality_To_SaveVersion" sourceRef="Task_CalcCriticality" targetRef="Task_SaveVersion"/>
+    <bpmn:sequenceFlow id="Flow_SaveVersion_To_AddArtifacts" sourceRef="Task_SaveVersion" targetRef="Task_AddArtifacts"/>
+    <bpmn:sequenceFlow id="Flow_AddArtifacts_To_ReadySubmit" sourceRef="Task_AddArtifacts" targetRef="Gateway_ReadyToSubmit"/>
+    <bpmn:sequenceFlow id="Flow_ReadySubmit_Yes" name="Да" sourceRef="Gateway_ReadyToSubmit" targetRef="Task_SubmitItem"/>
+    <bpmn:sequenceFlow id="Flow_ReadySubmit_No" name="Нет" sourceRef="Gateway_ReadyToSubmit" targetRef="Task_ReworkMaterials"/>
+    <bpmn:sequenceFlow id="Flow_SubmitItem_To_CreateApprovalInstance" sourceRef="Task_SubmitItem" targetRef="Task_CreateApprovalInstance"/>
+    <bpmn:sequenceFlow id="Flow_CreateApprovalInstance_To_HasApproval" sourceRef="Task_CreateApprovalInstance" targetRef="Gateway_HasApproval"/>
+    <bpmn:sequenceFlow id="Flow_HasApproval_Yes" name="Да" sourceRef="Gateway_HasApproval" targetRef="Task_SetInApproval"/>
+    <bpmn:sequenceFlow id="Flow_HasApproval_No" name="Нет" sourceRef="Gateway_HasApproval" targetRef="Gateway_AutoRatification"/>
+    <bpmn:sequenceFlow id="Flow_SetInApproval_To_ApproverReview" sourceRef="Task_SetInApproval" targetRef="Task_ApproverReview"/>
+    <bpmn:sequenceFlow id="Flow_ApproverReview_To_ApprovalOk" sourceRef="Task_ApproverReview" targetRef="Gateway_ApprovalOk"/>
+    <bpmn:sequenceFlow id="Flow_ApprovalOk_Yes" name="Да" sourceRef="Gateway_ApprovalOk" targetRef="Gateway_AutoRatification"/>
+    <bpmn:sequenceFlow id="Flow_ApprovalOk_No" name="Нет" sourceRef="Gateway_ApprovalOk" targetRef="Task_ReworkMaterials"/>
+    <bpmn:sequenceFlow id="Flow_AutoRatification_Yes" name="Да" sourceRef="Gateway_AutoRatification" targetRef="Task_StartAutoRatification"/>
+    <bpmn:sequenceFlow id="Flow_AutoRatification_No" name="Нет" sourceRef="Gateway_AutoRatification" targetRef="Task_SetAwaitingRatification"/>
+    <bpmn:sequenceFlow id="Flow_StartAutoRatification_To_RatifierReview" sourceRef="Task_StartAutoRatification" targetRef="Task_RatifierReview"/>
+    <bpmn:sequenceFlow id="Flow_SetAwaiting_To_NeedPackage" sourceRef="Task_SetAwaitingRatification" targetRef="Gateway_NeedPackage"/>
+    <bpmn:sequenceFlow id="Flow_NeedPackage_Yes" name="Да" sourceRef="Gateway_NeedPackage" targetRef="Task_SelectQueueItems"/>
+    <bpmn:sequenceFlow id="Flow_NeedPackage_No" name="Нет" sourceRef="Gateway_NeedPackage" targetRef="Task_StartIndividualRatification"/>
+    <bpmn:sequenceFlow id="Flow_SelectQueueItems_To_SendPackage" sourceRef="Task_SelectQueueItems" targetRef="Task_SendPackage"/>
+    <bpmn:sequenceFlow id="Flow_SendPackage_To_CreatePackage" sourceRef="Task_SendPackage" targetRef="Task_CreatePackageAndMoveToRatification"/>
+    <bpmn:sequenceFlow id="Flow_CreatePackage_To_RatifierReview" sourceRef="Task_CreatePackageAndMoveToRatification" targetRef="Task_RatifierReview"/>
+    <bpmn:sequenceFlow id="Flow_StartIndividualRatification_To_RatifierReview" sourceRef="Task_StartIndividualRatification" targetRef="Task_RatifierReview"/>
+    <bpmn:sequenceFlow id="Flow_RatifierReview_To_RatificationOk" sourceRef="Task_RatifierReview" targetRef="Gateway_RatificationOk"/>
+    <bpmn:sequenceFlow id="Flow_RatificationOk_Yes" name="Да" sourceRef="Gateway_RatificationOk" targetRef="EndEvent_Done"/>
+    <bpmn:sequenceFlow id="Flow_RatificationOk_No" name="Нет" sourceRef="Gateway_RatificationOk" targetRef="Task_ReworkMaterials"/>
+    <bpmn:sequenceFlow id="Flow_Rework_To_EndRework" sourceRef="Task_ReworkMaterials" targetRef="EndEvent_ReworkEnd"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Methodologist">
+    <bpmndi:BPMNPlane id="BPMNPlane_Methodologist" bpmnElement="Process_Methodologist">
+      <bpmndi:BPMNShape id="Lane_Methodologist_di" bpmnElement="Lane_Methodologist" isHorizontal="true">
+        <dc:Bounds x="100" y="40" width="4300" height="170"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="100" y="210" width="4300" height="170"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Approver_di" bpmnElement="Lane_Approver" isHorizontal="true">
+        <dc:Bounds x="100" y="380" width="4300" height="170"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Ratifier_di" bpmnElement="Lane_Ratifier" isHorizontal="true">
+        <dc:Bounds x="100" y="550" width="4300" height="170"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="StartEvent_ProcessStart_di" bpmnElement="StartEvent_ProcessStart">
+        <dc:Bounds x="220" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AnalyzeContext_di" bpmnElement="Task_AnalyzeContext">
+        <dc:Bounds x="300" y="100" width="140" height="76"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_NeedScorecard_di" bpmnElement="Gateway_NeedScorecard" isMarkerVisible="true">
+        <dc:Bounds x="500" y="113" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateOrUpdateScorecard_di" bpmnElement="Task_CreateOrUpdateScorecard">
+        <dc:Bounds x="590" y="98" width="170" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ResolveProduct_di" bpmnElement="Task_ResolveProduct">
+        <dc:Bounds x="820" y="260" width="140" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LoadTemplate_di" bpmnElement="Task_LoadTemplate">
+        <dc:Bounds x="1000" y="260" width="140" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrefillFromSimulation_di" bpmnElement="Task_PrefillFromSimulation">
+        <dc:Bounds x="1180" y="260" width="160" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FillParameters_di" bpmnElement="Task_FillParameters">
+        <dc:Bounds x="1380" y="98" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CalcCriticality_di" bpmnElement="Task_CalcCriticality">
+        <dc:Bounds x="1380" y="270" width="160" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SaveVersion_di" bpmnElement="Task_SaveVersion">
+        <dc:Bounds x="1580" y="270" width="150" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AddArtifacts_di" bpmnElement="Task_AddArtifacts">
+        <dc:Bounds x="1580" y="98" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ReadyToSubmit_di" bpmnElement="Gateway_ReadyToSubmit" isMarkerVisible="true">
+        <dc:Bounds x="1780" y="113" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SubmitItem_di" bpmnElement="Task_SubmitItem">
+        <dc:Bounds x="1870" y="98" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateApprovalInstance_di" bpmnElement="Task_CreateApprovalInstance">
+        <dc:Bounds x="2060" y="260" width="160" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasApproval_di" bpmnElement="Gateway_HasApproval" isMarkerVisible="true">
+        <dc:Bounds x="2260" y="270" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetInApproval_di" bpmnElement="Task_SetInApproval">
+        <dc:Bounds x="2350" y="260" width="150" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ApproverReview_di" bpmnElement="Task_ApproverReview">
+        <dc:Bounds x="2550" y="430" width="150" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ApprovalOk_di" bpmnElement="Gateway_ApprovalOk" isMarkerVisible="true">
+        <dc:Bounds x="2740" y="440" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AutoRatification_di" bpmnElement="Gateway_AutoRatification" isMarkerVisible="true">
+        <dc:Bounds x="2840" y="270" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SetAwaitingRatification_di" bpmnElement="Task_SetAwaitingRatification">
+        <dc:Bounds x="2930" y="260" width="160" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_StartAutoRatification_di" bpmnElement="Task_StartAutoRatification">
+        <dc:Bounds x="3020" y="330" width="180" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_NeedPackage_di" bpmnElement="Gateway_NeedPackage" isMarkerVisible="true">
+        <dc:Bounds x="3110" y="113" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SelectQueueItems_di" bpmnElement="Task_SelectQueueItems">
+        <dc:Bounds x="3200" y="98" width="150" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_StartIndividualRatification_di" bpmnElement="Task_StartIndividualRatification">
+        <dc:Bounds x="3290" y="260" width="190" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendPackage_di" bpmnElement="Task_SendPackage">
+        <dc:Bounds x="3380" y="98" width="140" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreatePackageAndMoveToRatification_di" bpmnElement="Task_CreatePackageAndMoveToRatification">
+        <dc:Bounds x="3560" y="260" width="200" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RatifierReview_di" bpmnElement="Task_RatifierReview">
+        <dc:Bounds x="3840" y="600" width="160" height="70"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RatificationOk_di" bpmnElement="Gateway_RatificationOk" isMarkerVisible="true">
+        <dc:Bounds x="4040" y="610" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReworkMaterials_di" bpmnElement="Task_ReworkMaterials">
+        <dc:Bounds x="3840" y="98" width="160" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_ReworkEnd_di" bpmnElement="EndEvent_ReworkEnd">
+        <dc:Bounds x="4040" y="120" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Done_di" bpmnElement="EndEvent_Done">
+        <dc:Bounds x="4210" y="617" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Start_To_Analyze_di" bpmnElement="Flow_Start_To_Analyze">
+        <di:waypoint x="256" y="138"/>
+        <di:waypoint x="300" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Analyze_To_NeedScorecard_di" bpmnElement="Flow_Analyze_To_NeedScorecard">
+        <di:waypoint x="440" y="138"/>
+        <di:waypoint x="500" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NeedScorecard_Yes_di" bpmnElement="Flow_NeedScorecard_Yes">
+        <di:waypoint x="550" y="138"/>
+        <di:waypoint x="590" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NeedScorecard_No_di" bpmnElement="Flow_NeedScorecard_No">
+        <di:waypoint x="525" y="163"/>
+        <di:waypoint x="525" y="220"/>
+        <di:waypoint x="1655" y="220"/>
+        <di:waypoint x="1655" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CreateScorecard_To_ResolveProduct_di" bpmnElement="Flow_CreateScorecard_To_ResolveProduct">
+        <di:waypoint x="760" y="138"/>
+        <di:waypoint x="790" y="138"/>
+        <di:waypoint x="790" y="295"/>
+        <di:waypoint x="820" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ResolveProduct_To_LoadTemplate_di" bpmnElement="Flow_ResolveProduct_To_LoadTemplate">
+        <di:waypoint x="960" y="295"/>
+        <di:waypoint x="1000" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_LoadTemplate_To_Prefill_di" bpmnElement="Flow_LoadTemplate_To_Prefill">
+        <di:waypoint x="1140" y="295"/>
+        <di:waypoint x="1180" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Prefill_To_FillParameters_di" bpmnElement="Flow_Prefill_To_FillParameters">
+        <di:waypoint x="1340" y="295"/>
+        <di:waypoint x="1360" y="295"/>
+        <di:waypoint x="1360" y="138"/>
+        <di:waypoint x="1380" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FillParameters_To_CalcCriticality_di" bpmnElement="Flow_FillParameters_To_CalcCriticality">
+        <di:waypoint x="1460" y="178"/>
+        <di:waypoint x="1460" y="270"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CalcCriticality_To_SaveVersion_di" bpmnElement="Flow_CalcCriticality_To_SaveVersion">
+        <di:waypoint x="1540" y="305"/>
+        <di:waypoint x="1580" y="305"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SaveVersion_To_AddArtifacts_di" bpmnElement="Flow_SaveVersion_To_AddArtifacts">
+        <di:waypoint x="1655" y="270"/>
+        <di:waypoint x="1655" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AddArtifacts_To_ReadySubmit_di" bpmnElement="Flow_AddArtifacts_To_ReadySubmit">
+        <di:waypoint x="1730" y="138"/>
+        <di:waypoint x="1780" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReadySubmit_Yes_di" bpmnElement="Flow_ReadySubmit_Yes">
+        <di:waypoint x="1830" y="138"/>
+        <di:waypoint x="1870" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ReadySubmit_No_di" bpmnElement="Flow_ReadySubmit_No">
+        <di:waypoint x="1805" y="163"/>
+        <di:waypoint x="1805" y="220"/>
+        <di:waypoint x="3920" y="220"/>
+        <di:waypoint x="3920" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SubmitItem_To_CreateApprovalInstance_di" bpmnElement="Flow_SubmitItem_To_CreateApprovalInstance">
+        <di:waypoint x="2020" y="138"/>
+        <di:waypoint x="2040" y="138"/>
+        <di:waypoint x="2040" y="295"/>
+        <di:waypoint x="2060" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CreateApprovalInstance_To_HasApproval_di" bpmnElement="Flow_CreateApprovalInstance_To_HasApproval">
+        <di:waypoint x="2220" y="295"/>
+        <di:waypoint x="2260" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HasApproval_Yes_di" bpmnElement="Flow_HasApproval_Yes">
+        <di:waypoint x="2310" y="295"/>
+        <di:waypoint x="2350" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HasApproval_No_di" bpmnElement="Flow_HasApproval_No">
+        <di:waypoint x="2285" y="320"/>
+        <di:waypoint x="2285" y="345"/>
+        <di:waypoint x="2865" y="345"/>
+        <di:waypoint x="2865" y="320"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SetInApproval_To_ApproverReview_di" bpmnElement="Flow_SetInApproval_To_ApproverReview">
+        <di:waypoint x="2425" y="330"/>
+        <di:waypoint x="2425" y="465"/>
+        <di:waypoint x="2550" y="465"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ApproverReview_To_ApprovalOk_di" bpmnElement="Flow_ApproverReview_To_ApprovalOk">
+        <di:waypoint x="2700" y="465"/>
+        <di:waypoint x="2740" y="465"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ApprovalOk_Yes_di" bpmnElement="Flow_ApprovalOk_Yes">
+        <di:waypoint x="2790" y="465"/>
+        <di:waypoint x="2815" y="465"/>
+        <di:waypoint x="2815" y="320"/>
+        <di:waypoint x="2865" y="320"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ApprovalOk_No_di" bpmnElement="Flow_ApprovalOk_No">
+        <di:waypoint x="2765" y="440"/>
+        <di:waypoint x="2765" y="220"/>
+        <di:waypoint x="3920" y="220"/>
+        <di:waypoint x="3920" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoRatification_Yes_di" bpmnElement="Flow_AutoRatification_Yes">
+        <di:waypoint x="2890" y="295"/>
+        <di:waypoint x="3020" y="355"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoRatification_No_di" bpmnElement="Flow_AutoRatification_No">
+        <di:waypoint x="2890" y="295"/>
+        <di:waypoint x="2930" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StartAutoRatification_To_RatifierReview_di" bpmnElement="Flow_StartAutoRatification_To_RatifierReview">
+        <di:waypoint x="3200" y="355"/>
+        <di:waypoint x="3800" y="355"/>
+        <di:waypoint x="3800" y="635"/>
+        <di:waypoint x="3840" y="635"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SetAwaiting_To_NeedPackage_di" bpmnElement="Flow_SetAwaiting_To_NeedPackage">
+        <di:waypoint x="3010" y="260"/>
+        <di:waypoint x="3010" y="138"/>
+        <di:waypoint x="3110" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NeedPackage_Yes_di" bpmnElement="Flow_NeedPackage_Yes">
+        <di:waypoint x="3160" y="138"/>
+        <di:waypoint x="3200" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NeedPackage_No_di" bpmnElement="Flow_NeedPackage_No">
+        <di:waypoint x="3135" y="163"/>
+        <di:waypoint x="3135" y="295"/>
+        <di:waypoint x="3290" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SelectQueueItems_To_SendPackage_di" bpmnElement="Flow_SelectQueueItems_To_SendPackage">
+        <di:waypoint x="3350" y="138"/>
+        <di:waypoint x="3380" y="138"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SendPackage_To_CreatePackage_di" bpmnElement="Flow_SendPackage_To_CreatePackage">
+        <di:waypoint x="3450" y="178"/>
+        <di:waypoint x="3450" y="295"/>
+        <di:waypoint x="3560" y="295"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CreatePackage_To_RatifierReview_di" bpmnElement="Flow_CreatePackage_To_RatifierReview">
+        <di:waypoint x="3760" y="295"/>
+        <di:waypoint x="3800" y="295"/>
+        <di:waypoint x="3800" y="635"/>
+        <di:waypoint x="3840" y="635"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StartIndividualRatification_To_RatifierReview_di" bpmnElement="Flow_StartIndividualRatification_To_RatifierReview">
+        <di:waypoint x="3480" y="295"/>
+        <di:waypoint x="3800" y="295"/>
+        <di:waypoint x="3800" y="635"/>
+        <di:waypoint x="3840" y="635"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RatifierReview_To_RatificationOk_di" bpmnElement="Flow_RatifierReview_To_RatificationOk">
+        <di:waypoint x="4000" y="635"/>
+        <di:waypoint x="4040" y="635"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RatificationOk_Yes_di" bpmnElement="Flow_RatificationOk_Yes">
+        <di:waypoint x="4090" y="635"/>
+        <di:waypoint x="4210" y="635"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RatificationOk_No_di" bpmnElement="Flow_RatificationOk_No">
+        <di:waypoint x="4065" y="610"/>
+        <di:waypoint x="4065" y="220"/>
+        <di:waypoint x="3920" y="220"/>
+        <di:waypoint x="3920" y="178"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Rework_To_EndRework_di" bpmnElement="Flow_Rework_To_EndRework">
+        <di:waypoint x="4000" y="138"/>
+        <di:waypoint x="4040" y="138"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

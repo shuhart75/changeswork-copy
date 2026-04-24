@@ -1,0 +1,27 @@
+' FEATURE: packages
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-PACKAGES-001: virtual, mapping=explicit
+[PLAN FE Страница Пакеты и пакетирование awaiting ratification] as [STORY_STORY_PACKAGES_001] starts 2026/04/07
+[STORY_STORY_PACKAGES_001] ends 2026/05/06
+[STORY_STORY_PACKAGES_001] is colored in LightSteelBlue
+[STORY_STORY_PACKAGES_001] is 13% completed
+
+' Execution task layer
+[AN страница Пакеты (BE): контракты и массовые действия] as [TASK_AN_PKG_BE] on {A3} lasts 1 days
+[TASK_AN_PKG_BE] starts 2026/04/09
+[TASK_AN_PKG_BE] is colored in LightGreen
+[TASK_AN_PKG_BE] is 80% completed
+
+[AN страница Пакеты (FE): UX, компоненты и edge cases] as [TASK_AN_PKG_FE] on {A3} lasts 1 days
+[TASK_AN_PKG_FE] starts 2026/04/10
+[TASK_AN_PKG_FE] is colored in LightGreen
+[TASK_AN_PKG_FE] is 80% completed
+
+[FE страница Пакеты] as [TASK_FE_PKG_PAGE] on {F2} lasts 10 days
+[TASK_FE_PKG_PAGE] starts 2026/04/22
+[TASK_FE_PKG_PAGE] is colored in LightCoral
+[TASK_FE_PKG_PAGE] is 0% completed

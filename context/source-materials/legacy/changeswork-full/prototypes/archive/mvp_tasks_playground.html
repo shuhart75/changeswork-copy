@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Tasks Review Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .controls {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        select, input[type="text"] {
+            background: #333;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #252525;
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .task-card {
+            background: #252525;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #666;
+            transition: all 0.2s;
+        }
+
+        .task-card.keep {
+            border-left-color: #4CAF50;
+            background: #1a2e1a;
+        }
+
+        .task-card.remove {
+            border-left-color: #f44336;
+            background: #2e1a1a;
+            opacity: 0.6;
+        }
+
+        .task-card.adjust {
+            border-left-color: #FF9800;
+            background: #2e2a1a;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .task-id {
+            font-size: 12px;
+            font-weight: 600;
+            color: #2196F3;
+            background: rgba(33, 150, 243, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-keep {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-keep:hover {
+            background: #45a049;
+        }
+
+        .btn-remove {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-remove:hover {
+            background: #da190b;
+        }
+
+        .btn-adjust {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-adjust:hover {
+            background: #e68900;
+        }
+
+        .btn.active {
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+        }
+
+        .task-summary {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .meta-item strong {
+            color: #b0b0b0;
+        }
+
+        .task-description {
+            font-size: 14px;
+            color: #b0b0b0;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .task-dependencies {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .comment-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+
+        .comment-input {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .export-section {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .btn-export {
+            background: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-export:hover {
+            background: #1976D2;
+        }
+
+        .export-output {
+            margin-top: 15px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .export-output.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MVP Tasks Review Playground</h1>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Фаза:</label>
+                <select id="filterPhase">
+                    <option value="all">Все</option>
+                    <option value="Фаза 1">Фаза 1</option>
+                    <option value="Фаза 2">Фаза 2</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Тип задачи:</label>
+                <select id="filterType">
+                    <option value="all">Все</option>
+                    <option value="AN">Аналитика (AN)</option>
+                    <option value="BE">Backend (BE)</option>
+                    <option value="FE">Frontend (FE)</option>
+                    <option value="QA">QA</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Статус решения:</label>
+                <select id="filterDecision">
+                    <option value="all">Все</option>
+                    <option value="keep">Keep</option>
+                    <option value="adjust">Adjust</option>
+                    <option value="remove">Remove</option>
+                    <option value="undecided">Без решения</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Сортировка:</label>
+                <select id="sortOrder">
+                    <option value="execution">По порядку выполнения</option>
+                    <option value="id">По ID</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Поиск:</label>
+                <input type="text" id="searchInput" placeholder="Поиск по названию или описанию...">
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Всего задач</div>
+                <div class="stat-value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Keep</div>
+                <div class="stat-value" style="color: #4CAF50;" id="statKeep">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Adjust</div>
+                <div class="stat-value" style="color: #FF9800;" id="statAdjust">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Remove</div>
+                <div class="stat-value" style="color: #f44336;" id="statRemove">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Без решения</div>
+                <div class="stat-value" style="color: #888;" id="statUndecided">0</div>
+            </div>
+        </div>
+
+        <div class="tasks-grid" id="tasksGrid"></div>
+
+        <div class="export-section">
+            <button class="btn-export" onclick="exportDecisions()">Экспорт для пользователя (Markdown)</button>
+            <button class="btn-export" onclick="exportForClaude()" style="margin-left: 10px; background: #9C27B0;">Экспорт для Claude (JSON)</button>
+            <div class="export-output" id="exportOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tasks data
+        const tasks = [
+            // Analytics tasks - Phase 1
+            { id: 'AN-PKG1', type: 'AN', summary: 'Аналитика страницы Пакеты', description: 'Анализ требований для страницы Пакеты: создание пакетов, группировка Pilot/Change, отправка на утверждение', priority: 'Критический', estimate: '2 дня', dependencies: '', phase: 'Фаза 1' },
+            { id: 'AN-AP1', type: 'AN', summary: 'Аналитика процесса согласования', description: 'Анализ требований для процесса согласования: двухэтапный процесс (Approval → Ratification), диалог настройки маршрута, выбор согласующих/утверждающих', priority: 'Критический', estimate: '2 дня', dependencies: '', phase: 'Фаза 1' },
+            { id: 'AN-APR1', type: 'AN', summary: 'Аналитика страницы Согласования', description: 'Анализ требований для страницы Согласования: 2 вкладки (На согласовании, На утверждении), batch операции, фильтрация по назначениям', priority: 'Критический', estimate: '2 дня', dependencies: 'AN-AP1', phase: 'Фаза 1' },
+
+            // Analytics tasks - Phase 2
+            { id: 'AN-D1', type: 'AN', summary: 'Аналитика списка внедрений', description: 'Анализ требований для списка внедрений', priority: 'Средний', estimate: '2 дня', dependencies: '', phase: 'Фаза 2' },
+            { id: 'AN-CD1', type: 'AN', summary: 'Аналитика создания внедрения', description: 'Анализ требований для формы создания внедрения', priority: 'Средний', estimate: '1 день', dependencies: 'BE-DD1', phase: 'Фаза 2' },
+            { id: 'AN-C1', type: 'AN', summary: 'Аналитика списка изменений', description: 'Анализ требований для списка изменений', priority: 'Средний', estimate: '1 день', dependencies: '', phase: 'Фаза 2' },
+            { id: 'AN-CHD1', type: 'AN', summary: 'Аналитика деталки изменения', description: 'Анализ требований для детальной страницы изменения с историей внедрений', priority: 'Высокий', estimate: '2 дня', dependencies: 'BE-CL1', phase: 'Фаза 2' },
+            { id: 'AN-CHF1', type: 'AN', summary: 'Аналитика формы изменения', description: 'Анализ требований для формы создания изменения', priority: 'Средний', estimate: '1 день', dependencies: 'AN-CHD1', phase: 'Фаза 2' },
+            { id: 'AN-SC1', type: 'AN', summary: 'Аналитика списка скоркарт', description: 'Анализ требований для списка скоркарт с Excel экспортом', priority: 'Средний', estimate: '1 день', dependencies: '', phase: 'Фаза 2' },
+            { id: 'AN-SCD1', type: 'AN', summary: 'Аналитика деталки скоркарты', description: 'Анализ требований для детальной страницы скоркарты', priority: 'Средний', estimate: '1 день', dependencies: 'AN-SC1', phase: 'Фаза 2' },
+            { id: 'AN-SCF1', type: 'AN', summary: 'Аналитика формы скоркарты', description: 'Анализ требований для формы создания скоркарты с JSON editor', priority: 'Высокий', estimate: '1 день', dependencies: 'AN-SCD1', phase: 'Фаза 2' },
+            { id: 'AN-S1', type: 'AN', summary: 'Аналитика адаптации симуляций', description: 'Анализ требований для адаптации списка и детальной симуляций под новый дизайн', priority: 'Средний', estimate: '1 день', dependencies: '', phase: 'Фаза 2' },
+            { id: 'AN-P1', type: 'AN', summary: 'Аналитика адаптации пилотов', description: 'Анализ требований для адаптации списка и детальной пилотов под новый дизайн', priority: 'Средний', estimate: '1 день', dependencies: 'AN-S1', phase: 'Фаза 2' },
+            { id: 'AN-SF1', type: 'AN', summary: 'Аналитика формы симуляции', description: 'Анализ требований для формы создания симуляции', priority: 'Низкий', estimate: '1 день', dependencies: 'FE-SD1', phase: 'Фаза 2' },
+            { id: 'AN-PF1', type: 'AN', summary: 'Аналитика формы пилота', description: 'Анализ требований для формы создания пилота', priority: 'Низкий', estimate: '1 день', dependencies: 'FE-PD1', phase: 'Фаза 2' },
+
+            // Backend tasks - Phase 1
+            { id: 'BE-PKG1', type: 'BE', summary: 'Backend страницы Пакеты', description: 'API для страницы Пакеты: создание пакетов, группировка Pilot/Change, batch операции, автоматический расчет критичности', priority: 'Критический', estimate: '7 дней', dependencies: 'AN-PKG1', phase: 'Фаза 1' },
+            { id: 'BE-AP1', type: 'BE', summary: 'Backend процесс согласования', description: 'Двухэтапный процесс согласования (Approval → Ratification), маршруты согласования, роли Approver/Ratifier', priority: 'Критический', estimate: '8 дней', dependencies: 'AN-AP1', phase: 'Фаза 1' },
+            { id: 'BE-INT1', type: 'BE', summary: 'Backend интеграция ЖЦ', description: 'Интеграция жизненных циклов с процессом согласования', priority: 'Критический', estimate: '3 дня', dependencies: 'BE-AP1', phase: 'Фаза 1' },
+            { id: 'BE-PL1', type: 'BE', summary: 'Backend ЖЦ пилота', description: 'Жизненный цикл пилота с интеграцией в процесс согласования', priority: 'Высокий', estimate: '3 дня', dependencies: 'BE-INT1', phase: 'Фаза 1' },
+            { id: 'BE-NOT1', type: 'BE', summary: 'Backend уведомления', description: 'Система email уведомлений для всех событий', priority: 'Высокий', estimate: '5 дней', dependencies: 'BE-INT1', phase: 'Фаза 1' },
+            { id: 'BE-SL1', type: 'BE', summary: 'Backend ЖЦ симуляции', description: 'Жизненный цикл симуляции (независимый)', priority: 'Средний', estimate: '2 дня', dependencies: 'BE-AP1', phase: 'Фаза 1' },
+            { id: 'BE-ART1', type: 'BE', summary: 'Backend артефакты', description: 'Подключение артефактов к существующим Simulation/Pilot', priority: 'Средний', estimate: '3 дня', dependencies: 'AN-PKG1', phase: 'Фаза 1' },
+            { id: 'BE-SC-INT1', type: 'BE', summary: 'Backend скоркарты интеграция', description: 'Подключение скоркарт к существующим Pilot', priority: 'Средний', estimate: '2 дня', dependencies: 'BE-ART1', phase: 'Фаза 1' },
+            { id: 'BE-APR1', type: 'BE', summary: 'Backend страницы Согласования', description: 'API для страницы Согласования с batch операциями', priority: 'Критический', estimate: '6 дней', dependencies: 'AN-APR1', phase: 'Фаза 1' },
+
+            // Backend tasks - Phase 2
+            { id: 'BE-D1', type: 'BE', summary: 'Backend списка внедрений', description: 'API для списка внедрений с фильтрацией и пагинацией', priority: 'Средний', estimate: '3 дня', dependencies: 'AN-D1', phase: 'Фаза 2' },
+            { id: 'BE-DD1', type: 'BE', summary: 'Backend деталки внедрения', description: 'API для детальной страницы внедрения', priority: 'Высокий', estimate: '3 дня', dependencies: 'BE-D1', phase: 'Фаза 2' },
+            { id: 'BE-CD1', type: 'BE', summary: 'Backend создания внедрения', description: 'API для создания внедрения', priority: 'Средний', estimate: '2 дня', dependencies: 'AN-CD1', phase: 'Фаза 2' },
+            { id: 'BE-C1', type: 'BE', summary: 'Backend списка изменений', description: 'API для списка изменений', priority: 'Средний', estimate: '3 дня', dependencies: 'AN-C1', phase: 'Фаза 2' },
+            { id: 'BE-CL1', type: 'BE', summary: 'Backend ЖЦ изменения', description: 'Жизненный цикл изменения (draft → requires_approval → approved → deployed → rolled_back)', priority: 'Критический', estimate: '5 дней', dependencies: 'FE-DD1', phase: 'Фаза 2' },
+            { id: 'BE-CHD1', type: 'BE', summary: 'Backend деталки изменения', description: 'API для детальной страницы изменения с историей', priority: 'Высокий', estimate: '5 дней', dependencies: 'AN-CHD1', phase: 'Фаза 2' },
+            { id: 'BE-CHF1', type: 'BE', summary: 'Backend формы изменения', description: 'API для создания изменения с автоматическим расчетом критичности', priority: 'Средний', estimate: '3 дня', dependencies: 'BE-CHD1', phase: 'Фаза 2' },
+            { id: 'BE-SC1', type: 'BE', summary: 'Backend списка скоркарт', description: 'API для списка скоркарт с Excel экспортом', priority: 'Средний', estimate: '5 дней', dependencies: 'AN-SC1', phase: 'Фаза 2' },
+            { id: 'BE-SCD1', type: 'BE', summary: 'Backend деталки скоркарты', description: 'API для детальной страницы скоркарты', priority: 'Средний', estimate: '4 дня', dependencies: 'BE-SC1', phase: 'Фаза 2' },
+            { id: 'BE-SCF1', type: 'BE', summary: 'Backend формы скоркарты', description: 'API для создания скоркарты', priority: 'Высокий', estimate: '4 дня', dependencies: 'BE-SCD1', phase: 'Фаза 2' },
+            { id: 'BE-S1', type: 'BE', summary: 'Backend адаптации симуляций', description: 'Адаптация API симуляций под новый дизайн', priority: 'Средний', estimate: '2 дня', dependencies: 'AN-S1', phase: 'Фаза 2' },
+            { id: 'BE-P1', type: 'BE', summary: 'Backend адаптации пилотов', description: 'Адаптация API пилотов под новый дизайн', priority: 'Средний', estimate: '2 дня', dependencies: 'BE-S1', phase: 'Фаза 2' },
+            { id: 'BE-SF1', type: 'BE', summary: 'Backend формы симуляции', description: 'API для создания симуляции', priority: 'Низкий', estimate: '1 день', dependencies: 'AN-SF1', phase: 'Фаза 2' },
+            { id: 'BE-PF1', type: 'BE', summary: 'Backend формы пилота', description: 'API для создания пилота', priority: 'Низкий', estimate: '3 дня', dependencies: 'AN-PF1', phase: 'Фаза 2' },
+
+            // Frontend tasks - Phase 1
+            { id: 'FE-PKG1', type: 'FE', summary: 'Frontend страницы Пакеты', description: 'Страница Пакеты: создание пакетов, группировка Pilot/Change, batch отправка на утверждение, диалог выбора маршрута', priority: 'Критический', estimate: '8 дней', dependencies: 'BE-PKG1', phase: 'Фаза 1' },
+            { id: 'FE-APR1', type: 'FE', summary: 'Frontend страницы Согласования', description: 'Страница Согласования (2 вкладки, batch операции)', priority: 'Критический', estimate: '7 дней', dependencies: 'BE-APR1', phase: 'Фаза 1' },
+
+            // QA tasks - Phase 1
+            { id: 'QA-PHASE1', type: 'QA', summary: 'Тестирование Фазы 1', description: 'Интеграционное тестирование процесса согласования, страницы Пакеты и Согласования', priority: 'Критический', estimate: '3 дня', dependencies: 'BE-NOT1,FE-PKG1,FE-APR1', phase: 'Фаза 1' },
+
+            // Frontend tasks - Phase 2
+            { id: 'FE-D1', type: 'FE', summary: 'Frontend списка внедрений', description: 'Компонент списка внедрений с фильтрацией', priority: 'Средний', estimate: '3 дня', dependencies: 'BE-D1', phase: 'Фаза 2' },
+            { id: 'FE-DD1', type: 'FE', summary: 'Frontend деталки внедрения', description: 'Детальная страница внедрения (4 вкладки, 3 inline формы)', priority: 'Критический', estimate: '10 дней', dependencies: 'FE-D1', phase: 'Фаза 2' },
+            { id: 'FE-CD1', type: 'FE', summary: 'Frontend создания внедрения', description: 'Форма создания внедрения', priority: 'Средний', estimate: '3 дня', dependencies: 'BE-CD1', phase: 'Фаза 2' },
+            { id: 'FE-C1', type: 'FE', summary: 'Frontend списка изменений', description: 'Компонент списка изменений', priority: 'Средний', estimate: '3 дня', dependencies: 'BE-C1', phase: 'Фаза 2' },
+            { id: 'FE-CHD1', type: 'FE', summary: 'Frontend деталки изменения', description: 'Детальная страница изменения с историей внедрений и timeline', priority: 'Высокий', estimate: '6 дней', dependencies: 'BE-CHD1', phase: 'Фаза 2' },
+            { id: 'FE-CHF1', type: 'FE', summary: 'Frontend формы изменения', description: 'Форма создания изменения с автоматическим расчетом критичности', priority: 'Средний', estimate: '3 дня', dependencies: 'BE-CHF1', phase: 'Фаза 2' },
+            { id: 'FE-SC1', type: 'FE', summary: 'Frontend списка скоркарт', description: 'Компонент списка скоркарт с Excel экспортом', priority: 'Средний', estimate: '5 дней', dependencies: 'BE-SC1', phase: 'Фаза 2' },
+            { id: 'FE-SCD1', type: 'FE', summary: 'Frontend деталки скоркарты', description: 'Детальная страница скоркарты с источниками', priority: 'Средний', estimate: '4 дня', dependencies: 'BE-SCD1', phase: 'Фаза 2' },
+            { id: 'FE-SCF1', type: 'FE', summary: 'Frontend формы скоркарты', description: 'Форма создания скоркарты с JSON editor', priority: 'Высокий', estimate: '5 дней', dependencies: 'BE-SCF1', phase: 'Фаза 2' },
+            { id: 'FE-PKG1', type: 'FE', summary: 'Frontend страницы Пакеты', description: 'Страница Пакеты (4 вкладки, batch операции, группировка)', priority: 'Критический', estimate: '8 дней', dependencies: 'BE-PKG1', phase: 'Фаза 2' },
+            { id: 'FE-S1', type: 'FE', summary: 'Frontend адаптации симуляций', description: 'Адаптация списка и детальной симуляций под новый дизайн с артефактами', priority: 'Средний', estimate: '2 дня', dependencies: 'BE-S1', phase: 'Фаза 2' },
+            { id: 'FE-SD1', type: 'FE', summary: 'Frontend деталки симуляции', description: 'Детальная страница симуляции с артефактами', priority: 'Средний', estimate: '4 дня', dependencies: 'FE-S1', phase: 'Фаза 2' },
+            { id: 'FE-P1', type: 'FE', summary: 'Frontend адаптации пилотов', description: 'Адаптация списка и детальной пилотов под новый дизайн с артефактами и скоркартами', priority: 'Средний', estimate: '2 дня', dependencies: 'BE-P1', phase: 'Фаза 2' },
+            { id: 'FE-PD1', type: 'FE', summary: 'Frontend деталки пилота', description: 'Детальная страница пилота с артефактами и скоркартами', priority: 'Средний', estimate: '5 дней', dependencies: 'FE-P1', phase: 'Фаза 2' },
+            { id: 'FE-SF1', type: 'FE', summary: 'Frontend формы симуляции', description: 'Форма создания симуляции', priority: 'Низкий', estimate: '2 дня', dependencies: 'BE-SF1', phase: 'Фаза 2' },
+            { id: 'FE-PF1', type: 'FE', summary: 'Frontend формы пилота', description: 'Форма создания пилота с выбором скоркарт', priority: 'Низкий', estimate: '3 дня', dependencies: 'BE-PF1', phase: 'Фаза 2' },
+            { id: 'FE-NAV1', type: 'FE', summary: 'Frontend навигационное меню', description: 'Обновление навигационного меню с новыми пунктами', priority: 'Низкий', estimate: '2 дня', dependencies: 'FE-PKG1', phase: 'Фаза 2' },
+
+            // QA tasks
+            { id: 'QA-PHASE1', type: 'QA', summary: 'Тестирование Фазы 1', description: 'Интеграционное тестирование процесса согласования', priority: 'Критический', estimate: '3 дня', dependencies: 'BE-NOT1', phase: 'Фаза 1' },
+            { id: 'QA-PHASE2', type: 'QA', summary: 'Тестирование Фазы 2', description: 'Тестирование всех новых функций', priority: 'Высокий', estimate: '3 дня', dependencies: 'FE-PKG1', phase: 'Фаза 2' },
+            { id: 'QA-FINAL', type: 'QA', summary: 'Финальное тестирование MVP', description: 'Полное end-to-end тестирование всего MVP перед релизом', priority: 'Критический', estimate: '3 дня', dependencies: 'QA-PHASE2', phase: 'Фаза 2' },
+        ];
+
+        // State management
+        const state = {
+            decisions: {},
+            comments: {},
+            filters: {
+                phase: 'all',
+                type: 'all',
+                decision: 'all',
+                search: ''
+            },
+            sortOrder: 'execution'
+        };
+
+        // Initialize
+        function init() {
+            tasks.forEach(task => {
+                state.decisions[task.id] = null;
+                state.comments[task.id] = '';
+            });
+
+            document.getElementById('filterPhase').addEventListener('change', (e) => {
+                state.filters.phase = e.target.value;
+                renderTasks();
+            });
+
+            document.getElementById('filterType').addEventListener('change', (e) => {
+                state.filters.type = e.target.value;
+                renderTasks();
+            });
+
+            document.getElementById('filterDecision').addEventListener('change', (e) => {
+                state.filters.decision = e.target.value;
+                renderTasks();
+            });
+
+            document.getElementById('sortOrder').addEventListener('change', (e) => {
+                state.sortOrder = e.target.value;
+                renderTasks();
+            });
+
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                state.filters.search = e.target.value.toLowerCase();
+                renderTasks();
+            });
+
+            renderTasks();
+        }
+
+        // Topological sort for execution order
+        function topologicalSort(tasksList) {
+            const taskMap = {};
+            tasksList.forEach(task => {
+                taskMap[task.id] = task;
+            });
+
+            const sorted = [];
+            const visited = new Set();
+            const visiting = new Set();
+
+            function visit(taskId) {
+                if (visited.has(taskId)) return;
+                if (visiting.has(taskId)) return; // Cycle detection
+
+                visiting.add(taskId);
+
+                const task = taskMap[taskId];
+                if (task && task.dependencies) {
+                    const deps = task.dependencies.split(',').map(d => d.trim()).filter(d => d);
+                    deps.forEach(depId => {
+                        if (taskMap[depId]) {
+                            visit(depId);
+                        }
+                    });
+                }
+
+                visiting.delete(taskId);
+                visited.add(taskId);
+                if (task) {
+                    sorted.push(task);
+                }
+            }
+
+            tasksList.forEach(task => {
+                visit(task.id);
+            });
+
+            return sorted;
+        }
+
+        // Filter tasks
+        function getFilteredTasks() {
+            let filtered = tasks.filter(task => {
+                // Phase filter
+                if (state.filters.phase !== 'all' && task.phase !== state.filters.phase) {
+                    return false;
+                }
+
+                // Type filter
+                if (state.filters.type !== 'all' && task.type !== state.filters.type) {
+                    return false;
+                }
+
+                // Decision filter
+                if (state.filters.decision !== 'all') {
+                    const decision = state.decisions[task.id];
+                    if (state.filters.decision === 'undecided' && decision !== null) {
+                        return false;
+                    }
+                    if (state.filters.decision !== 'undecided' && decision !== state.filters.decision) {
+                        return false;
+                    }
+                }
+
+                // Search filter
+                if (state.filters.search) {
+                    const searchText = (task.summary + ' ' + task.description).toLowerCase();
+                    if (!searchText.includes(state.filters.search)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // Apply sorting
+            if (state.sortOrder === 'execution') {
+                filtered = topologicalSort(filtered);
+            } else {
+                // Sort by ID
+                filtered.sort((a, b) => a.id.localeCompare(b.id));
+            }
+
+            return filtered;
+        }
+
+        // Set decision
+        function setDecision(taskId, decision) {
+            if (state.decisions[taskId] === decision) {
+                state.decisions[taskId] = null;
+            } else {
+                state.decisions[taskId] = decision;
+            }
+            renderTasks();
+        }
+
+        // Update comment
+        function updateComment(taskId, comment) {
+            state.comments[taskId] = comment;
+        }
+
+        // Render tasks
+        function renderTasks() {
+            const filteredTasks = getFilteredTasks();
+            const grid = document.getElementById('tasksGrid');
+            
+            grid.innerHTML = filteredTasks.map(task => {
+                const decision = state.decisions[task.id];
+                const decisionClass = decision ? decision : '';
+                const comment = state.comments[task.id] || '';
+
+                return `
+                    <div class="task-card ${decisionClass}">
+                        <div class="task-header">
+                            <div class="task-id">${task.id}</div>
+                            <div class="task-actions">
+                                <button class="btn btn-keep ${decision === 'keep' ? 'active' : ''}" 
+                                        onclick="setDecision('${task.id}', 'keep')">Keep</button>
+                                <button class="btn btn-adjust ${decision === 'adjust' ? 'active' : ''}" 
+                                        onclick="setDecision('${task.id}', 'adjust')">Adjust</button>
+                                <button class="btn btn-remove ${decision === 'remove' ? 'active' : ''}" 
+                                        onclick="setDecision('${task.id}', 'remove')">Remove</button>
+                            </div>
+                        </div>
+                        
+                        <div class="task-summary">${task.summary}</div>
+                        
+                        <div class="task-meta">
+                            <div class="meta-item"><strong>Фаза:</strong> ${task.phase}</div>
+                            <div class="meta-item"><strong>Приоритет:</strong> ${task.priority}</div>
+                            <div class="meta-item"><strong>Оценка:</strong> ${task.estimate}</div>
+                        </div>
+                        
+                        <div class="task-description">${task.description}</div>
+                        
+                        ${task.dependencies ? `<div class="task-dependencies"><strong>Зависимости:</strong> ${task.dependencies}</div>` : ''}
+                        
+                        <div class="comment-section">
+                            <textarea class="comment-input" 
+                                      placeholder="Комментарий или корректировка..."
+                                      onchange="updateComment('${task.id}', this.value)">${comment}</textarea>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = tasks.length;
+            let keep = 0, adjust = 0, remove = 0, undecided = 0;
+
+            tasks.forEach(task => {
+                const decision = state.decisions[task.id];
+                if (decision === 'keep') keep++;
+                else if (decision === 'adjust') adjust++;
+                else if (decision === 'remove') remove++;
+                else undecided++;
+            });
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statKeep').textContent = keep;
+            document.getElementById('statAdjust').textContent = adjust;
+            document.getElementById('statRemove').textContent = remove;
+            document.getElementById('statUndecided').textContent = undecided;
+        }
+
+        // Export decisions
+        function exportDecisions() {
+            const output = document.getElementById('exportOutput');
+            
+            let report = '# MVP Tasks Review Report\n\n';
+            report += `Дата: ${new Date().toLocaleDateString('ru-RU')}\n\n`;
+            
+            // Summary
+            const stats = {
+                total: tasks.length,
+                keep: 0,
+                adjust: 0,
+                remove: 0,
+                undecided: 0
+            };
+
+            tasks.forEach(task => {
+                const decision = state.decisions[task.id];
+                if (decision === 'keep') stats.keep++;
+                else if (decision === 'adjust') stats.adjust++;
+                else if (decision === 'remove') stats.remove++;
+                else stats.undecided++;
+            });
+
+            report += '## Статистика\n\n';
+            report += `- Всего задач: ${stats.total}\n`;
+            report += `- Keep: ${stats.keep}\n`;
+            report += `- Adjust: ${stats.adjust}\n`;
+            report += `- Remove: ${stats.remove}\n`;
+            report += `- Без решения: ${stats.undecided}\n\n`;
+
+            // Keep tasks
+            const keepTasks = tasks.filter(t => state.decisions[t.id] === 'keep');
+            if (keepTasks.length > 0) {
+                report += '## Задачи для сохранения (Keep)\n\n';
+                keepTasks.forEach(task => {
+                    report += `### ${task.id}: ${task.summary}\n`;
+                    report += `- Фаза: ${task.phase}\n`;
+                    report += `- Приоритет: ${task.priority}\n`;
+                    report += `- Оценка: ${task.estimate}\n`;
+                    if (state.comments[task.id]) {
+                        report += `- Комментарий: ${state.comments[task.id]}\n`;
+                    }
+                    report += '\n';
+                });
+            }
+
+            // Adjust tasks
+            const adjustTasks = tasks.filter(t => state.decisions[t.id] === 'adjust');
+            if (adjustTasks.length > 0) {
+                report += '## Задачи для корректировки (Adjust)\n\n';
+                adjustTasks.forEach(task => {
+                    report += `### ${task.id}: ${task.summary}\n`;
+                    report += `- Фаза: ${task.phase}\n`;
+                    report += `- Приоритет: ${task.priority}\n`;
+                    report += `- Оценка: ${task.estimate}\n`;
+                    report += `- Описание: ${task.description}\n`;
+                    if (state.comments[task.id]) {
+                        report += `- **Корректировка:** ${state.comments[task.id]}\n`;
+                    }
+                    report += '\n';
+                });
+            }
+
+            // Remove tasks
+            const removeTasks = tasks.filter(t => state.decisions[t.id] === 'remove');
+            if (removeTasks.length > 0) {
+                report += '## Задачи для удаления (Remove)\n\n';
+                removeTasks.forEach(task => {
+                    report += `### ${task.id}: ${task.summary}\n`;
+                    if (state.comments[task.id]) {
+                        report += `- Причина: ${state.comments[task.id]}\n`;
+                    }
+                    report += '\n';
+                });
+            }
+
+            output.textContent = report;
+            output.classList.add('visible');
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(report).then(() => {
+                const btn = document.querySelector('.btn-export');
+                const originalText = btn.textContent;
+                btn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Export decisions for Claude (JSON format)
+        function exportForClaude() {
+            const output = document.getElementById('exportOutput');
+
+            const reviewData = {
+                timestamp: new Date().toISOString(),
+                summary: {
+                    total: tasks.length,
+                    keep: 0,
+                    adjust: 0,
+                    remove: 0,
+                    undecided: 0
+                },
+                tasks: []
+            };
+
+            tasks.forEach(task => {
+                const decision = state.decisions[task.id];
+                const comment = state.comments[task.id] || '';
+
+                // Update summary
+                if (decision === 'keep') reviewData.summary.keep++;
+                else if (decision === 'adjust') reviewData.summary.adjust++;
+                else if (decision === 'remove') reviewData.summary.remove++;
+                else reviewData.summary.undecided++;
+
+                // Only include tasks with decisions or comments
+                if (decision || comment) {
+                    reviewData.tasks.push({
+                        id: task.id,
+                        type: task.type,
+                        phase: task.phase,
+                        summary: task.summary,
+                        description: task.description,
+                        priority: task.priority,
+                        estimate: task.estimate,
+                        dependencies: task.dependencies,
+                        decision: decision,
+                        comment: comment
+                    });
+                }
+            });
+
+            const jsonOutput = JSON.stringify(reviewData, null, 2);
+
+            output.textContent = jsonOutput;
+            output.classList.add('visible');
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(jsonOutput).then(() => {
+                const btn = document.querySelectorAll('.btn-export')[1];
+                const originalText = btn.textContent;
+                btn.textContent = 'Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

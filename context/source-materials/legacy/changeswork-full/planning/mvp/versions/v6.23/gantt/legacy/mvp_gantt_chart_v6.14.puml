@@ -1,0 +1,232 @@
+@startgantt
+title План разработки MVP - Rescoped (v6.14: no Scorecards list; keep Scorecard detail + create/edit; no Chains page; no lineage widget; keep sources preview in forms; Phase 1 = весь MVP; no Initiatives; deployments in MVP; artifacts/related blocks on Pilot + Simulation)
+
+Project starts the 30th of march 2026
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+
+' ============================================
+' АНАЛИТИКА - ВСЯ ВПЕРЕД (для всего MVP)
+' ============================================
+
+' A1 - непрерывная загрузка 100%
+[Аналитика процесса согласования] as [AN_AP1] on {A1} lasts 8 days
+[AN_AP1] is colored in lightgreen
+
+[Аналитика страницы Согласования] as [AN_APR1] on {A1} lasts 5 days
+[AN_APR1] starts at [AN_AP1]'s end
+[AN_APR1] is colored in lightgreen
+
+[Аналитика деталки скоркарты] as [AN_SCD1] on {A1} lasts 5 days
+[AN_SCD1] starts at [AN_APR1]'s end
+[AN_SCD1] is colored in lightgreen
+
+[Аналитика формы скоркарты] as [AN_SCF1] on {A1} lasts 5 days
+[AN_SCF1] starts at [AN_SCD1]'s end
+[AN_SCF1] is colored in lightgreen
+
+[Аналитика источников lineage (создано из)] as [AN_CD1] on {A1} lasts 5 days
+[AN_CD1] starts at [AN_SCF1]'s end
+[AN_CD1] is colored in lightgreen
+
+' A2 - непрерывная загрузка 100%
+[Аналитика страницы Пакеты] as [AN_PKG1] on {A2} lasts 7 days
+[AN_PKG1] starts at [AN_AP1]'s end
+[AN_PKG1] is colored in lightgreen
+
+[Аналитика списка внедрений] as [AN_C1] on {A2} lasts 5 days
+[AN_C1] starts at [AN_PKG1]'s end
+[AN_C1] is colored in lightgreen
+
+[Аналитика адаптации пилотов] as [AN_P1] on {A2} lasts 5 days
+[AN_P1] starts at [AN_C1]'s end
+[AN_P1] is colored in lightgreen
+
+[Аналитика деталки внедрения] as [AN_CHD1] on {A2} lasts 5 days
+[AN_CHD1] starts at [AN_P1]'s end
+[AN_CHD1] is colored in lightgreen
+
+[Аналитика формы внедрения] as [AN_CHF1] on {A2} lasts 5 days
+[AN_CHF1] starts at [AN_CHD1]'s end
+[AN_CHF1] is colored in lightgreen
+
+[Аналитика блоков пилота (артефакты + связанные)] as [AN_PA1] on {A2} lasts 3 days
+[AN_PA1] starts at [AN_CHF1]'s end
+[AN_PA1] is colored in lightgreen
+
+' ============================================
+' ФАЗА 1 (MVP): Разработка (весь MVP)
+' ============================================
+
+[Backend процесс согласования] as [BE_AP1] on {B1} lasts 10 days
+[BE_AP1] starts at [AN_AP1]'s end
+[BE_AP1] is colored in lightblue
+
+[Backend интеграция ЖЦ] as [BE_INT1] on {B1} lasts 5 days
+[BE_INT1] starts at [BE_AP1]'s end
+[BE_INT1] is colored in lightblue
+
+[Backend ЖЦ пилота] as [BE_PL1] on {B1} lasts 5 days
+[BE_PL1] starts at [BE_INT1]'s end
+[BE_PL1] is colored in lightblue
+
+[Backend артефакты] as [BE_ART1] on {B2} lasts 3 days
+[BE_ART1] starts at [AN_APR1]'s end
+[BE_ART1] is colored in lightblue
+
+[Backend скоркарты интеграция] as [BE_SC_INT1] on {B2} lasts 5 days
+[BE_SC_INT1] starts at [BE_ART1]'s end
+[BE_SC_INT1] is colored in lightblue
+
+[Backend уведомления] as [BE_NOT1] on {B2} lasts 5 days
+[BE_NOT1] starts at [BE_SC_INT1]'s end
+[BE_NOT1] is colored in lightblue
+
+[Backend страницы Согласования] as [BE_APR1] on {B3} lasts 6 days
+[BE_APR1] starts at [BE_AP1]'s end
+[BE_APR1] is colored in lightblue
+
+[Backend страницы Пакеты] as [BE_PKG1] on {B3} lasts 7 days
+[BE_PKG1] starts at [BE_APR1]'s end
+[BE_PKG1] is colored in lightblue
+
+[Frontend страницы Согласования] as [FE_APR1] on {F1} lasts 10 days
+[FE_APR1] starts at [BE_APR1]'s end
+[FE_APR1] is colored in lightcoral
+
+	[Frontend страницы Пакеты] as [FE_PKG1] on {F2:50%} lasts 10 days
+	[FE_PKG1] starts at [BE_PKG1]'s end
+	[FE_PKG1] is colored in lightcoral
+
+	' ============================================
+	' Продолжение Фазы 1 (MVP): Deployments / Scorecards / Pilots / Lineage
+	' ============================================
+
+' B1 - Источники (created_from) / preview для форм (без страницы "Цепочки" и без lineage widget)
+[Backend источников lineage (auto-link + preview)] as [BE_CD1] on {B1} lasts 2 days
+[BE_CD1] starts at [AN_CD1]'s end
+[BE_CD1] starts at [BE_PL1]'s end
+[BE_CD1] is colored in lightblue
+
+' B2 - Изменения
+[Backend ЖЦ изменения] as [BE_CL1] on {B2} lasts 5 days
+[BE_CL1] starts at [BE_NOT1]'s end
+[BE_CL1] is colored in lightblue
+
+[Backend деталки внедрения] as [BE_CHD1] on {B2} lasts 5 days
+[BE_CHD1] starts at [AN_CHD1]'s end
+[BE_CHD1] starts at [BE_CL1]'s end
+[BE_CHD1] is colored in lightblue
+
+[Backend формы создания/редактирования внедрения] as [BE_CHF1] on {B2} lasts 5 days
+[BE_CHF1] starts at [AN_CHF1]'s end
+[BE_CHF1] starts at [BE_CHD1]'s end
+[BE_CHF1] is colored in lightblue
+
+' B3 - Скоркарты, Симуляции, Пилоты
+[Backend списка внедрений] as [BE_C1] on {B3} lasts 5 days
+[BE_C1] starts at [AN_C1]'s end
+[BE_C1] starts at [BE_PKG1]'s end
+[BE_C1] is colored in lightblue
+
+[Backend деталки скоркарты] as [BE_SCD1] on {B3} lasts 5 days
+[BE_SCD1] starts at [AN_SCD1]'s end
+[BE_SCD1] starts at [BE_C1]'s end
+[BE_SCD1] starts at [BE_SC_INT1]'s end
+[BE_SCD1] is colored in lightblue
+
+[Backend формы скоркарты] as [BE_SCF1] on {B3} lasts 4 days
+[BE_SCF1] starts at [AN_SCF1]'s end
+[BE_SCF1] starts at [BE_SCD1]'s end
+[BE_SCF1] is colored in lightblue
+
+[Backend списка пилотов] as [BE_P1] on {B3} lasts 2 days
+[BE_P1] starts at [BE_SCF1]'s end
+[BE_P1] is colored in lightblue
+
+[Backend блоков пилота (артефакты + связанные)] as [BE_PA1] on {B3} lasts 3 days
+[BE_PA1] starts at [BE_P1]'s end
+[BE_PA1] is colored in lightblue
+
+' F1 - Скоркарта (без списка) + preview источников в формах
+[Frontend preview источников (created_from) в формах] as [FE_CD1] on {F1} lasts 3 days
+[FE_CD1] starts at [BE_CD1]'s end
+[FE_CD1] is colored in lightcoral
+
+[Frontend деталки скоркарты] as [FE_SCD1] on {F1} lasts 8 days
+[FE_SCD1] starts at [BE_SCD1]'s end
+[FE_SCD1] starts at [FE_CD1]'s end
+[FE_SCD1] is colored in lightcoral
+
+[Frontend формы скоркарты] as [FE_SCF1] on {F1} lasts 10 days
+[FE_SCF1] starts at [BE_SCF1]'s end
+[FE_SCF1] starts at [FE_SCD1]'s end
+[FE_SCF1] is colored in lightcoral
+
+' F2 - Изменения и Пилоты (50% загрузка)
+[Frontend списка внедрений] as [FE_C1] on {F2:50%} lasts 5 days
+[FE_C1] starts at [BE_C1]'s end
+[FE_C1] starts at [FE_PKG1]'s end
+[FE_C1] is colored in lightcoral
+
+[Frontend деталки внедрения] as [FE_CHD1] on {F2:50%} lasts 5 days
+[FE_CHD1] starts at [BE_CHD1]'s end
+[FE_CHD1] starts at [FE_C1]'s end
+[FE_CHD1] is colored in lightcoral
+
+[Frontend формы создания/редактирования внедрения] as [FE_CHF1] on {F2:50%} lasts 5 days
+[FE_CHF1] starts at [BE_CHF1]'s end
+[FE_CHF1] starts at [FE_CHD1]'s end
+[FE_CHF1] is colored in lightcoral
+
+[Frontend списка пилотов] as [FE_P1] on {F2:50%} lasts 2 days
+[FE_P1] starts at [BE_P1]'s end
+[FE_P1] starts at [FE_CHF1]'s end
+[FE_P1] is colored in lightcoral
+
+[Frontend деталки пилота] as [FE_PD1] on {F2:50%} lasts 5 days
+[FE_PD1] starts at [FE_P1]'s end
+[FE_PD1] is colored in lightcoral
+
+	[Frontend блоков пилота (артефакты + связанные) + UI под ЖЦ] as [FE_PA1] on {F2:50%} lasts 6 days
+	[FE_PA1] starts at [BE_PA1]'s end
+	[FE_PA1] starts at [FE_PD1]'s end
+	[FE_PA1] is colored in lightcoral
+
+	[Frontend блоков симуляции (артефакты + связанные)] as [FE_SA1] on {F2:50%} lasts 3 days
+	[FE_SA1] starts at [BE_ART1]'s end
+	[FE_SA1] starts at [FE_PA1]'s end
+	[FE_SA1] is colored in lightcoral
+	
+	[Frontend навигационное меню] as [FE_NAV1] on {F2:50%} lasts 2 days
+	[FE_NAV1] starts at [FE_SA1]'s end
+	[FE_NAV1] is colored in lightcoral
+
+	' QA MVP: 2 рабочих недели (подтверждено)
+	[Тестирование MVP] as [QA_PHASE1] on {Q1} lasts 10 days
+	[QA_PHASE1] starts at [FE_NAV1]'s end
+	[QA_PHASE1] starts at [FE_SCF1]'s end
+	[QA_PHASE1] is colored in gold
+	
+	[Milestone: MVP завершен] as [M1] happens at [QA_PHASE1]'s end
+	
+	@endgantt

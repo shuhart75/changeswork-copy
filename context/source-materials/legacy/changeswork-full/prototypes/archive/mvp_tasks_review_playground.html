@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Tasks Review Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .controls {
+            background: #252525;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="text"] {
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stat.keep .stat-value { color: #4CAF50; }
+        .stat.remove .stat-value { color: #f44336; }
+        .stat.adjust .stat-value { color: #FF9800; }
+
+        .tasks-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .task-card {
+            background: #252525;
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid #404040;
+            transition: all 0.2s;
+        }
+
+        .task-card.keep { border-left-color: #4CAF50; background: #1a2e1a; }
+        .task-card.remove { border-left-color: #f44336; background: #2e1a1a; }
+        .task-card.adjust { border-left-color: #FF9800; background: #2e251a; }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .task-id {
+            font-size: 12px;
+            color: #2196F3;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .task-type {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-type.analytics { background: #4CAF50; color: #000; }
+        .task-type.backend { background: #2196F3; color: #fff; }
+        .task-type.frontend { background: #f44336; color: #fff; }
+        .task-type.qa { background: #FFD700; color: #000; }
+
+        .task-summary {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #999;
+        }
+
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .priority-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .priority-critical { background: #f44336; color: #fff; }
+        .priority-high { background: #FF9800; color: #fff; }
+        .priority-medium { background: #2196F3; color: #fff; }
+
+        .task-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b0b0b0;
+            margin-bottom: 12px;
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .task-description.expanded {
+            max-height: none;
+        }
+
+        .expand-btn {
+            color: #2196F3;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.keep {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .action-btn.remove {
+            background: #f44336;
+            color: #fff;
+        }
+
+        .action-btn.adjust {
+            background: #FF9800;
+            color: #fff;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.active {
+            box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px currentColor;
+        }
+
+        .comment-box {
+            margin-top: 12px;
+        }
+
+        .comment-box textarea {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            color: #e0e0e0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .comment-box textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .export-section {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #252525;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .export-btn {
+            background: #2196F3;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #1976D2;
+            transform: translateY(-1px);
+        }
+
+        .copied-toast {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #4CAF50;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .copied-toast.show {
+            opacity: 1;
+        }
+
+        .dependencies {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MVP Tasks Review Playground</h1>
+            <p class="subtitle">Review, adjust, and export decisions for all MVP tasks</p>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Task Type</label>
+                <select id="typeFilter">
+                    <option value="all">All Types</option>
+                    <option value="analytics">Analytics</option>
+                    <option value="backend">Backend</option>
+                    <option value="frontend">Frontend</option>
+                    <option value="qa">QA</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Decision Status</label>
+                <select id="statusFilter">
+                    <option value="all">All Decisions</option>
+                    <option value="pending">Pending</option>
+                    <option value="keep">Keep</option>
+                    <option value="adjust">Adjust</option>
+                    <option value="remove">Remove</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Search tasks...">
+            </div>
+
+            <div class="stats">
+                <div class="stat keep">
+                    <div class="stat-value" id="keepCount">0</div>
+                    <div class="stat-label">Keep</div>
+                </div>
+                <div class="stat adjust">
+                    <div class="stat-value" id="adjustCount">0</div>
+                    <div class="stat-label">Adjust</div>
+                </div>
+                <div class="stat remove">
+                    <div class="stat-value" id="removeCount">0</div>
+                    <div class="stat-label">Remove</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tasks-grid" id="tasksGrid"></div>
+
+        <div class="export-section">
+            <button class="export-btn" onclick="exportDecisions()">Export Decisions</button>
+        </div>
+
+        <div class="copied-toast" id="copiedToast">Copied to clipboard!</div>
+    </div>
+
+    <script>
+        const tasks = [            // Analytics tasks
+            { id: 'AN-D1', type: 'analytics', summary: 'Аналитика списка внедрений', priority: 'high', estimate: '2 дня', dependencies: 'Нет', description: 'Детализация требований для адаптации списка внедрений с добавлением новых полей и фильтров' },
+            { id: 'AN-S1', type: 'analytics', summary: 'Аналитика списка симуляций', priority: 'high', estimate: '1 день', dependencies: 'Нет', description: 'Детализация требований для адаптации списка симуляций' },
+            { id: 'AN-P1', type: 'analytics', summary: 'Аналитика списка пилотов', priority: 'high', estimate: '1 день', dependencies: 'Нет', description: 'Детализация требований для адаптации списка пилотов' },
+            { id: 'AN-C1', type: 'analytics', summary: 'Аналитика списка изменений', priority: 'high', estimate: '1 день', dependencies: 'Нет', description: 'Детализация требований для разработки списка изменений' },
+            { id: 'AN-SC1', type: 'analytics', summary: 'Аналитика списка скоркарт', priority: 'high', estimate: '1 день', dependencies: 'Нет', description: 'Детализация требований для адаптации списка скоркарт с Excel экспортом' },
+            { id: 'AN-PKG1', type: 'analytics', summary: 'Аналитика страницы Пакеты', priority: 'critical', estimate: '2 дня', dependencies: 'M3', description: 'Детализация требований для разработки страницы Пакеты с batch операциями' },
+            { id: 'AN-APR1', type: 'analytics', summary: 'Аналитика страницы Согласования', priority: 'critical', estimate: '2 дня', dependencies: 'M3', description: 'Детализация требований для разработки страницы Согласования' },
+            { id: 'AN-DD1', type: 'analytics', summary: 'Аналитика деталки внедрения', priority: 'high', estimate: '2 дня', dependencies: 'AN-P1', description: 'Детализация требований для адаптации детальной страницы внедрения (4 вкладки, 3 inline формы)' },
+            { id: 'AN-SD1', type: 'analytics', summary: 'Аналитика деталки симуляции', priority: 'high', estimate: '1 день', dependencies: 'AN-DD1', description: 'Детализация требований для адаптации детальной страницы симуляции с артефактами и связанными сущностями' },
+            { id: 'AN-PD1', type: 'analytics', summary: 'Аналитика деталки пилота', priority: 'high', estimate: '1 день', dependencies: 'AN-SD1', description: 'Детализация требований для адаптации детальной страницы пилота с артефактами и связанными сущностями' },
+            { id: 'AN-CHD1', type: 'analytics', summary: 'Аналитика деталки изменения', priority: 'critical', estimate: '2 дня', dependencies: 'M3', description: 'Детализация требований для разработки детальной страницы изменения с историей внедрений' },
+            { id: 'AN-SCD1', type: 'analytics', summary: 'Аналитика деталки скоркарты', priority: 'high', estimate: '1 день', dependencies: 'M3', description: 'Детализация требований для адаптации детальной страницы скоркарты с источниками и использованием' },
+            { id: 'AN-CD1', type: 'analytics', summary: 'Аналитика создания внедрения', priority: 'high', estimate: '1 день', dependencies: 'AN-PF1', description: 'Детализация требований для разработки формы создания внедрения' },
+            { id: 'AN-SF1', type: 'analytics', summary: 'Аналитика формы симуляции', priority: 'medium', estimate: '0.5 дня', dependencies: 'AN-DD1', description: 'Детализация требований для адаптации формы симуляции (простая форма)' },
+            { id: 'AN-PF1', type: 'analytics', summary: 'Аналитика формы пилота', priority: 'medium', estimate: '0.5 дня', dependencies: 'AN-SF1', description: 'Детализация требований для адаптации формы пилота с множественным выбором скоркарт' },
+            { id: 'AN-CHF1', type: 'analytics', summary: 'Аналитика формы изменения', priority: 'high', estimate: '1 день', dependencies: 'AN-CHD1', description: 'Детализация требований для разработки формы изменения с автоматическим расчетом критичности' },
+            { id: 'AN-SCF1', type: 'analytics', summary: 'Аналитика формы скоркарты', priority: 'high', estimate: '1 день', dependencies: 'AN-SCD1', description: 'Детализация требований для разработки формы скоркарты с JSON editor' },
+
+            // Backend tasks
+            { id: 'BE-D1', type: 'backend', summary: 'Backend списка внедрений', priority: 'high', estimate: '3 дня', dependencies: 'AN-D1', description: 'Адаптация Backend для списка внедрений с новыми полями и фильтрами' },
+            { id: 'BE-S1', type: 'backend', summary: 'Backend списка симуляций', priority: 'high', estimate: '2 дня', dependencies: 'BE-D1', description: 'Адаптация Backend для списка симуляций' },
+            { id: 'BE-P1', type: 'backend', summary: 'Backend списка пилотов', priority: 'high', estimate: '2 дня', dependencies: 'BE-S1', description: 'Адаптация Backend для списка пилотов' },
+            { id: 'BE-C1', type: 'backend', summary: 'Backend списка изменений', priority: 'high', estimate: '3 дня', dependencies: 'AN-C1', description: 'Разработка Backend для списка изменений' },
+            { id: 'BE-SC1', type: 'backend', summary: 'Backend списка скоркарт', priority: 'high', estimate: '5 дней', dependencies: 'BE-C1', description: 'Адаптация Backend для списка скоркарт с Excel экспортом' },
+            { id: 'BE-PKG1', type: 'backend', summary: 'Backend страницы Пакеты', priority: 'critical', estimate: '7 дней', dependencies: 'AN-PKG1', description: 'Разработка Backend для страницы Пакеты с batch операциями и группировкой' },
+            { id: 'BE-APR1', type: 'backend', summary: 'Backend страницы Согласования', priority: 'critical', estimate: '6 дней', dependencies: 'AN-APR1', description: 'Разработка Backend для страницы Согласования с фильтрацией по назначениям' },
+            { id: 'BE-DD1', type: 'backend', summary: 'Backend деталки внедрения', priority: 'high', estimate: '3 дня', dependencies: 'BE-P1', description: 'Адаптация Backend для детальной страницы внедрения' },
+            { id: 'BE-SD1', type: 'backend', summary: 'Backend деталки симуляции', priority: 'high', estimate: '4 дня', dependencies: 'BE-DD1', description: 'Адаптация Backend для детальной страницы симуляции с артефактами и связанными сущностями' },
+            { id: 'BE-PD1', type: 'backend', summary: 'Backend деталки пилота', priority: 'high', estimate: '4 дня', dependencies: 'BE-SD1', description: 'Адаптация Backend для детальной страницы пилота с артефактами и связанными сущностями' },
+            { id: 'BE-CHD1', type: 'backend', summary: 'Backend деталки изменения', priority: 'critical', estimate: '5 дней', dependencies: 'AN-CHD1', description: 'Разработка Backend для детальной страницы изменения с историей внедрений' },
+            { id: 'BE-SCD1', type: 'backend', summary: 'Backend деталки скоркарты', priority: 'high', estimate: '4 дня', dependencies: 'AN-SCD1', description: 'Адаптация Backend для детальной страницы скоркарты с источниками и использованием' },
+            { id: 'BE-CD1', type: 'backend', summary: 'Backend создания внедрения', priority: 'high', estimate: '2 дня', dependencies: 'AN-CD1', description: 'Разработка Backend для формы создания внедрения' },
+            { id: 'BE-SF1', type: 'backend', summary: 'Backend формы симуляции', priority: 'medium', estimate: '1 день', dependencies: 'BE-SC1', description: 'Адаптация Backend для формы симуляции' },
+            { id: 'BE-PF1', type: 'backend', summary: 'Backend формы пилота', priority: 'medium', estimate: '3 дня', dependencies: 'BE-SF1', description: 'Адаптация Backend для формы пилота с валидацией скоркарт' },
+            { id: 'BE-CHF1', type: 'backend', summary: 'Backend формы изменения', priority: 'high', estimate: '3 дня', dependencies: 'BE-CHF1', description: 'Разработка Backend для формы изменения с автоматическим расчетом критичности' },
+            { id: 'BE-SCF1', type: 'backend', summary: 'Backend формы скоркарты', priority: 'high', estimate: '4 дня', dependencies: 'BE-SCF1', description: 'Разработка Backend для формы скоркарты с JSON валидацией' },
+            { id: 'BE-CL1', type: 'backend', summary: 'Backend ЖЦ изменения', priority: 'critical', estimate: '5 дней', dependencies: 'M1', description: 'Разработка жизненного цикла изменения (draft → requires_approval → approved → deployed → rolled_back)' },
+            { id: 'BE-AP1', type: 'backend', summary: 'Backend процесс согласования', priority: 'critical', estimate: '8 дней', dependencies: 'BE-CL1', description: 'Разработка универсального двухэтапного процесса согласования (Approval → Ratification)' },
+            { id: 'BE-INT1', type: 'backend', summary: 'Backend интеграция ЖЦ', priority: 'critical', estimate: '3 дня', dependencies: 'BE-AP1', description: 'Интеграция жизненных циклов Pilot и Change с процессом согласования' },
+            { id: 'BE-PL1', type: 'backend', summary: 'Backend ЖЦ пилота', priority: 'critical', estimate: '3 дня', dependencies: 'BE-INT1', description: 'Разработка жизненного цикла пилота с интеграцией в процесс согласования' },
+            { id: 'BE-NOT1', type: 'backend', summary: 'Backend уведомления', priority: 'high', estimate: '5 дней', dependencies: 'BE-INT1', description: 'Разработка системы email уведомлений с шаблонами' },
+            { id: 'BE-SL1', type: 'backend', summary: 'Backend ЖЦ симуляции', priority: 'medium', estimate: '2 дня', dependencies: 'BE-CL1', description: 'Разработка жизненного цикла симуляции (независимый от согласования)' },
+
+            // Frontend tasks
+            { id: 'FE-D1', type: 'frontend', summary: 'Frontend списка внедрений', priority: 'high', estimate: '3 дня', dependencies: 'BE-D1', description: 'Адаптация UI списка внедрений с новыми колонками и фильтрами' },
+            { id: 'FE-S1', type: 'frontend', summary: 'Frontend списка симуляций', priority: 'high', estimate: '2 дня', dependencies: 'FE-D1', description: 'Адаптация UI списка симуляций' },
+            { id: 'FE-P1', type: 'frontend', summary: 'Frontend списка пилотов', priority: 'high', estimate: '2 дня', dependencies: 'FE-S1', description: 'Адаптация UI списка пилотов' },
+            { id: 'FE-C1', type: 'frontend', summary: 'Frontend списка изменений', priority: 'high', estimate: '3 дня', dependencies: 'BE-C1', description: 'Разработка UI списка изменений' },
+            { id: 'FE-SC1', type: 'frontend', summary: 'Frontend списка скоркарт', priority: 'high', estimate: '5 дней', dependencies: 'BE-SC1', description: 'Адаптация UI списка скоркарт с Excel экспортом' },
+            { id: 'FE-PKG1', type: 'frontend', summary: 'Frontend страницы Пакеты', priority: 'critical', estimate: '8 дней', dependencies: 'BE-PKG1', description: 'Разработка UI страницы Пакеты с 4 вкладками и batch операциями' },
+            { id: 'FE-APR1', type: 'frontend', summary: 'Frontend страницы Согласования', priority: 'critical', estimate: '7 дней', dependencies: 'BE-APR1', description: 'Разработка UI страницы Согласования с 2 вкладками и batch операциями' },
+            { id: 'FE-DD1', type: 'frontend', summary: 'Frontend деталки внедрения', priority: 'critical', estimate: '10 дней', dependencies: 'FE-P1', description: 'Адаптация UI детальной страницы внедрения (4 вкладки, 3 inline формы)' },
+            { id: 'FE-SD1', type: 'frontend', summary: 'Frontend деталки симуляции', priority: 'high', estimate: '4 дня', dependencies: 'BE-SD1', description: 'Адаптация UI детальной страницы симуляции с артефактами и связанными сущностями' },
+            { id: 'FE-PD1', type: 'frontend', summary: 'Frontend деталки пилота', priority: 'high', estimate: '5 дней', dependencies: 'FE-SD1', description: 'Адаптация UI детальной страницы пилота с артефактами и связанными сущностями' },
+            { id: 'FE-CHD1', type: 'frontend', summary: 'Frontend деталки изменения', priority: 'critical', estimate: '6 дней', dependencies: 'BE-CHD1', description: 'Разработка UI детальной страницы изменения с timeline истории внедрений' },
+            { id: 'FE-SCD1', type: 'frontend', summary: 'Frontend деталки скоркарты', priority: 'high', estimate: '4 дня', dependencies: 'BE-SCD1', description: 'Адаптация UI детальной страницы скоркарты с источниками и использованием' },
+            { id: 'FE-CD1', type: 'frontend', summary: 'Frontend создания внедрения', priority: 'high', estimate: '3 дня', dependencies: 'BE-CD1', description: 'Разработка UI формы создания внедрения' },
+            { id: 'FE-SF1', type: 'frontend', summary: 'Frontend формы симуляции', priority: 'medium', estimate: '2 дня', dependencies: 'BE-SF1', description: 'Адаптация UI формы симуляции' },
+            { id: 'FE-PF1', type: 'frontend', summary: 'Frontend формы пилота', priority: 'medium', estimate: '3 дня', dependencies: 'BE-PF1', description: 'Адаптация UI формы пилота с множественным выбором скоркарт' },
+            { id: 'FE-CHF1', type: 'frontend', summary: 'Frontend формы изменения', priority: 'high', estimate: '3 дня', dependencies: 'BE-CHF1', description: 'Разработка UI формы изменения с автоматическим расчетом критичности' },
+            { id: 'FE-SCF1', type: 'frontend', summary: 'Frontend формы скоркарты', priority: 'high', estimate: '5 дней', dependencies: 'BE-SCF1', description: 'Разработка UI формы скоркарты с JSON editor' },
+            { id: 'FE-NAV1', type: 'frontend', summary: 'Frontend навигационное меню', priority: 'medium', estimate: '2 дня', dependencies: 'FE-APR1', description: 'Обновление навигационного меню с новыми пунктами' },
+
+            // QA tasks
+            { id: 'QA-CD1', type: 'qa', summary: 'Тестирование создания внедрения', priority: 'high', estimate: '1 день', dependencies: 'FE-CD1', description: 'Тестирование формы создания внедрения' }
+        ];
+
+        let state = tasks.map(task => ({
+            ...task,
+            decision: 'pending',
+            comment: ''
+        }));
+
+        function render() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = state.filter(task => {
+                if (typeFilter !== 'all' && task.type !== typeFilter) return false;
+                if (statusFilter !== 'all' && task.decision !== statusFilter) return false;
+                if (searchQuery && !task.id.toLowerCase().includes(searchQuery) && 
+                    !task.summary.toLowerCase().includes(searchQuery) &&
+                    !task.description.toLowerCase().includes(searchQuery)) return false;
+                return true;
+            });
+
+            const grid = document.getElementById('tasksGrid');
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div>No tasks found matching your filters</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(task => `
+                <div class="task-card ${task.decision}">
+                    <div class="task-header">
+                        <div>
+                            <div class="task-id">${task.id}</div>
+                            <span class="task-type ${task.type}">${task.type}</span>
+                        </div>
+                    </div>
+                    <div class="task-summary">${task.summary}</div>
+                    <div class="task-meta">
+                        <span>
+                            <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                        </span>
+                        <span>⏱️ ${task.estimate}</span>
+                    </div>
+                    <div class="task-description" id="desc-${task.id}">
+                        ${task.description}
+                    </div>
+                    <span class="expand-btn" onclick="toggleDescription('${task.id}')">Show more</span>
+                    <div class="dependencies">Dependencies: ${task.dependencies}</div>
+                    <div class="task-actions">
+                        <button class="action-btn keep ${task.decision === 'keep' ? 'active' : ''}" 
+                                onclick="setDecision('${task.id}', 'keep')">Keep</button>
+                        <button class="action-btn adjust ${task.decision === 'adjust' ? 'active' : ''}" 
+                                onclick="setDecision('${task.id}', 'adjust')">Adjust</button>
+                        <button class="action-btn remove ${task.decision === 'remove' ? 'active' : ''}" 
+                                onclick="setDecision('${task.id}', 'remove')">Remove</button>
+                    </div>
+                    <div class="comment-box">
+                        <textarea placeholder="Add comments or adjustments..." 
+                                  onchange="setComment('${task.id}', this.value)">${task.comment}</textarea>
+                    </div>
+                </div>
+            `).join('');
+
+            updateStats();
+        }
+
+        function toggleDescription(taskId) {
+            const desc = document.getElementById(`desc-${taskId}`);
+            desc.classList.toggle('expanded');
+            event.target.textContent = desc.classList.contains('expanded') ? 'Show less' : 'Show more';
+        }
+
+        function setDecision(taskId, decision) {
+            const task = state.find(t => t.id === taskId);
+            task.decision = task.decision === decision ? 'pending' : decision;
+            render();
+        }
+
+        function setComment(taskId, comment) {
+            const task = state.find(t => t.id === taskId);
+            task.comment = comment;
+        }
+
+        function updateStats() {
+            document.getElementById('keepCount').textContent = state.filter(t => t.decision === 'keep').length;
+            document.getElementById('adjustCount').textContent = state.filter(t => t.decision === 'adjust').length;
+            document.getElementById('removeCount').textContent = state.filter(t => t.decision === 'remove').length;
+        }
+
+        function exportDecisions() {
+            const decisions = state.filter(t => t.decision !== 'pending');
+            
+            let output = '# MVP Tasks Review Decisions\n\n';
+            output += `Generated: ${new Date().toLocaleString('ru-RU')}\n\n`;
+            output += `## Summary\n\n`;
+            output += `- Keep: ${state.filter(t => t.decision === 'keep').length}\n`;
+            output += `- Adjust: ${state.filter(t => t.decision === 'adjust').length}\n`;
+            output += `- Remove: ${state.filter(t => t.decision === 'remove').length}\n\n`;
+            
+            ['keep', 'adjust', 'remove'].forEach(decision => {
+                const tasks = state.filter(t => t.decision === decision);
+                if (tasks.length > 0) {
+                    output += `## ${decision.toUpperCase()}\n\n`;
+                    tasks.forEach(task => {
+                        output += `### ${task.id}: ${task.summary}\n\n`;
+                        output += `- **Type:** ${task.type}\n`;
+                        output += `- **Priority:** ${task.priority}\n`;
+                        output += `- **Estimate:** ${task.estimate}\n`;
+                        output += `- **Dependencies:** ${task.dependencies}\n`;
+                        output += `- **Description:** ${task.description}\n`;
+                        if (task.comment) {
+                            output += `- **Comment:** ${task.comment}\n`;
+                        }
+                        output += '\n';
+                    });
+                }
+            });
+
+            navigator.clipboard.writeText(output).then(() => {
+                const toast = document.getElementById('copiedToast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        }
+
+        document.getElementById('typeFilter').addEventListener('change', render);
+        document.getElementById('statusFilter').addEventListener('change', render);
+        document.getElementById('searchInput').addEventListener('input', render);
+
+        render();
+    </script>
+</body>
+</html>

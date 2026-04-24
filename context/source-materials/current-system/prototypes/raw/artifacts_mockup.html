@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Документы и Артефакты пилота - Макет для требований</title>
+
+    <!-- Material-UI CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <!-- React and Material-UI from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+        }
+        #root {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .top-bar {
+            background-color: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 16px;
+        }
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const {
+            Box, Button, Paper, Typography, Tabs, Tab, TextField,
+            Select, MenuItem, FormControl, InputLabel, IconButton,
+            Stack, Grid, Divider
+        } = MaterialUI;
+        const { useState } = React;
+
+        // Компонент: Отображение списка артефактов (из основного макета)
+        function ArtifactsDisplay({ artifacts }) {
+            const artifactTypes = {
+                'business_case': 'Бизнес-кейс',
+                'rov': 'ROV',
+                'other': 'Другое'
+            };
+
+            if (!artifacts || artifacts.length === 0) {
+                return (
+                    <Box sx={{
+                        bgcolor: '#e8eaf6',
+                        p: 4,
+                        borderRadius: 2,
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="body1" color="text.secondary">
+                            Артефакты не добавлены. Для добавления перейдите в режим редактирования.
+                        </Typography>
+                    </Box>
+                );
+            }
+
+            return (
+                <Stack spacing={2}>
+                    {artifacts.map((artifact, index) => (
+                        <Box key={index} sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            p: 2,
+                            bgcolor: '#ffffff',
+                            borderRadius: 1,
+                            border: '1px solid #e0e0e0'
+                        }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="body1" fontWeight={500} sx={{ mb: 0.5 }}>
+                                    {artifact.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {artifactTypes[artifact.type] || artifact.type}
+                                </Typography>
+                            </Box>
+                            <Button
+                                variant="outlined"
+                                size="medium"
+                                startIcon={<span className="material-icons">open_in_new</span>}
+                                sx={{ minWidth: 120 }}
+                            >
+                                Открыть
+                            </Button>
+                        </Box>
+                    ))}
+                </Stack>
+            );
+        }
+
+        // Компонент: Управление артефактами (из основного макета)
+        function ArtifactsManager({ artifacts, onChange }) {
+            const [newArtifact, setNewArtifact] = useState({ name: '', type: 'business_case', url: '' });
+
+            const artifactTypes = [
+                { value: 'business_case', label: 'Бизнес-кейс' },
+                { value: 'rov', label: 'ROV' },
+                { value: 'other', label: 'Другое' }
+            ];
+
+            const handleAddArtifact = () => {
+                if (!newArtifact.name || !newArtifact.url) {
+                    alert('Заполните название и ссылку на артефакт');
+                    return;
+                }
+                onChange([...artifacts, { ...newArtifact, id: Date.now() }]);
+                setNewArtifact({ name: '', type: 'business_case', url: '' });
+            };
+
+            const handleRemoveArtifact = (id) => {
+                onChange(artifacts.filter(a => a.id !== id));
+            };
+
+            return (
+                <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                        Артефакты (ссылки на внешние документы)
+                    </Typography>
+
+                    {/* Список добавленных артефактов */}
+                    {artifacts.length > 0 && (
+                        <Stack spacing={2} sx={{ mb: 2 }}>
+                            {artifacts.map(artifact => (
+                                <Paper key={artifact.id} sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <span className="material-icons" style={{ color: '#666' }}>description</span>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body1" fontWeight={500}>
+                                                {artifact.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {artifactTypes.find(t => t.value === artifact.type)?.label} • {artifact.url}
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleRemoveArtifact(artifact.id)}
+                                        >
+                                            Удалить
+                                        </Button>
+                                    </Stack>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    )}
+
+                    {/* Форма добавления нового артефакта */}
+                    <Paper sx={{ p: 2, bgcolor: '#f5f5f5' }}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Название"
+                                    value={newArtifact.name}
+                                    onChange={(e) => setNewArtifact({ ...newArtifact, name: e.target.value })}
+                                    placeholder="Например: Бизнес-кейс Q1"
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Тип</InputLabel>
+                                    <Select
+                                        value={newArtifact.type}
+                                        onChange={(e) => setNewArtifact({ ...newArtifact, type: e.target.value })}
+                                        label="Тип"
+                                    >
+                                        {artifactTypes.map(type => (
+                                            <MenuItem key={type.value} value={type.value}>
+                                                {type.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Ссылка"
+                                    value={newArtifact.url}
+                                    onChange={(e) => setNewArtifact({ ...newArtifact, url: e.target.value })}
+                                    placeholder="https://..."
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={1}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={handleAddArtifact}
+                                    sx={{ height: '40px' }}
+                                >
+                                    <span className="material-icons">add</span>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Box>
+            );
+        }
+
+        // Главный компонент приложения
+        function App() {
+            const [currentTab, setCurrentTab] = useState(1); // 1 = Документы
+            const [isEditMode, setIsEditMode] = useState(false);
+            const [documents, setDocuments] = useState([]);
+            const [artifacts, setArtifacts] = useState([]);
+            const [newDocNumber, setNewDocNumber] = useState('');
+            const [showAddDocForm, setShowAddDocForm] = useState(false);
+
+            const handleTabChange = (event, newValue) => {
+                setCurrentTab(newValue);
+            };
+
+            const handleEdit = () => {
+                setIsEditMode(true);
+            };
+
+            const handleSave = () => {
+                setIsEditMode(false);
+                setShowAddDocForm(false);
+                setNewDocNumber('');
+            };
+
+            const handleCancel = () => {
+                setIsEditMode(false);
+                setShowAddDocForm(false);
+                setNewDocNumber('');
+            };
+
+            const handleAddDocClick = () => {
+                if (isEditMode) {
+                    setShowAddDocForm(true);
+                }
+            };
+
+            const handleAddDocument = () => {
+                if (newDocNumber.trim()) {
+                    setDocuments([...documents, { id: Date.now(), number: newDocNumber }]);
+                    setNewDocNumber('');
+                    setShowAddDocForm(false);
+                }
+            };
+
+            const handleRemoveDocument = (id) => {
+                setDocuments(documents.filter(d => d.id !== id));
+            };
+
+            return (
+                <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+                    {/* Top Bar */}
+                    <Box className="top-bar">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Подразделение
+                            </Typography>
+                            <FormControl size="small" sx={{ minWidth: 120 }}>
+                                <Select value="DRRB" displayEmpty>
+                                    <MenuItem value="DRRB">
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <span className="material-icons" style={{ fontSize: 18 }}>business</span>
+                                            ДРРБ
+                                        </Box>
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <span className="material-icons" style={{ color: '#666' }}>account_circle</span>
+                            <Typography variant="body2">
+                                Юлий Полина Алексеевна
+                            </Typography>
+                            <IconButton size="small">
+                                <span className="material-icons">logout</span>
+                            </IconButton>
+                        </Box>
+                    </Box>
+
+                    {/* Main Content */}
+                    <Box className="main-content">
+                        {/* Tabs */}
+                        <Paper sx={{ mb: 3 }}>
+                            <Tabs value={currentTab} onChange={handleTabChange}>
+                                <Tab
+                                    icon={<span className="material-icons">menu</span>}
+                                    label="Основная информация"
+                                    iconPosition="start"
+                                />
+                                <Tab
+                                    icon={<span className="material-icons">description</span>}
+                                    label="Документы"
+                                    iconPosition="start"
+                                />
+                                <Tab
+                                    icon={<span className="material-icons">check_circle</span>}
+                                    label="Итоги пилота"
+                                    iconPosition="start"
+                                />
+                                <Tab
+                                    icon={<span className="material-icons">history</span>}
+                                    label="История изменений"
+                                    iconPosition="start"
+                                />
+                            </Tabs>
+                        </Paper>
+
+                        {/* Action Buttons */}
+                        <Box sx={{ mb: 3 }}>
+                            {!isEditMode ? (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<span className="material-icons">edit</span>}
+                                    onClick={handleEdit}
+                                >
+                                    Редактировать
+                                </Button>
+                            ) : (
+                                <Stack direction="row" spacing={2}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleSave}
+                                    >
+                                        Сохранить
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleCancel}
+                                    >
+                                        Отменить
+                                    </Button>
+                                </Stack>
+                            )}
+                        </Box>
+
+                        {/* БЛОК 1: Документы пилота (со скриншотов) */}
+                        <Box sx={{ mb: 4 }}>
+                            <Typography variant="h5" fontWeight={500} sx={{ mb: 3 }}>
+                                {isEditMode ? 'Редактирование документов пилота CC-127' : 'Документы пилота CC-127'}
+                            </Typography>
+
+                            {/* Пустое состояние или список документов */}
+                            {documents.length === 0 && !showAddDocForm && (
+                                <Box sx={{
+                                    bgcolor: '#e8eaf6',
+                                    p: 4,
+                                    borderRadius: 2,
+                                    textAlign: 'center'
+                                }}>
+                                    <Typography variant="body1" color="text.secondary">
+                                        Документы не указаны. Для добавления перейдите в режим редактирования.
+                                    </Typography>
+                                </Box>
+                            )}
+
+                            {/* Список документов в режиме редактирования */}
+                            {isEditMode && documents.length > 0 && (
+                                <Stack spacing={2} sx={{ mb: 2 }}>
+                                    {documents.map(doc => (
+                                        <Paper key={doc.id} sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <span className="material-icons" style={{ color: '#666' }}>description</span>
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography variant="body1" fontWeight={500}>
+                                                        {doc.number}
+                                                    </Typography>
+                                                </Box>
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    color="error"
+                                                    onClick={() => handleRemoveDocument(doc.id)}
+                                                >
+                                                    Удалить
+                                                </Button>
+                                            </Stack>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+
+                            {/* Список документов в режиме просмотра */}
+                            {!isEditMode && documents.length > 0 && (
+                                <Stack spacing={2}>
+                                    {documents.map(doc => (
+                                        <Paper key={doc.id} sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                                            <Stack direction="row" spacing={2} alignItems="center">
+                                                <span className="material-icons" style={{ color: '#666' }}>description</span>
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography variant="body1" fontWeight={500}>
+                                                        {doc.number}
+                                                    </Typography>
+                                                </Box>
+                                                <Button
+                                                    size="small"
+                                                    variant="outlined"
+                                                    startIcon={<span className="material-icons">open_in_new</span>}
+                                                >
+                                                    Открыть
+                                                </Button>
+                                            </Stack>
+                                        </Paper>
+                                    ))}
+                                </Stack>
+                            )}
+
+                            {/* Форма добавления документа */}
+                            {showAddDocForm && (
+                                <Paper sx={{ p: 3, bgcolor: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: 2 }}>
+                                    <Grid container spacing={2} alignItems="flex-start">
+                                        <Grid item xs={12} md={10}>
+                                            <TextField
+                                                fullWidth
+                                                label="Номер документа"
+                                                required
+                                                value={newDocNumber}
+                                                onChange={(e) => setNewDocNumber(e.target.value)}
+                                                placeholder="СН-"
+                                                sx={{ bgcolor: '#ffffff' }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleAddDocument();
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={2}>
+                                            <Button
+                                                fullWidth
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => {
+                                                    setShowAddDocForm(false);
+                                                    setNewDocNumber('');
+                                                }}
+                                                sx={{ height: '56px' }}
+                                            >
+                                                Удалить
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            )}
+                        </Box>
+
+                        <Divider sx={{ my: 4 }} />
+
+                        {/* БЛОК 2: Артефакты (из основного макета) */}
+                        <Box>
+                            <Typography variant="h6" sx={{ mb: 3 }}>
+                                Артефакты
+                            </Typography>
+                            {!isEditMode ? (
+                                <ArtifactsDisplay artifacts={artifacts} />
+                            ) : (
+                                <ArtifactsManager artifacts={artifacts} onChange={setArtifacts} />
+                            )}
+                        </Box>
+                    </Box>
+                </Box>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

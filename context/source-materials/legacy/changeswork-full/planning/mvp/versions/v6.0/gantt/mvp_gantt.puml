@@ -1,0 +1,265 @@
+@startgantt
+title MVP Система управления внедрениями риск-стратегий - Gantt Chart
+projectscale daily
+printscale daily zoom 2
+Project starts 2026-03-30
+
+' Выходные дни
+saturday are closed
+sunday are closed
+
+' Праздничные дни России 2026
+2026-05-01 is closed
+2026-05-02 is closed
+2026-05-03 is closed
+2026-05-09 is closed
+2026-06-12 is closed
+
+' Определение ресурсов
+[Аналитик 1] on {Analyst1} lasts 1 days
+[Аналитик 2] on {Analyst2} lasts 1 days
+[Backend Dev 1] on {BE1} lasts 1 days
+[Backend Dev 2] on {BE2} lasts 1 days
+[Backend Dev 3] on {BE3} lasts 1 days
+[Frontend Dev 1] on {FE1} lasts 1 days
+[Frontend Dev 2] on {FE2} lasts 1 days
+[Тестировщик 1] on {QA1} lasts 1 days
+[Тестировщик 2] on {QA2} lasts 1 days
+
+' ============================================
+' SPRINT 1: Недели 1-4 (30 марта - 26 апреля)
+' 20 рабочих дней
+' ============================================
+
+-- Sprint 1: Фундамент (30 марта - 26 апреля) --
+
+' --- Аналитические задачи ---
+[AN-1: Детализация требований] on {Analyst1} lasts 5 days
+[AN-1: Детализация требований] starts 2026-03-30
+[AN-1: Детализация требований] is colored in Green
+
+[AN-2: Проектирование UI/UX] on {Analyst2} lasts 5 days
+[AN-2: Проектирование UI/UX] starts 2026-03-30
+[AN-2: Проектирование UI/UX] is colored in Green
+
+[AN-3: Документация API контрактов] on {Analyst1} lasts 3 days
+[AN-3: Документация API контрактов] starts at [AN-1: Детализация требований]'s end
+[AN-3: Документация API контрактов] is colored in Green
+
+' --- Backend задачи ---
+[BE-1: Миграция БД - Базовые таблицы] on {BE1} lasts 3 days
+[BE-1: Миграция БД - Базовые таблицы] starts at [AN-1: Детализация требований]'s end
+
+[BE-2: Миграция БД - Согласование] on {BE2} lasts 2 days
+[BE-2: Миграция БД - Согласование] starts at [BE-1: Миграция БД - Базовые таблицы]'s end
+
+[BE-3: Миграция БД - Артефакты и роли] on {BE3} lasts 2 days
+[BE-3: Миграция БД - Артефакты и роли] starts at [BE-1: Миграция БД - Базовые таблицы]'s end
+
+[BE-4: Модели данных (ORM)] on {BE1} lasts 3 days
+[BE-4: Модели данных (ORM)] starts at [BE-2: Миграция БД - Согласование]'s end
+
+[BE-5: API Deployment] on {BE1} lasts 3 days
+[BE-5: API Deployment] starts at [BE-4: Модели данных (ORM)]'s end
+
+[BE-8: API Scorecard] on {BE2} lasts 3 days
+[BE-8: API Scorecard] starts at [BE-4: Модели данных (ORM)]'s end
+
+' --- Frontend задачи ---
+[FE-1: Настройка проекта и роутинг] on {FE1} lasts 2 days
+[FE-1: Настройка проекта и роутинг] starts at [AN-2: Проектирование UI/UX]'s end
+[FE-1: Настройка проекта и роутинг] is colored in Red
+
+[FE-2: Компоненты UI Kit] on {FE1} lasts 3 days
+[FE-2: Компоненты UI Kit] starts at [FE-1: Настройка проекта и роутинг]'s end
+[FE-2: Компоненты UI Kit] is colored in Red
+
+[FE-3: Сервисы для работы с API] on {FE1} lasts 2 days
+[FE-3: Сервисы для работы с API] starts at [FE-2: Компоненты UI Kit]'s end
+[FE-3: Сервисы для работы с API] is colored in Red
+
+[FE-4: Управление состоянием] on {FE1} lasts 2 days
+[FE-4: Управление состоянием] starts at [FE-3: Сервисы для работы с API]'s end
+[FE-4: Управление состоянием] is colored in Red
+
+[FE-16: Dashboard] on {FE2} lasts 3 days
+[FE-16: Dashboard] starts at [FE-4: Управление состоянием]'s end
+[FE-16: Dashboard] is colored in Red
+
+' --- Тестирование ---
+[QA-1: План тестирования] on {QA1} lasts 3 days
+[QA-1: План тестирования] starts at [AN-1: Детализация требований]'s end
+[QA-1: План тестирования] is colored in Gold
+
+[QA-2: Подготовка тестовых данных] on {QA2} lasts 3 days
+[QA-2: Подготовка тестовых данных] starts at [BE-4: Модели данных (ORM)]'s end
+[QA-2: Подготовка тестовых данных] is colored in Gold
+
+' ============================================
+' SPRINT 2: Недели 5-8 (27 апреля - 24 мая)
+' 20 рабочих дней (с учетом праздников 1-3, 9 мая)
+' ============================================
+
+-- Sprint 2: Основные сущности (27 апреля - 24 мая) --
+
+' --- Аналитические задачи ---
+[AN-4: Документация процессов] on {Analyst1} lasts 5 days
+[AN-4: Документация процессов] starts 2026-04-27
+[AN-4: Документация процессов] is colored in Green
+
+' --- Backend задачи ---
+[BE-6: API Simulation] on {BE1} lasts 2 days
+[BE-6: API Simulation] starts at [BE-5: API Deployment]'s end
+
+[BE-7: API Pilot] on {BE1} lasts 3 days
+[BE-7: API Pilot] starts at [BE-6: API Simulation]'s end
+
+[BE-9: API Change] on {BE1} lasts 4 days
+[BE-9: API Change] starts at [BE-7: API Pilot]'s end
+
+[BE-10: API Lineage] on {BE2} lasts 2 days
+[BE-10: API Lineage] starts at [BE-9: API Change]'s end
+
+[BE-14: API Artifact Links] on {BE3} lasts 2 days
+[BE-14: API Artifact Links] starts at [BE-8: API Scorecard]'s end
+
+' --- Frontend задачи ---
+[FE-5: Раздел Deployments] on {FE1} lasts 4 days
+[FE-5: Раздел Deployments] starts at [BE-5: API Deployment]'s end
+[FE-5: Раздел Deployments] is colored in Red
+
+[FE-8: Раздел Scorecards] on {FE1} lasts 4 days
+[FE-8: Раздел Scorecards] starts at [FE-5: Раздел Deployments]'s end
+[FE-8: Раздел Scorecards] is colored in Red
+
+[FE-6: Раздел Simulations] on {FE2} lasts 3 days
+[FE-6: Раздел Simulations] starts at [BE-6: API Simulation]'s end
+[FE-6: Раздел Simulations] is colored in Red
+
+[FE-7: Раздел Pilots] on {FE2} lasts 4 days
+[FE-7: Раздел Pilots] starts at [FE-6: Раздел Simulations]'s end
+[FE-7: Раздел Pilots] is colored in Red
+
+[FE-14: Управление артефактами] on {FE2} lasts 3 days
+[FE-14: Управление артефактами] starts at [FE-7: Раздел Pilots]'s end
+[FE-14: Управление артефактами] is colored in Red
+
+' --- Тестирование ---
+[QA-3: Unit тесты Backend] on {QA1} lasts 5 days
+[QA-3: Unit тесты Backend] starts at [BE-8: API Scorecard]'s end
+[QA-3: Unit тесты Backend] is colored in Gold
+
+[QA-4: Unit тесты Frontend] on {QA2} lasts 5 days
+[QA-4: Unit тесты Frontend] starts at [FE-8: Раздел Scorecards]'s end
+[QA-4: Unit тесты Frontend] is colored in Gold
+
+' ============================================
+' SPRINT 3: Недели 9-12 (25 мая - 21 июня)
+' 20 рабочих дней (с учетом праздника 12 июня)
+' ============================================
+
+-- Sprint 3: Процесс согласования (25 мая - 21 июня) --
+
+' --- Аналитические задачи ---
+[AN-5: Приемочные тесты] on {Analyst1} lasts 5 days
+[AN-5: Приемочные тесты] starts 2026-05-25
+[AN-5: Приемочные тесты] is colored in Green
+
+[AN-6: Пользовательская документация] on {Analyst2} lasts 8 days
+[AN-6: Пользовательская документация] starts at [AN-5: Приемочные тесты]'s end
+[AN-6: Пользовательская документация] is colored in Green
+
+' --- Backend задачи ---
+[BE-11: API Package] on {BE1} lasts 3 days
+[BE-11: API Package] starts at [BE-10: API Lineage]'s end
+
+[BE-12: Бизнес-логика согласования] on {BE1} lasts 5 days
+[BE-12: Бизнес-логика согласования] starts at [BE-11: API Package]'s end
+
+[BE-16: Middleware прав доступа] on {BE2} lasts 3 days
+[BE-16: Middleware прав доступа] starts at [BE-14: API Artifact Links]'s end
+
+[BE-15: Integration тесты] on {BE3} lasts 4 days
+[BE-15: Integration тесты] starts at [BE-12: Бизнес-логика согласования]'s end
+
+' --- Frontend задачи ---
+[FE-9: Раздел Changes] on {FE1} lasts 5 days
+[FE-9: Раздел Changes] starts at [BE-9: API Change]'s end
+[FE-9: Раздел Changes] is colored in Red
+
+[FE-10: Компонент LineageVisualization] on {FE1} lasts 3 days
+[FE-10: Компонент LineageVisualization] starts at [FE-9: Раздел Changes]'s end
+[FE-10: Компонент LineageVisualization] is colored in Red
+
+[FE-12: Диалог Package] on {FE2} lasts 4 days
+[FE-12: Диалог Package] starts at [BE-11: API Package]'s end
+[FE-12: Диалог Package] is colored in Red
+
+[FE-13: Раздел Мои согласования] on {FE2} lasts 3 days
+[FE-13: Раздел Мои согласования] starts at [FE-12: Диалог Package]'s end
+[FE-13: Раздел Мои согласования] is colored in Red
+
+' --- Тестирование ---
+[QA-5: Integration тесты] on {QA1} lasts 6 days
+[QA-5: Integration тесты] starts at [BE-12: Бизнес-логика согласования]'s end
+[QA-5: Integration тесты] is colored in Gold
+
+[QA-6: UI тесты] on {QA2} lasts 5 days
+[QA-6: UI тесты] starts at [FE-10: Компонент LineageVisualization]'s end
+[QA-6: UI тесты] is colored in Gold
+
+' ============================================
+' SPRINT 4: Недели 13-16 (22 июня - 19 июля)
+' 20 рабочих дней
+' ============================================
+
+-- Sprint 4: Интеграция и релиз (22 июня - 19 июля) --
+
+' --- Аналитические задачи ---
+[AN-7: Финальная приемка] on {Analyst1} lasts 5 days
+[AN-7: Финальная приемка] starts 2026-06-22
+[AN-7: Финальная приемка] is colored in Green
+
+' --- Backend задачи ---
+[BE-17: API документация] on {BE1} lasts 2 days
+[BE-17: API документация] starts at [BE-15: Integration тесты]'s end
+
+[BE-18: Оптимизация и баг-фиксы] on {BE1} lasts 6 days
+[BE-18: Оптимизация и баг-фиксы] starts at [BE-17: API документация]'s end
+
+' --- Frontend задачи ---
+[FE-17: Интеграция с Backend API] on {FE1} lasts 3 days
+[FE-17: Интеграция с Backend API] starts at [FE-13: Раздел Мои согласования]'s end
+[FE-17: Интеграция с Backend API] is colored in Red
+
+[FE-18: E2E тесты] on {FE1} lasts 4 days
+[FE-18: E2E тесты] starts at [FE-17: Интеграция с Backend API]'s end
+[FE-18: E2E тесты] is colored in Red
+
+[FE-19: Оптимизация производительности] on {FE2} lasts 2 days
+[FE-19: Оптимизация производительности] starts at [FE-17: Интеграция с Backend API]'s end
+[FE-19: Оптимизация производительности] is colored in Red
+
+[FE-20: Финальное тестирование] on {FE1} lasts 3 days
+[FE-20: Финальное тестирование] starts at [FE-18: E2E тесты]'s end
+[FE-20: Финальное тестирование] is colored in Red
+
+' --- Тестирование ---
+[QA-7: E2E тесты] on {QA1} lasts 6 days
+[QA-7: E2E тесты] starts at [FE-17: Интеграция с Backend API]'s end
+[QA-7: E2E тесты] is colored in Gold
+
+[QA-8: Регрессионное тестирование] on {QA1} lasts 5 days
+[QA-8: Регрессионное тестирование] starts at [QA-7: E2E тесты]'s end
+[QA-8: Регрессионное тестирование] is colored in Gold
+
+[QA-9: Подготовка к релизу] on {QA1} lasts 3 days
+[QA-9: Подготовка к релизу] starts at [QA-8: Регрессионное тестирование]'s end
+[QA-9: Подготовка к релизу] is colored in Gold
+
+' --- Релиз ---
+[RELEASE: Продакшн релиз] lasts 1 days
+[RELEASE: Продакшн релиз] starts at [QA-9: Подготовка к релизу]'s end
+[RELEASE: Продакшн релиз] is colored in Red
+
+@endgantt

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Скоркарты — деталка</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        :root {
+            --app-bg: #f5f7fa;
+            --topbar-bg: #ffffff;
+            --topbar-border: #e0e0e0;
+            --muted-text: #666;
+        }
+        [data-theme="dark"] {
+            --app-bg: #0f1115;
+            --topbar-bg: #141922;
+            --topbar-border: rgba(255, 255, 255, 0.12);
+            --muted-text: rgba(231, 234, 240, 0.72);
+        }
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--app-bg);
+        }
+        #root {
+            height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 240px;
+            background-color: #1a1d23;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        .sidebar-item.active {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+            border-left: 3px solid #4caf50;
+        }
+        .sidebar-subitem {
+            padding: 10px 20px 10px 52px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .sidebar-subitem:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        .sidebar-subitem.active {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            background-color: var(--topbar-bg);
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--topbar-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-wrapper {
+            flex: 1;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const {
+            Accordion,
+            AccordionDetails,
+            AccordionSummary,
+            Alert,
+            Box,
+            Breadcrumbs,
+            Button,
+            Chip,
+            CssBaseline,
+            Grid,
+            Link,
+            List,
+            ListItemButton,
+            ListItemText,
+            Paper,
+            Stack,
+            Table,
+            TableBody,
+            TableCell,
+            TableContainer,
+            TableHead,
+            TableRow,
+            ThemeProvider,
+            Typography,
+            createTheme
+        } = MaterialUI;
+
+        const React = window.React;
+        const { useState, useEffect } = React;
+
+        const getSystemMode = () => {
+            if (typeof window === 'undefined' || !window.matchMedia) return 'light';
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        };
+
+        const createAppTheme = (mode) => createTheme({
+            palette: {
+                mode,
+                primary: {
+                    main: '#2c4f7c',
+                    dark: '#1e3a5f',
+                },
+                secondary: {
+                    main: '#4caf50',
+                },
+                ...(mode === 'light'
+                    ? {
+                        background: {
+                            default: '#f5f7fa',
+                            paper: '#ffffff',
+                        },
+                        text: {
+                            primary: '#1a1d23',
+                            secondary: '#6c757d',
+                        },
+                    }
+                    : {
+                        background: {
+                            default: '#0f1115',
+                            paper: '#141922',
+                        },
+                        text: {
+                            primary: '#e7eaf0',
+                            secondary: '#a7b0bf',
+                        },
+                    }),
+            },
+            typography: {
+                fontFamily: 'Roboto, sans-serif',
+                h5: { fontWeight: 500 },
+                h6: { fontWeight: 500 },
+            },
+            components: {
+                MuiButton: {
+                    styleOverrides: {
+                        root: {
+                            textTransform: 'none',
+                            borderRadius: 4,
+                        },
+                        contained: {
+                            boxShadow: 'none',
+                            '&:hover': { boxShadow: 'none' },
+                        },
+                    },
+                },
+                MuiPaper: {
+                    styleOverrides: {
+                        root: { boxShadow: mode === 'light' ? '0 1px 3px rgba(0,0,0,0.08)' : '0 1px 3px rgba(0,0,0,0.35)' },
+                    },
+                },
+                MuiChip: {
+                    styleOverrides: {
+                        root: { borderRadius: 4 },
+                    },
+                },
+            },
+        });
+
+        const applyDocumentTheme = (mode) => {
+            document.documentElement.setAttribute('data-theme', mode);
+            document.documentElement.style.colorScheme = mode;
+        };
+
+        const initialMode = getSystemMode();
+        applyDocumentTheme(initialMode);
+        const theme = createAppTheme(initialMode);
+
+        const alwaysHighFields = [
+            { id: 'launch_new_credit_product', label: 'Запуск нового кредитного продукта / закрытие продукта' },
+            { id: 'new_customer_segment', label: 'Ввод нового сегмента клиентов' },
+            { id: 'new_sales_channel', label: 'Включение нового канала продаж' },
+            { id: 'new_partner', label: 'Подключение нового партнёра' },
+            { id: 'new_decision_model', label: 'Внедрение новой модели в процесс принятия решений' },
+            { id: 'new_external_source', label: 'Добавление внешнего источника данных в процесс принятия решения' },
+            { id: 'new_pricing_strategy', label: 'Внедрение новой стратегии ценообразования' }
+        ];
+
+        const dependentGroups = [
+            {
+                title: 'Инструмент оценки риска',
+                emptyText: 'Во всём блоке значения только «Нет».',
+                fields: [
+                    { id: 'change_internal_source', label: 'Добавление / удаление / изменение внутреннего источника данных в процесс принятия решения' },
+                    { id: 'remove_external_source', label: 'Удаление внешнего источника данных в процесс принятия решения' },
+                    { id: 'remove_model', label: 'Исключение модели из процесса принятия решения' },
+                    { id: 'recalibrate_model', label: 'Калибровка действующей модели в части оценки риска' },
+                    { id: 'change_reject_codes', label: 'Добавление / удаление / изменение кодов отказа' },
+                    { id: 'change_cutoff', label: 'Корректировка границ отсечения, cutoff' },
+                    { id: 'change_hard_checks', label: 'Изменение hard-checks' },
+                    { id: 'change_antifraud', label: 'Изменение антифрод-стратегии' },
+                    { id: 'change_risk_income_calc', label: 'Добавление / изменение расчётов действующей стратегии риск-доходности' }
+                ]
+            },
+            {
+                title: 'Лимитная политика',
+                emptyText: 'Во всём блоке значения только «Нет».',
+                fields: [
+                    { id: 'change_income_strategy', label: 'Изменение стратегии расчёта дохода / долговой нагрузки' },
+                    { id: 'change_limit_policy', label: 'Изменение лимитной политики' },
+                    { id: 'change_pti', label: 'Изменение отсечек PTI, ПДН и пр.' },
+                    { id: 'change_max_limit', label: 'Изменение максимальной суммы / лимита задолженности на клиента' },
+                    { id: 'change_income_documents', label: 'Изменение типов принимаемых к учёту данных / документов о доходе' }
+                ]
+            },
+            {
+                title: 'Финансовые параметры',
+                emptyText: 'Во всём блоке значения только «Нет».',
+                fields: [
+                    { id: 'recalibrate_pricing', label: 'Калибровка действующей технологии ценообразования' },
+                    { id: 'change_npv_strategy', label: 'Изменение стратегии оценки NPV клиента' },
+                    { id: 'change_risk_income_params', label: 'Изменение параметров риск-доходности' }
+                ]
+            },
+            {
+                title: 'Клиентский путь',
+                emptyText: 'Во всём блоке значения только «Нет».',
+                fields: [
+                    { id: 'change_client_path', label: 'Изменение клиентского пути: маршрутизация заявок, запрос документов' },
+                    { id: 'non_decision_tools', label: 'Внедрение инструментов оценки рисков без участия в принятии решения' }
+                ]
+            }
+        ];
+
+        const effects = [
+            { id: 'ar_delta_pp', label: 'Изменение AR (абс) в п.п.', thresholdLabel: '|x| ≥ 5 п.п.', thresholdValue: 5, unit: 'п.п.' },
+            { id: 'issuance_volume_pct', label: 'Изменение объёма выдач в %', thresholdLabel: '|x| ≥ 5%', thresholdValue: 5, unit: '%' },
+            { id: 'rc_pct', label: 'Изменение RC в %', thresholdLabel: '|x| ≥ 10%', thresholdValue: 10, unit: '%' },
+            { id: 'npv_pct', label: 'Изменение NPV в %', thresholdLabel: '|x| ≥ 15%', thresholdValue: 15, unit: '%' },
+            { id: 'npl30_pct', label: 'Изменение NPL30 в %', thresholdLabel: 'Не применяется для продукта КК', notApplicable: true, unit: '%' },
+            { id: 'f_rorwa_pct', label: 'Изменение F-RoRWA в %', thresholdLabel: 'Не применяется для продукта КК', notApplicable: true, unit: '%' }
+        ];
+
+        const data = {
+            displayId: 'SC-001',
+            name: 'Кредитная скоркарта для продукта КК',
+            product: 'КК',
+            productLabel: 'Кредитные карты',
+            version: 3,
+            status: 'approved',
+            statusLabel: 'Согласовано',
+            criticality: 'high',
+            canEdit: true,
+            values: {
+                launch_new_credit_product: false,
+                new_customer_segment: false,
+                new_sales_channel: false,
+                new_partner: false,
+                new_decision_model: true,
+                new_external_source: false,
+                new_pricing_strategy: false,
+                change_internal_source: false,
+                remove_external_source: false,
+                remove_model: false,
+                recalibrate_model: false,
+                change_reject_codes: true,
+                change_cutoff: false,
+                change_hard_checks: false,
+                change_antifraud: false,
+                change_risk_income_calc: false,
+                change_income_strategy: false,
+                change_limit_policy: false,
+                change_pti: false,
+                change_max_limit: false,
+                change_income_documents: false,
+                recalibrate_pricing: false,
+                change_npv_strategy: false,
+                change_risk_income_params: false,
+                change_client_path: true,
+                non_decision_tools: false
+            },
+            effects: {
+                ar_delta_pp: 4.2,
+                issuance_volume_pct: 3,
+                rc_pct: 11,
+                npv_pct: 12,
+                npl30_pct: 0,
+                f_rorwa_pct: 0
+            },
+            sources: [
+                {
+                    title: 'Simulation SIM-002',
+                    description: 'Результаты симуляции использованы для частичного заполнения прогнозных эффектов.',
+                    href: 'current.html'
+                }
+            ],
+            usage: [
+                {
+                    title: 'Pilot PLT-010 v4',
+                    description: 'Активный пилот того же продукта.',
+                    href: 'current.html'
+                },
+                {
+                    title: 'Deployment DEP-004 v2',
+                    description: 'Текущее внедрение. Статус скоркарты синхронизируется с жизненным циклом этой версии.',
+                    href: 'deployments_page.html'
+                }
+            ]
+        };
+
+        function valueChip(value, emphasize) {
+            if (value) {
+                return (
+                    <Chip
+                        size="small"
+                        label="Да"
+                        sx={{
+                            minWidth: 64,
+                            fontWeight: 600,
+                            bgcolor: emphasize ? '#ffebee' : '#e8f5e9',
+                            color: emphasize ? '#c62828' : '#2e7d32',
+                            borderRadius: 1
+                        }}
+                    />
+                );
+            }
+
+            return (
+                <Chip
+                    size="small"
+                    label="Нет"
+                    sx={{
+                        minWidth: 64,
+                        fontWeight: 600,
+                        bgcolor: '#f5f5f5',
+                        color: '#616161',
+                        borderRadius: 1
+                    }}
+                />
+            );
+        }
+
+        function pluralize(value) {
+            const mod10 = value % 10;
+            const mod100 = value % 100;
+            if (mod10 === 1 && mod100 !== 11) return 'е';
+            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'я';
+            return 'ей';
+        }
+
+        function formatEffectValue(value, unit) {
+            const normalized = Number.isInteger(value) ? String(value) : String(value).replace('.', ',');
+            return normalized + (unit === '%' ? '%' : ' ' + unit);
+        }
+
+        function CompactTable({ fields, values, emphasizeYes = false, showHeader = true, mt = 0 }) {
+            return (
+                <TableContainer sx={{ mt }}>
+                    <Table size="small" sx={{ tableLayout: 'fixed' }}>
+                        <colgroup>
+                            <col />
+                            <col style={{ width: '132px' }} />
+                        </colgroup>
+                        {showHeader && (
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Поле скоркарты</TableCell>
+                                    <TableCell align="center" sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Значение</TableCell>
+                                </TableRow>
+                            </TableHead>
+                        )}
+                        <TableBody>
+                            {fields.map((field) => (
+                                <TableRow key={field.id}>
+                                    <TableCell sx={{ borderBottomColor: '#e0e0e0' }}>{field.label}</TableCell>
+                                    <TableCell align="center" sx={{ borderBottomColor: '#e0e0e0' }}>
+                                        {valueChip(values[field.id], emphasizeYes && values[field.id])}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            );
+        }
+
+        function ToggleSection({ title, fields, values, emphasizeYes = false, emptyText }) {
+            const yesFields = fields.filter((field) => values[field.id]);
+            const noFields = fields.filter((field) => !values[field.id]);
+            const useAccordion = noFields.length >= 3;
+
+            return (
+                <Paper sx={{ p: 2, borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                        {title}
+                    </Typography>
+
+                    {yesFields.length > 0 ? (
+                        <CompactTable fields={yesFields} values={values} emphasizeYes={emphasizeYes} />
+                    ) : (
+                        <Paper
+                            sx={{
+                                p: 2,
+                                borderRadius: 1,
+                                border: '1px dashed #e0e0e0',
+                                bgcolor: '#fafafa'
+                            }}
+                        >
+                            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                {emptyText}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {useAccordion
+                                    ? 'Все значения в этом блоке сейчас равны «Нет». При необходимости можно раскрыть полный список ниже.'
+                                    : 'Все значения в этом блоке сейчас равны «Нет».'}
+                            </Typography>
+                        </Paper>
+                    )}
+
+                    {useAccordion ? (
+                        <Accordion
+                            disableGutters
+                            elevation={0}
+                            sx={{
+                                mt: 1.5,
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '4px !important',
+                                '&:before': { display: 'none' }
+                            }}
+                        >
+                            <AccordionSummary sx={{ minHeight: 48 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#6c757d' }}>
+                                    {yesFields.length
+                                        ? `Показать ещё ${noFields.length} пол${pluralize(noFields.length)} со значением «Нет»`
+                                        : `Все ${noFields.length} пол${pluralize(noFields.length)} в этом блоке сейчас имеют значение «Нет»`}
+                                </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ pt: 0 }}>
+                                <CompactTable fields={noFields} values={values} showHeader={false} />
+                            </AccordionDetails>
+                        </Accordion>
+                    ) : (
+                        noFields.length > 0 && <CompactTable fields={noFields} values={values} showHeader={false} mt={1.5} />
+                    )}
+                </Paper>
+            );
+        }
+
+        function EffectsSection() {
+            return (
+                <Paper sx={{ p: 2, borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                        Эффект доработки (прогноз)
+                    </Typography>
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Показатель</TableCell>
+                                    <TableCell sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Значение</TableCell>
+                                    <TableCell sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Порог</TableCell>
+                                    <TableCell sx={{ color: '#6c757d', textTransform: 'uppercase', fontSize: 12, fontWeight: 600 }}>Итог</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {effects.map((effect) => {
+                                    const value = Number(data.effects[effect.id] || 0);
+                                    const triggered = !effect.notApplicable && Math.abs(value) >= effect.thresholdValue;
+                                    return (
+                                        <TableRow key={effect.id}>
+                                            <TableCell sx={{ borderBottomColor: '#e0e0e0' }}>{effect.label}</TableCell>
+                                            <TableCell sx={{ borderBottomColor: '#e0e0e0' }}>{formatEffectValue(value, effect.unit)}</TableCell>
+                                            <TableCell sx={{ borderBottomColor: '#e0e0e0' }}>{effect.thresholdLabel}</TableCell>
+                                            <TableCell sx={{ borderBottomColor: '#e0e0e0' }}>
+                                                {effect.notApplicable ? (
+                                                    <Chip size="small" label="Не применяется" sx={{ bgcolor: '#f5f5f5', color: '#616161', fontWeight: 600, borderRadius: 1 }} />
+                                                ) : triggered ? (
+                                                    <Chip size="small" label="Высокая" sx={{ bgcolor: '#ffebee', color: '#c62828', fontWeight: 600, borderRadius: 1 }} />
+                                                ) : (
+                                                    <Chip size="small" label="Низкая" sx={{ bgcolor: '#f5f5f5', color: '#616161', fontWeight: 600, borderRadius: 1 }} />
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Paper>
+            );
+        }
+
+        function RelationsBlock({ title, items, emptyText }) {
+            return (
+                <Paper sx={{ p: 2, borderRadius: 1, border: '1px solid #e0e0e0', height: '100%' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                        {title}
+                    </Typography>
+                    {items.length ? (
+                        <Stack spacing={1.5}>
+                            {items.map((item) => (
+                                <Paper
+                                    key={item.title}
+                                    component="a"
+                                    href={item.href}
+                                    sx={{
+                                        p: 1.5,
+                                        borderRadius: 1,
+                                        border: '1px solid #e0e0e0',
+                                        textDecoration: 'none',
+                                        color: 'inherit',
+                                        '&:hover': { borderColor: '#2c4f7c', bgcolor: 'rgba(44, 79, 124, 0.04)' }
+                                    }}
+                                >
+                                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                        {item.title}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        {item.description}
+                                    </Typography>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    ) : (
+                        <Typography variant="body2" color="text.secondary">
+                            {emptyText}
+                        </Typography>
+                    )}
+                </Paper>
+            );
+        }
+
+        function Sidebar() {
+            return (
+                <Box className="sidebar">
+                    <Box className="sidebar-header">
+                        <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600 }}>
+                            Риск-стратегии MVP
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                            Отдельные макеты
+                        </Typography>
+                    </Box>
+                    <Box className="sidebar-menu">
+                        <a href="current.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-item">
+                                <span className="material-icons">science</span>
+                                <span>Симуляции и пилоты</span>
+                            </div>
+                        </a>
+                        <a href="deployments_page.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-item">
+                                <span className="material-icons">published_with_changes</span>
+                                <span>Внедрения</span>
+                            </div>
+                        </a>
+                        <a href="scorecards_detail.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-item active">
+                                <span className="material-icons">assignment</span>
+                                <span>Скоркарты</span>
+                            </div>
+                        </a>
+                        <a href="scorecards_detail.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-subitem active">
+                                Деталка
+                            </div>
+                        </a>
+                        <a href="packages_page.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-item">
+                                <span className="material-icons">inventory_2</span>
+                                <span>Пакеты</span>
+                            </div>
+                        </a>
+                        <a href="approvals_page.html" style={{ textDecoration: 'none' }}>
+                            <div className="sidebar-item">
+                                <span className="material-icons">task_alt</span>
+                                <span>Согласования</span>
+                            </div>
+                        </a>
+                    </Box>
+                </Box>
+            );
+        }
+
+        function App() {
+            return (
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <Box sx={{ display: 'flex', height: '100vh', width: '100%' }}>
+                        <Sidebar />
+
+                        <Box className="main-content">
+                            <Box className="top-bar">
+                                <Typography variant="h6">
+                                    Скоркарты / деталка
+                                </Typography>
+                            </Box>
+
+                            <Box className="content-wrapper">
+                                <Box sx={{ maxWidth: 1320, mx: 'auto' }}>
+                                    <Breadcrumbs sx={{ mb: 2, color: '#6c757d' }}>
+                                        <Link underline="hover" color="inherit" href="current.html">Главная</Link>
+                                        <Typography color="text.secondary">Скоркарты</Typography>
+                                        <Typography color="text.primary">{data.displayId}</Typography>
+                                    </Breadcrumbs>
+
+                                    <Stack spacing={2.5}>
+                                        <Paper sx={{ p: 3, borderRadius: 1 }}>
+                                            <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', lg: 'center' }}>
+                                                <Box>
+                                                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+                                                        <Chip label={data.displayId} size="small" sx={{ bgcolor: '#f5f5f5', color: '#616161', fontWeight: 600, borderRadius: 1 }} />
+                                                        <Chip label={data.statusLabel} size="small" sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 600, borderRadius: 1 }} />
+                                                        <Chip label="Высокая" size="small" sx={{ bgcolor: '#ffebee', color: '#c62828', fontWeight: 600, borderRadius: 1 }} />
+                                                        <Chip label={`Версия ${data.version}`} size="small" sx={{ bgcolor: '#f5f5f5', color: '#616161', fontWeight: 600, borderRadius: 1 }} />
+                                                    </Stack>
+                                                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                                                        {data.name}
+                                                    </Typography>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        Продукт: {data.productLabel} ({data.product})
+                                                    </Typography>
+                                                </Box>
+
+                                                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems="flex-start">
+                                                    <Button
+                                                        size="small"
+                                                        variant="contained"
+                                                        disabled
+                                                        sx={{ bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                                                    >
+                                                        Редактировать
+                                                    </Button>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        disabled
+                                                        sx={{ borderColor: '#2c4f7c', color: '#2c4f7c', '&:hover': { borderColor: '#1e3a5f', bgcolor: 'rgba(44, 79, 124, 0.04)' } }}
+                                                    >
+                                                        Создать скоркарту
+                                                    </Button>
+                                                </Stack>
+                                            </Stack>
+                                        </Paper>
+
+                                        <Paper sx={{ p: 3, borderRadius: 1 }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                                                Детали скоркарты
+                                            </Typography>
+
+                                            <Grid container spacing={2} sx={{ mb: 3 }}>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                        Источник формирования
+                                                    </Typography>
+                                                    <Typography variant="body1">
+                                                        Вручную
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={6}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                                        Критичность
+                                                    </Typography>
+                                                    <Box sx={{ mt: 0.5 }}>
+                                                        <Chip
+                                                            label="высокая"
+                                                            size="small"
+                                                            sx={{ bgcolor: '#ffebee', color: '#c62828', fontWeight: 500 }}
+                                                        />
+                                                    </Box>
+                                                </Grid>
+                                            </Grid>
+
+                                            <Box sx={{ mb: 3, pb: 3, borderBottom: '1px solid #e0e0e0' }}>
+                                                <Typography variant="body2" color="text.secondary" display="block" gutterBottom>
+                                                    Финансовые эффекты
+                                                </Typography>
+                                                <Grid container spacing={1}>
+                                                    <Grid item xs={3}>
+                                                        <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                AR(абс)
+                                                            </Typography>
+                                                            <Typography variant="body1" fontWeight={600} color="primary">
+                                                                4,2 п.п.
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                    <Grid item xs={3}>
+                                                        <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                Объём
+                                                            </Typography>
+                                                            <Typography variant="body1" fontWeight={600} color="primary">
+                                                                3%
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                    <Grid item xs={3}>
+                                                        <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                NPV
+                                                            </Typography>
+                                                            <Typography variant="body1" fontWeight={600} color="primary">
+                                                                12%
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                    <Grid item xs={3}>
+                                                        <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                            <Typography variant="body2" color="text.secondary">
+                                                                RC
+                                                            </Typography>
+                                                            <Typography variant="body1" fontWeight={600} color="primary">
+                                                                11%
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+
+                                            <Box>
+                                                <Typography variant="body2" color="text.secondary" display="block" gutterBottom>
+                                                    Индикаторы изменения стратегии
+                                                </Typography>
+                                                <Grid container spacing={2}>
+                                                    <Grid item xs={6}>
+                                                        <Typography variant="body2" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                            Продукт
+                                                        </Typography>
+                                                        <Box sx={{ pl: 1 }}>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Запуск нового продукта
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый сегмент клиентов
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый канал продаж
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение условий продукта
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                    <Grid item xs={6}>
+                                                        <Typography variant="body2" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                            Инструмент оценки риска
+                                                        </Typography>
+                                                        <Box sx={{ pl: 1 }}>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#4caf50' }}>check_box</span> Новая скоринг модель
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение весов факторов
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#4caf50' }}>check_box</span> Изменение Cut-off
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Новые правила андеррайтинга
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                    <Grid item xs={6}>
+                                                        <Typography variant="body2" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                            Лимитная политика
+                                                        </Typography>
+                                                        <Box sx={{ pl: 1 }}>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение лимитов
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение правил расчёта
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Новая методика лимитов
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                    <Grid item xs={6}>
+                                                        <Typography variant="body2" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                            Финансовые параметры
+                                                        </Typography>
+                                                        <Box sx={{ pl: 1 }}>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение ставок
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение комиссий
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                <span className="material-icons" style={{ fontSize: 16, color: '#4caf50' }}>check_box</span> Изменение условий льготного периода
+                                                            </Typography>
+                                                        </Box>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
+                                        </Paper>
+
+                                        <Paper sx={{ p: 3, borderRadius: 1 }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                                                Источники и использование
+                                            </Typography>
+
+                                            <Grid container spacing={3}>
+                                                <Grid item xs={12} md={6}>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                                        Источники формирования
+                                                    </Typography>
+                                                    {data.sources.length > 0 ? (
+                                                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                                            {data.sources.map((item, index) => (
+                                                                <Chip
+                                                                    key={index}
+                                                                    icon={<span className="material-icons" style={{ fontSize: 18, color: '#1565c0' }}>science</span>}
+                                                                    label={item.title}
+                                                                    component="a"
+                                                                    href={item.href}
+                                                                    clickable
+                                                                    sx={{
+                                                                        bgcolor: '#e3f2fd',
+                                                                        color: '#1565c0',
+                                                                        fontWeight: 500,
+                                                                        '&:hover': {
+                                                                            bgcolor: '#bbdefb'
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Stack>
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                            Источники не зафиксированы
+                                                        </Typography>
+                                                    )}
+                                                </Grid>
+
+                                                <Grid item xs={12} md={6}>
+                                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                                        Где используется
+                                                    </Typography>
+                                                    {data.usage.length > 0 ? (
+                                                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                                            {data.usage.map((item, index) => {
+                                                                const isPilot = item.title.includes('Pilot');
+                                                                const iconName = isPilot ? 'flight_takeoff' : 'published_with_changes';
+                                                                return (
+                                                                    <Chip
+                                                                        key={index}
+                                                                        icon={<span className="material-icons" style={{ fontSize: 18, color: '#2e7d32' }}>{iconName}</span>}
+                                                                        label={item.title}
+                                                                        component="a"
+                                                                        href={item.href}
+                                                                        clickable
+                                                                        sx={{
+                                                                            bgcolor: '#e8f5e9',
+                                                                            color: '#2e7d32',
+                                                                            fontWeight: 500,
+                                                                            '&:hover': {
+                                                                                bgcolor: '#c8e6c9'
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                );
+                                                            })}
+                                                        </Stack>
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                            Скоркарта сейчас ни с чем не связана
+                                                        </Typography>
+                                                    )}
+                                                </Grid>
+                                            </Grid>
+                                        </Paper>
+                                    </Stack>
+                                </Box>
+                            </Box>
+                        </Box>
+                    </Box>
+                </ThemeProvider>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

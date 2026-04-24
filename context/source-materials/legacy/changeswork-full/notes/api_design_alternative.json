@@ -1,0 +1,32 @@
+{
+  "fields": {
+    "indicators": [
+      {
+        "code": "launch_new_credit_product",
+        "label": "Запуск нового кредитного продукта",
+        "type": "boolean",
+        "required": true,
+        "default_value": false,
+        "criticality_rule": {
+          "if_true": "high"
+        }
+      }
+    ],
+    "financial_effects": [
+      {
+        "code": "ar_delta_pp",
+        "label": "Изменение AR (абс) в п.п.",
+        "type": "number",
+        "required": true,
+        "unit": "pp",
+        "default_value": 0,
+        "criticality_rule": {
+          "comparison": "abs_gte",
+          "threshold": 5.0,
+          "result_if_true": "high"
+        }
+      }
+    ]
+  },
+  "criticality_final_rule": "high_if_any_indicator_or_effect_high_else_low"
+}

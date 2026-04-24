@@ -1,0 +1,76 @@
+' FEATURE: deployments
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-DEPLOYMENTS-001: materialized, mapping=explicit
+[PLAN BE Backend foundation для внедрений] as [STORY_STORY_DEPLOYMENTS_001] starts 2026/04/14
+[STORY_STORY_DEPLOYMENTS_001] ends 2026/04/23
+[STORY_STORY_DEPLOYMENTS_001] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_001] is 9% completed
+
+' Story STORY-DEPLOYMENTS-002: materialized, mapping=explicit
+[PLAN BE Жизненный цикл внедрений] as [STORY_STORY_DEPLOYMENTS_002] starts 2026/04/15
+[STORY_STORY_DEPLOYMENTS_002] ends 2026/04/30
+[STORY_STORY_DEPLOYMENTS_002] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_002] is 0% completed
+
+' Story STORY-DEPLOYMENTS-003: materialized, mapping=explicit
+[PLAN FE Список внедрений] as [STORY_STORY_DEPLOYMENTS_003] starts 2026/04/06
+[STORY_STORY_DEPLOYMENTS_003] ends 2026/04/10
+[STORY_STORY_DEPLOYMENTS_003] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_003] is 100% completed
+
+' Story STORY-DEPLOYMENTS-004: materialized, mapping=explicit
+[PLAN FE Форма создания и редактирования] as [STORY_STORY_DEPLOYMENTS_004] starts 2026/04/20
+[STORY_STORY_DEPLOYMENTS_004] ends 2026/04/24
+[STORY_STORY_DEPLOYMENTS_004] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_004] is 0% completed
+
+' Story STORY-DEPLOYMENTS-005: mixed, mapping=inferred
+[PLAN FE Детальная страница и связанные блоки] as [STORY_STORY_DEPLOYMENTS_005] starts 2026/04/13
+[STORY_STORY_DEPLOYMENTS_005] ends 2026/04/25
+[STORY_STORY_DEPLOYMENTS_005] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_005] is 0% completed
+
+' Execution task layer
+[RSCON-2346 FE список внедрений] as [TASK_RSCON_2346] on {FE1} lasts 5 days
+[TASK_RSCON_2346] starts 2026/04/06
+[TASK_RSCON_2346] is colored in LightCoral
+[TASK_RSCON_2346] is 100% completed
+
+[RSCON-2347 FE детальная внедрения] as [TASK_RSCON_2347] on {TBD_FE} lasts 5 days
+[TASK_RSCON_2347] starts 2026/04/13
+[TASK_RSCON_2347] is colored in LightCoral
+[TASK_RSCON_2347] is 0% completed
+
+[RSCON-2349 BE внедрений БД + API] as [TASK_RSCON_2349] on {BE3} lasts 3 days
+[TASK_RSCON_2349] starts 2026/04/17
+[TASK_RSCON_2349] is colored in LightBlue
+[TASK_RSCON_2349] is 15% completed
+
+[RSCON-2348 FE форма создания/редактирования внедрений] as [TASK_RSCON_2348] on {TBD_FE} lasts 5 days
+[TASK_RSCON_2348] starts 2026/04/20
+[TASK_RSCON_2348] is colored in LightCoral
+[TASK_RSCON_2348] is 0% completed
+
+[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {TBD_AN} lasts 5 days
+[TASK_AN_CHD1] starts 2026/04/21
+[TASK_AN_CHD1] is colored in LightGreen
+[TASK_AN_CHD1] is 0% completed
+
+[BE детальная страница Внедрения] as [TASK_BE_CHD1] on {TBD_BE} lasts 5 days
+[TASK_BE_CHD1] starts 2026/04/21
+[TASK_BE_CHD1] is colored in LightBlue
+[TASK_BE_CHD1] is 0% completed
+
+[RSCON-2445 BE Базовая функциональность для внедрений] as [TASK_RSCON_2445] on {BE3} lasts 2 days
+[TASK_RSCON_2445] starts 2026/04/22
+[TASK_RSCON_2445] is colored in LightBlue
+[TASK_RSCON_2445] is 0% completed
+
+[RSCON-2410 BE ЖЦ внедрений] as [TASK_RSCON_2410] on {BE3} lasts 5 days
+[TASK_RSCON_2410] starts 2026/04/24
+[TASK_RSCON_2410] is colored in LightBlue
+[TASK_RSCON_2410] is 0% completed

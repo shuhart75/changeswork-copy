@@ -1,0 +1,551 @@
+@startuml
+
+title Модель данных v3.3 - Архитектура на основе Инициатив
+
+' ========================
+' Контекст идентификации и доступа
+' ========================
+
+entity "user" as user {
+  * id : UUID <<PK>>
+  * email : String <<UK>>
+  * full_name : String
+  * is_active : Boolean
+  * created_at : DateTime
+}
+
+entity "user_role" as user_role {
+  * id : UUID <<PK>>
+  * user_id : UUID <<FK>>
+  * role : Role
+  * product_id : UUID <<FK, nullable>>
+  * created_at : DateTime
+  --
+  <<UK>> (user_id, role, product_id)
+}
+
+entity "role" as role {
+  * role : String <<PK>>
+  --
+  prm
+  methodologist
+  approver
+  admin
+}
+
+' ========================
+' Контекст каталога продуктов
+' ========================
+
+entity "product" as product {
+  * id : UUID <<PK>>
+  * code : String <<UK>>
+  * name : String
+}
+
+entity "sub_product" as sub_product {
+  * id : UUID <<PK>>
+  * product_id : UUID <<FK>>
+  * name : String
+}
+
+' ========================
+' Контекст шаблонов скоркарт
+' ========================
+
+entity "scorecard_template" as scorecard_template {
+  * id : UUID <<PK>>
+  * product_id : UUID <<FK>>
+  * name : String
+  * created_at : DateTime
+  * is_active : Boolean
+}
+
+entity "scorecard_template_version" as template_version {
+  * id : UUID <<PK>>
+  * template_id : UUID <<FK>>
+  * version : String
+  * created_at : DateTime
+  * valid_from : DateTime
+  * valid_to : DateTime
+  * default_config : JSONB
+}
+
+' ========================
+' Контекст скоркарт
+' ========================
+
+entity "scorecard" as scorecard {
+  * id : UUID <<PK>>
+  * template_version_id : UUID <<FK>>
+  * name : String
+  * created_at : DateTime
+  * created_by : UUID
+  * is_manual : Boolean
+}
+
+entity "scorecard_version" as scorecard_version {
+  * id : UUID <<PK>>
+  * scorecard_id : UUID <<FK>>
+  * version : Integer
+  * config : JSONB
+  * financial_effects : JSONB
+  * created_at : DateTime
+  * created_by : UUID
+}
+
+entity "scorecard_source" as scorecard_source {
+  * scorecard_version_id : UUID <<FK>> <<PK>>
+  * source_type : SourceType <<PK>>
+  * source_id : UUID <<PK>>
+  * created_at : DateTime
+}
+
+entity "source_type" as source_type {
+  * type : String <<PK>>
+  --
+  simulation
+}
+
+entity "scorecard_sub_product" as scorecard_sub_product {
+  * scorecard_id : UUID <<FK>> <<PK>>
+  * sub_product_id : UUID <<FK>> <<PK>>
+  * linked_at : DateTime
+}
+
+' ========================
+' Контекст инициатив
+' ========================
+
+entity "initiative" as initiative {
+  * id : UUID <<PK>>
+  * name : String
+  * description : Text
+  * product_id : UUID <<FK>>
+  * author_id : UUID
+  * created_at : DateTime
+  * updated_at : DateTime
+  * status : InitiativeStatus
+}
+
+entity "initiative_status" as initiative_status {
+  * status : String <<PK>>
+  --
+  draft
+  active
+  completed
+  archived
+}
+
+entity "initiative_sub_product" as initiative_sub_product {
+  * initiative_id : UUID <<FK>> <<PK>>
+  * sub_product_id : UUID <<FK>> <<PK>>
+  * linked_at : DateTime
+}
+
+' ========================
+' Контекст исследований и выполнения
+' ========================
+
+entity "simulation" as simulation {
+  * id : UUID <<PK>>
+  * initiative_id : UUID <<FK>>
+  * name : String
+  * description : Text
+  dataset_period_from : Date
+  dataset_period_to : Date
+  * created_at : DateTime
+  * created_by : UUID
+  started_at : DateTime
+  completed_at : DateTime
+  * status : SimulationStatus
+  results : JSONB
+}
+
+entity "simulation_status" as simulation_status {
+  * status : String <<PK>>
+  --
+  draft
+  running
+  completed
+  failed
+}
+
+entity "pilot" as pilot {
+  * id : UUID <<PK>>
+  * initiative_id : UUID <<FK>>
+  * name : String
+  * description : Text
+  pilot_group_size : Integer
+  control_group_size : Integer
+  * created_at : DateTime
+  * created_by : UUID
+  started_at : DateTime
+  planned_end_at : DateTime
+  actual_end_at : DateTime
+  * status : PilotStatus
+  metrics : JSONB
+}
+
+entity "pilot_status" as pilot_status {
+  * status : String <<PK>>
+  --
+  draft
+  requires_activation
+  active
+  requires_correction
+  completed
+}
+
+entity "deployment" as deployment {
+  * id : UUID <<PK>>
+  * initiative_id : UUID <<FK>>
+  * name : String
+  deployment_type : DeploymentType
+  goal : Text
+  change_description : Text
+  application_perimeter : Text
+  lineage_simulation_id : UUID <<FK, nullable>>
+  required_scorecard_id : UUID <<FK, nullable>>
+  * created_at : DateTime
+  * created_by : UUID
+  deployed_at : DateTime
+  * status : DeploymentStatus
+  deployment_config : JSONB
+  rollback_plan : Text
+  rollback_at : DateTime
+}
+
+entity "deployment_status" as deployment_status {
+  * status : String <<PK>>
+  --
+  draft
+  requires_approval
+  approved
+  deployed
+  rolled_back
+}
+
+entity "deployment_type" as deployment_type {
+  * type : String <<PK>>
+  --
+  general
+  simulation_based
+}
+
+' ========================
+' Связи скоркарт
+' ========================
+
+entity "pilot_scorecard" as pilot_scorecard {
+  * pilot_id : UUID <<FK>> <<PK>>
+  * scorecard_id : UUID <<FK>> <<PK>>
+  * linked_at : DateTime
+}
+
+entity "deployment_scorecard" as deployment_scorecard {
+  * deployment_id : UUID <<FK>> <<PK>>
+  * scorecard_id : UUID <<FK>> <<PK>>
+  * linked_at : DateTime
+}
+
+' ========================
+' Контекст цепочек
+' ========================
+
+entity "chain" as chain {
+  * id : UUID <<PK>>
+  * initiative_id : UUID <<FK>>
+  * deployment_id : UUID <<FK>> <<UK>>
+  * name : String
+  * description : Text
+  * created_at : DateTime
+  * updated_at : DateTime
+  * priority : String
+}
+
+entity "chain_simulation" as chain_simulation {
+  * chain_id : UUID <<FK>> <<PK>>
+  * simulation_id : UUID <<FK>> <<PK>>
+  * added_at : DateTime
+}
+
+entity "chain_pilot" as chain_pilot {
+  * chain_id : UUID <<FK>> <<PK>>
+  * pilot_id : UUID <<FK>> <<PK>>
+  * added_at : DateTime
+}
+
+' ========================
+' Контекст пакетов
+' ========================
+
+entity "package" as package {
+  * id : UUID <<PK>>
+  brief_subject : String
+  brief_body : Text
+  * created_by : UUID
+  * created_at : DateTime
+}
+
+' ========================
+' Контекст согласования
+' ========================
+
+entity "approval_instance" as approval_instance {
+  * id : UUID <<PK>>
+  * target_type : String
+  * target_id : UUID
+  * status : String
+  * auto_ratification : Boolean
+  package_id : UUID <<FK>>
+  brief_subject : String
+  brief_body : Text
+  * process_snapshot : JSONB
+  * created_by : UUID
+  * created_at : DateTime
+  * updated_by : UUID
+  * updated_at : DateTime
+}
+
+' ========================
+' Артефакты
+' ========================
+
+entity "artifact" as artifact {
+  * id : UUID <<PK>>
+  * entity_type : String
+  * entity_id : UUID
+  * doc_type : ArtifactType
+  * name : String
+  * version : String
+  * url : String
+  * created_at : DateTime
+}
+
+entity "artifact_type" as artifact_type {
+  * type : String <<PK>>
+  --
+  business_case
+  rov
+  other
+}
+
+' ========================
+' Связи
+' ========================
+
+' Идентификация и доступ
+user "1" -- "0..*" user_role
+user_role "0..*" -- "1" role
+user_role "0..*" -- "0..1" product
+' Каталог продуктов
+product "1" -- "0..*" sub_product
+product "1" -- "0..*" scorecard_template
+product "1" -- "0..*" initiative
+
+' Шаблоны скоркарт
+scorecard_template "1" -- "0..*" template_version
+
+' Скоркарты
+template_version "1" -- "0..*" scorecard
+scorecard "1" -- "1..*" scorecard_version
+scorecard_version "1" -- "0..*" scorecard_source
+scorecard_source "0..*" -- "1" source_type
+scorecard "1" -- "0..*" scorecard_sub_product
+sub_product "1" -- "0..*" scorecard_sub_product
+
+' Инициатива
+initiative "0..*" -- "1" initiative_status
+initiative "1" -- "0..*" simulation
+initiative "1" -- "0..*" pilot
+initiative "1" -- "0..*" deployment
+initiative "1" -- "0..*" chain
+initiative "0..*" -- "1" product
+initiative "1" -- "0..*" initiative_sub_product
+sub_product "1" -- "0..*" initiative_sub_product
+
+' Симуляции
+simulation "0..*" -- "1" simulation_status
+
+' Пилоты
+pilot "0..*" -- "1" pilot_status
+pilot "1" -- "0..*" pilot_scorecard
+scorecard "1" -- "0..*" pilot_scorecard
+
+' Внедрения
+deployment "0..*" -- "1" deployment_status
+deployment "1" -- "0..*" deployment_scorecard
+scorecard "1" -- "0..*" deployment_scorecard
+pilot "0..*" -- "0..1" deployment : через общие Скоркарты
+
+' Цепочка
+chain "0..*" -- "1" deployment
+chain "1" -- "0..*" chain_simulation
+simulation "1" -- "0..*" chain_simulation
+chain "1" -- "0..*" chain_pilot
+pilot "1" -- "0..*" chain_pilot
+
+' Согласование
+package "0..1" -- "0..*" approval_instance : active package
+
+' Артефакты
+artifact "0..*" -- "1" artifact_type
+
+note right of user
+  Корневой агрегат: Пользователь
+
+  Представляет пользователя системы с ролями.
+
+  Роли:
+  - ПРМ (prm): управляет инициативами своего продукта
+  - Методолог (methodologist): управляет скоркартами и документами
+  - Согласующий (approver): согласует/утверждает
+  - Администратор (admin): полный доступ
+
+  Множественные роли:
+  - Пользователь может иметь несколько ролей
+  - ПРМ и методолог могут быть согласующими
+  - Роли могут быть привязаны к продуктам (ПРМ)
+    или глобальными (методолог, согласующий, админ)
+
+  Назначение на согласование:
+  - Полная история маршрута и участники хранятся в approval_instance.process_snapshot
+end note
+
+note right of initiative
+  Корневой агрегат: Инициатива
+
+  Верхнеуровневая сущность, группирующая
+  всю работу по стратегическому изменению.
+
+  Содержит:
+  - Множество Симуляций (исследования)
+  - Множество Пилотов (эксперименты)
+  - Множество Внедрений (deployments)
+
+  Связь с продуктами:
+  - Принадлежит одному Product
+  - Связь многие-ко-многим с SubProduct
+  - Если подпродукты не указаны, относится ко всем
+
+  Жизненный цикл: draft → active → deployed → archived
+
+  Предоставляет контекст и группировку
+  для всех связанных активностей.
+end note
+
+note right of scorecard
+  Корневой агрегат: Скоркарта
+
+  Представляет скоркарту кредитного решения
+  с конфигурацией и финансовыми эффектами.
+
+  Может быть создана:
+  - Вручную (is_manual = true)
+  - Из результатов Симуляции
+
+  Версионируется при изменении.
+  Источники отслеживаются в scorecard_source.
+
+  Связь с продуктами:
+  - Связь многие-ко-многим с SubProduct
+  - Если подпродукты не указаны, относится ко всем
+  - Пилоты и Внедрения наследуют связи с подпродуктами
+
+  Связь многие-ко-многим с Пилотами и Внедрениями.
+end note
+
+note right of simulation
+  Корневой агрегат: Симуляция
+
+  Анализ исторических данных для прогноза
+  финансовых эффектов и метрик риска.
+
+  Принадлежит Инициативе.
+  Может быть источником для Скоркарт.
+  Несколько симуляций могут быть частью
+  одной Цепочки.
+
+  Жизненный цикл: draft → running → completed/failed
+end note
+
+note right of pilot
+  Корневой агрегат: Пилот
+
+  Реальный эксперимент с контрольной группой.
+
+  Ограничения:
+  - Принадлежит одной Инициативе
+  - Может быть связан максимум с одним Внедрением через общие Скоркарты (0..1)
+  - Связан с одной или несколькими Скоркартами
+  - Может быть источником для Скоркарт
+
+  Если создан из Скоркарт, источником которых
+  послужили Симуляции, наследует связи с Симуляциями.
+
+  Жизненный цикл: draft → requires_activation →
+  active → requires_correction/completed
+end note
+
+note right of deployment
+  Корневой агрегат: Внедрение
+
+  Продуктовое внедрение изменения стратегии.
+
+  Принадлежит Инициативе.
+  Может иметь множество Пилотов (0..*) через общие Скоркарты.
+  Связано с одной или несколькими Скоркартами.
+
+  Наследование связей через Скоркарты:
+  - Если создано из Скоркарт, источником которых были Симуляции → наследует связи с Симуляциями
+  - Если создано из Скоркарт, источником которых были Пилоты → наследует связи с Пилотами
+
+  Жизненный цикл: draft → requires_approval →
+  approved → deployed → rolled_back
+end note
+
+note right of chain
+  Корневой агрегат: Цепочка
+
+  Представляет концепцию цепочки:
+  Симуляции → Пилоты → Внедрение
+
+  Ограничения:
+  - Должна иметь ОДНО Внедрение (deployment_id UK)
+  - Может иметь НЕСКОЛЬКО Пилотов (опционально)
+  - Может иметь НЕСКОЛЬКО Симуляций
+
+  Текущий этап отслеживает жизненный цикл:
+  simulation → pilot → deployment
+
+  Цепочка отправляется на согласование:
+  - Начиная с этапа pilot
+  - Только если пилот требует активации/корректировки
+    ИЛИ внедрение требует одобрения
+end note
+
+note right of package
+  Корневой агрегат: Пакет
+
+  Группирует Цепочки с одинаковым маршрутом согласования.
+
+  Двухэтапное согласование:
+  1. Согласование (approval)
+  2. Утверждение (ratification)
+
+  Критичность: максимальная среди всех Цепочек.
+end note
+
+note right of scorecard_source
+  Junction-таблица для отслеживания источников
+  версий Скоркарт.
+
+  source_type: simulation
+  source_id: ссылка на simulation.id
+
+  Обеспечивает трассируемость:
+  - Какие Симуляции использованы для Скоркарты
+end note
+
+@enduml

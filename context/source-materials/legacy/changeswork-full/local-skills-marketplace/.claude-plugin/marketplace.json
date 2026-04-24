@@ -1,0 +1,26 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "local-skills",
+  "description": "Local marketplace for custom Claude Code plugins",
+  "metadata": {
+    "description": "Local marketplace for custom Claude Code plugins"
+  },
+  "owner": {
+    "name": "Local",
+    "email": ""
+  },
+  "plugins": [
+    {
+      "name": "skill-creator",
+      "description": "Guide for creating effective skills",
+      "version": "1.0.0",
+      "author": {
+        "name": "Local",
+        "email": ""
+      },
+      "source": "./plugins/skill-creator",
+      "category": "development",
+      "strict": false
+    }
+  ]
+}

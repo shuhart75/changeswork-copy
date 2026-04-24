@@ -1,0 +1,107 @@
+@startuml
+title BPMN-like process: Methodologist workflow
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultTextAlignment center
+hide empty members
+
+class "Start" as n_start
+class "Done" as n_end_ok
+class "Rework" as n_end_rework
+
+package "Methodologist: analysis" {
+  class "Analyze context" as m1
+  class "Need scorecard?" as g1
+  class "Create / update\nscorecard" as m2
+  class "Fill parameters" as m3
+}
+
+package "Methodologist: prep" {
+  class "Add artifacts" as m4
+  class "Ready to submit?" as g2
+  class "Submit item" as m5
+  class "Need package?" as g3
+}
+
+package "Methodologist: package / rework" {
+  class "Pick queue items" as m6
+  class "Send package" as m7
+  class "Revise materials" as m8
+}
+
+package "System: setup" {
+  class "Resolve product" as sys_product
+  class "Load template" as sys_template
+  class "Prefill from\nsimulation" as sys_prefill
+  class "Calc\ncriticality" as sys_criticality
+}
+
+package "System: routing" {
+  class "Save version" as sys_save
+  class "Create instance" as sys_instance
+  class "Has approval?" as sys_has_approval
+  class "Set in_approval" as sys_in_approval
+}
+
+package "System: ratification" {
+  class "Auto ratification?" as sys_auto_ratification
+  class "Set awaiting" as sys_awaiting
+  class "Set in_ratification" as sys_in_ratification
+  class "Create package" as sys_package
+}
+
+package "Approver" {
+  class "Review" as a1
+  class "Approval ok?" as g6
+}
+
+package "Ratifier" {
+  class "Review" as r1
+  class "Ratification ok?" as g7
+}
+
+n_start --> m1
+m1 --> g1
+g1 --> m2 : Yes
+g1 --> m4 : No
+
+m2 --> sys_product
+sys_product --> sys_template
+sys_template --> sys_prefill
+sys_prefill --> m3
+m3 --> sys_criticality
+sys_criticality --> sys_save
+sys_save --> m4
+
+m4 --> g2
+g2 --> m5 : Yes
+g2 --> n_end_rework : No
+n_end_rework --> m8
+
+m5 --> sys_instance
+sys_instance --> sys_has_approval
+sys_has_approval --> sys_in_approval : Yes
+sys_has_approval --> sys_auto_ratification : No
+sys_in_approval --> a1
+a1 --> g6
+g6 --> sys_auto_ratification : Yes
+g6 --> n_end_rework : No
+
+sys_auto_ratification --> sys_in_ratification : Yes
+sys_auto_ratification --> sys_awaiting : No
+sys_awaiting --> g3
+g3 --> m6 : Yes
+g3 --> sys_in_ratification : No
+m6 --> m7
+m7 --> sys_package
+sys_package --> sys_in_ratification
+
+sys_in_ratification --> r1
+r1 --> g7
+g7 --> n_end_ok : Yes
+g7 --> n_end_rework : No
+
+@enduml

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цвета статусов — Симуляции</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a1d23;
+            padding: 40px;
+        }
+
+        h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+        .subtitle { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+
+        .comparison-table {
+            width: 100%;
+            max-width: 1200px;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 32px;
+        }
+
+        .comparison-table th {
+            background: #f8f9fb;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .comparison-table td {
+            padding: 16px;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .comparison-table tr:last-child td { border-bottom: none; }
+
+        .chip {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+
+        .arrow-cell {
+            text-align: center;
+            font-size: 20px;
+            color: #9ca3af;
+            width: 40px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section { margin-bottom: 32px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .color-codes {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.08);
+            flex-shrink: 0;
+        }
+
+        .code {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .label {
+            color: #9ca3af;
+            font-size: 12px;
+            min-width: 50px;
+        }
+
+        .note {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-size: 13px;
+            color: #92400e;
+            max-width: 1200px;
+            margin-bottom: 32px;
+        }
+
+        .note strong { color: #78350f; }
+
+        .unchanged {
+            color: #9ca3af;
+            font-size: 13px;
+            font-style: italic;
+        }
+
+        .preview-table {
+            width: 100%;
+            max-width: 1200px;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            margin-bottom: 32px;
+        }
+
+        .preview-table th {
+            background: #f8f9fb;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .preview-table td {
+            padding: 12px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .preview-table tr:last-child td { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Цвета статусов — Симуляции</h1>
+    <p class="subtitle">Сравнение «было → стало» для изменённых статусов</p>
+
+    <!-- Comparison table -->
+    <div class="section">
+        <div class="section-title">Было → Стало</div>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Статус</th>
+                    <th>Было (фон / текст)</th>
+                    <th></th>
+                    <th>Стало (фон / текст)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Ошибка</strong></td>
+                    <td>
+                        <span class="chip" style="background:#ffebee; color:#c62828;">Ошибка</span><br>
+                        <span style="font-size:12px; color:#9ca3af; margin-top:4px; display:inline-block;">#ffebee / #c62828</span>
+                    </td>
+                    <td class="arrow-cell">→</td>
+                    <td>
+                        <span class="chip" style="background:#ffebee; color:#b71c1c;">Ошибка</span><br>
+                        <span style="font-size:12px; color:#9ca3af; margin-top:4px; display:inline-block;">#ffebee / #b71c1c</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Установка на ПРОМ</strong></td>
+                    <td>
+                        <span class="chip" style="background:#fff9c4; color:#f9a825;">Установка на ПРОМ</span><br>
+                        <span style="font-size:12px; color:#9ca3af; margin-top:4px; display:inline-block;">#fff9c4 / #f9a825</span>
+                    </td>
+                    <td class="arrow-cell">→</td>
+                    <td>
+                        <span class="chip" style="background:#fff9c4; color:#f57f17;">Установка на ПРОМ</span><br>
+                        <span style="font-size:12px; color:#9ca3af; margin-top:4px; display:inline-block;">#fff9c4 / #f57f17</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Завершена</strong></td>
+                    <td colspan="3" class="unchanged">без изменений — #e8f5e9 / #2e7d32</td>
+                </tr>
+                <tr>
+                    <td><strong>Новая</strong></td>
+                    <td colspan="3" class="unchanged">без изменений — #bbdefb / #1565c0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Preview table -->
+    <div class="section">
+        <div class="section-title">Предпросмотр в таблице</div>
+        <table class="preview-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Статус</th>
+                    <th>Этап</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color:#1565c0; font-weight:600;">SIM-CC-97</td>
+                    <td>test09.04-3</td>
+                    <td><span class="chip" style="background:#e8f5e9; color:#2e7d32;">Завершена</span></td>
+                    <td>Формирование отчета</td>
+                </tr>
+                <tr>
+                    <td style="color:#1565c0; font-weight:600;">SIM-CC-93</td>
+                    <td>показ0804</td>
+                    <td><span class="chip" style="background:#ffebee; color:#b71c1c;">Ошибка</span></td>
+                    <td>Агрегация данных для кред...</td>
+                </tr>
+                <tr>
+                    <td style="color:#1565c0; font-weight:600;">SIM-CC-91</td>
+                    <td>dti_cutoff_0804</td>
+                    <td><span class="chip" style="background:#fff9c4; color:#f57f17;">Установка на ПРОМ</span></td>
+                    <td>Установка риск-параметров</td>
+                </tr>
+                <tr>
+                    <td style="color:#1565c0; font-weight:600;">SIM-CC-92</td>
+                    <td>dti_cutoff_показ</td>
+                    <td><span class="chip" style="background:#bbdefb; color:#1565c0;">Новая</span></td>
+                    <td>—</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Color cards -->
+    <div class="section">
+        <div class="section-title">Коды цветов</div>
+        <div class="grid">
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="chip" style="background:#fde8e8; color:#b71c1c;">Ошибка</span>
+                </div>
+                <div class="color-codes">
+                    <div class="color-row">
+                        <div class="swatch" style="background:#ffebee;"></div>
+                        <span class="label">Фон</span>
+                        <span class="code">#ffebee</span>
+                    </div>
+                    <div class="color-row">
+                        <div class="swatch" style="background:#b71c1c;"></div>
+                        <span class="label">Текст</span>
+                        <span class="code">#b71c1c</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="chip" style="background:#fff9c4; color:#f57f17;">Установка на ПРОМ</span>
+                </div>
+                <div class="color-codes">
+                    <div class="color-row">
+                        <div class="swatch" style="background:#fff9c4;"></div>
+                        <span class="label">Фон</span>
+                        <span class="code">#fff9c4</span>
+                    </div>
+                    <div class="color-row">
+                        <div class="swatch" style="background:#f57f17;"></div>
+                        <span class="label">Текст</span>
+                        <span class="code">#f57f17</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MUI palette reference -->
+    <div class="section">
+        <div class="section-title">Коды MUI Palette</div>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Статус</th>
+                    <th>Фон</th>
+                    <th>Текст</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Ошибка</strong></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="swatch" style="background:#ffebee;"></div>
+                            <div>
+                                <span class="code">#ffebee</span><br>
+                                <span style="font-size:11px;color:#9ca3af;">red[50]</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="swatch" style="background:#b71c1c;"></div>
+                            <div>
+                                <span class="code">#b71c1c</span><br>
+                                <span style="font-size:11px;color:#9ca3af;">red[900]</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Установка на ПРОМ</strong></td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="swatch" style="background:#fff9c4;"></div>
+                            <div>
+                                <span class="code">#fff9c4</span><br>
+                                <span style="font-size:11px;color:#9ca3af;">yellow[100]</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="swatch" style="background:#f57f17;"></div>
+                            <div>
+                                <span class="code">#f57f17</span><br>
+                                <span style="font-size:11px;color:#9ca3af;">yellow[900]</span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Справочник MUI Palette (основные оттенки)</div>
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Цвет</th>
+                    <th>50</th>
+                    <th>100</th>
+                    <th>200</th>
+                    <th>300</th>
+                    <th>400</th>
+                    <th>500</th>
+                    <th>600</th>
+                    <th>700</th>
+                    <th>800</th>
+                    <th>900</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>red</strong></td>
+                    <td><div class="swatch" style="background:#ffebee;" title="#ffebee"></div></td>
+                    <td><div class="swatch" style="background:#ffcdd2;" title="#ffcdd2"></div></td>
+                    <td><div class="swatch" style="background:#ef9a9a;" title="#ef9a9a"></div></td>
+                    <td><div class="swatch" style="background:#e57373;" title="#e57373"></div></td>
+                    <td><div class="swatch" style="background:#ef5350;" title="#ef5350"></div></td>
+                    <td><div class="swatch" style="background:#f44336;" title="#f44336"></div></td>
+                    <td><div class="swatch" style="background:#e53935;" title="#e53935"></div></td>
+                    <td><div class="swatch" style="background:#d32f2f;" title="#d32f2f"></div></td>
+                    <td><div class="swatch" style="background:#c62828;" title="#c62828"></div></td>
+                    <td><div class="swatch" style="background:#b71c1c;" title="#b71c1c"></div></td>
+                </tr>
+                <tr>
+                    <td><strong>orange</strong></td>
+                    <td><div class="swatch" style="background:#fff3e0;" title="#fff3e0"></div></td>
+                    <td><div class="swatch" style="background:#ffe0b2;" title="#ffe0b2"></div></td>
+                    <td><div class="swatch" style="background:#ffcc80;" title="#ffcc80"></div></td>
+                    <td><div class="swatch" style="background:#ffb74d;" title="#ffb74d"></div></td>
+                    <td><div class="swatch" style="background:#ffa726;" title="#ffa726"></div></td>
+                    <td><div class="swatch" style="background:#ff9800;" title="#ff9800"></div></td>
+                    <td><div class="swatch" style="background:#fb8c00;" title="#fb8c00"></div></td>
+                    <td><div class="swatch" style="background:#f57c00;" title="#f57c00"></div></td>
+                    <td><div class="swatch" style="background:#ef6c00;" title="#ef6c00"></div></td>
+                    <td><div class="swatch" style="background:#e65100;" title="#e65100"></div></td>
+                </tr>
+                <tr>
+                    <td><strong>yellow</strong></td>
+                    <td><div class="swatch" style="background:#fffde7;" title="#fffde7"></div></td>
+                    <td><div class="swatch" style="background:#fff9c4;" title="#fff9c4"></div></td>
+                    <td><div class="swatch" style="background:#fff59d;" title="#fff59d"></div></td>
+                    <td><div class="swatch" style="background:#fff176;" title="#fff176"></div></td>
+                    <td><div class="swatch" style="background:#ffee58;" title="#ffee58"></div></td>
+                    <td><div class="swatch" style="background:#ffeb3b;" title="#ffeb3b"></div></td>
+                    <td><div class="swatch" style="background:#fdd835;" title="#fdd835"></div></td>
+                    <td><div class="swatch" style="background:#fbc02d;" title="#fbc02d"></div></td>
+                    <td><div class="swatch" style="background:#f9a825;" title="#f9a825"></div></td>
+                    <td><div class="swatch" style="background:#f57f17;" title="#f57f17"></div></td>
+                </tr>
+                <tr>
+                    <td><strong>green</strong></td>
+                    <td><div class="swatch" style="background:#e8f5e9;" title="#e8f5e9"></div></td>
+                    <td><div class="swatch" style="background:#c8e6c9;" title="#c8e6c9"></div></td>
+                    <td><div class="swatch" style="background:#a5d6a7;" title="#a5d6a7"></div></td>
+                    <td><div class="swatch" style="background:#81c784;" title="#81c784"></div></td>
+                    <td><div class="swatch" style="background:#66bb6a;" title="#66bb6a"></div></td>
+                    <td><div class="swatch" style="background:#4caf50;" title="#4caf50"></div></td>
+                    <td><div class="swatch" style="background:#43a047;" title="#43a047"></div></td>
+                    <td><div class="swatch" style="background:#388e3c;" title="#388e3c"></div></td>
+                    <td><div class="swatch" style="background:#2e7d32;" title="#2e7d32"></div></td>
+                    <td><div class="swatch" style="background:#1b5e20;" title="#1b5e20"></div></td>
+                </tr>
+                <tr>
+                    <td><strong>blue</strong></td>
+                    <td><div class="swatch" style="background:#e3f2fd;" title="#e3f2fd"></div></td>
+                    <td><div class="swatch" style="background:#bbdefb;" title="#bbdefb"></div></td>
+                    <td><div class="swatch" style="background:#90caf9;" title="#90caf9"></div></td>
+                    <td><div class="swatch" style="background:#64b5f6;" title="#64b5f6"></div></td>
+                    <td><div class="swatch" style="background:#42a5f5;" title="#42a5f5"></div></td>
+                    <td><div class="swatch" style="background:#2196f3;" title="#2196f3"></div></td>
+                    <td><div class="swatch" style="background:#1e88e5;" title="#1e88e5"></div></td>
+                    <td><div class="swatch" style="background:#1976d2;" title="#1976d2"></div></td>
+                    <td><div class="swatch" style="background:#1565c0;" title="#1565c0"></div></td>
+                    <td><div class="swatch" style="background:#0d47a1;" title="#0d47a1"></div></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="note">
+        <strong>Что изменено:</strong><br><br>
+        <strong>«Ошибка»</strong> — фон <code>red[50]</code> (#ffebee), текст <code>red[900]</code> (#b71c1c). Отличается от «Выключен» у пилотов.<br><br>
+        <strong>«Установка на ПРОМ»</strong> — фон <code>yellow[100]</code> (#fff9c4), текст <code>yellow[900]</code> (#f57f17). Более тёмный жёлтый, не сливается с оранжевым «Согласование корректировки» у пилотов.
+    </div>
+
+</body>
+</html>

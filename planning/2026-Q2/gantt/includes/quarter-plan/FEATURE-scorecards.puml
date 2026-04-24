@@ -1,0 +1,12 @@
+' FEATURE: scorecards
+[Scorecards: backend foundation, templates and criticality] as [SC_STORY_CORE] lasts 10 days
+[SC_STORY_CORE] starts 2026/04/15
+[SC_STORY_CORE] is colored in LightBlue
+
+[Scorecards: workspace, detail, sources and usage] as [SC_STORY_WORKSPACE] lasts 12 days
+[SC_STORY_WORKSPACE] starts 2026/04/21
+[SC_STORY_WORKSPACE] is colored in LightCoral
+
+[Scorecards: create, edit and binding] as [SC_STORY_FORM] lasts 17 days
+[SC_STORY_FORM] starts 2026/04/24
+[SC_STORY_FORM] is colored in LightCoral

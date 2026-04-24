@@ -1,0 +1,51 @@
+# Сводка задач MVP v6.1 (Aligned to spec v3.1 + Gantt v6)
+
+**Спецификация:** [`spec/domain_model.md`](/home/reutov/Documents/AI/changesWork/spec/domain_model.md)  
+**План/оценки:** [`planning/mvp/versions/v6.1/gantt/mvp_gantt_chart_v6.1_aligned.puml`](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/gantt/mvp_gantt_chart_v6.1_aligned.puml)
+
+## Термины (важно)
+
+- `Initiative` (Инициатива) это верхнеуровневая сущность (в старых материалах часто называлась "Deployment/Внедрение").
+- `Deployment` (Внедрение) это продуктовое внедрение (в старых материалах часто называлось "Change/Изменение").
+
+## Карта "Gantt -> Task docs"
+
+- **Approval / Package (Фаза 1):**
+  - `AN_AP1`, `BE_AP1`: процесс согласования/утверждения: [mvp_tasks_approval_process_backend.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_approval_process_backend.md)
+  - `AN_APR1`, `BE_APR1`, `FE_APR1`: страница "Согласования": [mvp_tasks_approvals_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_approvals_page.md)
+  - `AN_PKG1`, `BE_PKG1`, `FE_PKG1`: страница "Пакеты": [mvp_tasks_packages_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_packages_page.md)
+  - `BE_INT1`: интеграция ЖЦ с результатами согласования: [mvp_tasks_approval_integration.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_approval_integration.md)
+  - `BE_NOT1`: email/уведомления: [mvp_tasks_notifications.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_notifications.md)
+  - `QA_PHASE1`: тестирование фазы 1: [mvp_tasks_qa_phase1.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_qa_phase1.md)
+
+- **Initiative (Инициативы):**
+  - `AN_D1`, `BE_D1`, `FE_D1`: список инициатив: [mvp_tasks_initiatives_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_initiatives_page.md)
+  - `AN_DD1`, `BE_DD1`, `FE_DD1`: детальная инициативы: [mvp_tasks_initiative_detail_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_initiative_detail_page.md)
+  - `AN_CD1`, `BE_CD1`, `FE_CD1`: создание инициативы: [mvp_tasks_create_initiative_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_create_initiative_page.md)
+
+- **Deployment (Внедрения):**
+  - `AN_C1`, `BE_C1`, `FE_C1`: список внедрений: [mvp_tasks_deployments_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_deployments_page.md)
+  - `AN_CHD1`, `BE_CHD1`, `FE_CHD1`: детальная внедрения: [mvp_tasks_deployment_detail_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_deployment_detail_page.md)
+  - `AN_CHF1`, `BE_CHF1`, `FE_CHF1`: форма внедрения: [mvp_tasks_deployment_form.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_deployment_form.md)
+  - `BE_CL1`: жизненный цикл внедрения: [mvp_tasks_deployment_lifecycle.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_deployment_lifecycle.md)
+
+- **Scorecards:**
+  - `AN_SC1`, `BE_SC1`, `FE_SC1`: список скоркарт: [mvp_tasks_scorecards_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_scorecards_page.md)
+  - `AN_SCD1`, `BE_SCD1`, `FE_SCD1`: детальная скоркарты: [mvp_tasks_scorecard_detail_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_scorecard_detail_page.md)
+  - `AN_SCF1`, `BE_SCF1`, `FE_SCF1`: форма скоркарты (с `ScorecardVersion`): [mvp_tasks_scorecard_form.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_scorecard_form.md)
+
+- **Simulation / Pilot:**
+  - `AN_S1`, `BE_S1`, `FE_S1`: список симуляций: [mvp_tasks_simulations_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_simulations_page.md)
+  - `AN_P1`, `BE_P1`, `FE_P1`: список пилотов: [mvp_tasks_pilots_page.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_pilots_page.md)
+  - `AN_SF1`, `BE_SF1`, `FE_SF1`: форма симуляции: [mvp_tasks_simulation_form.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_simulation_form.md)
+  - `AN_PF1`, `BE_PF1`, `FE_PF1`: форма пилота: [mvp_tasks_pilot_form.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_pilot_form.md)
+  - `FE_SD1`, `FE_PD1`: детальные Simulation/Pilot в Gantt есть только как Frontend-задачи; Backend-часть предполагается существующей или включенной в `BE_S1/BE_P1` (см. примечания ниже)
+
+- **Навигация + финальный QA:**
+  - `FE_NAV1`: меню: [mvp_tasks_navigation_menu.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_navigation_menu.md)
+  - `QA_PHASE2`, `QA_FINAL`: тестирование фазы 2 и финал: [mvp_tasks_qa_phase2.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_qa_phase2.md), [mvp_tasks_qa_final.md](/home/reutov/Documents/AI/changesWork/planning/mvp/versions/v6.1/tasks/mvp_tasks_qa_final.md)
+
+## Примечания по расхождениям "tasks vs Gantt"
+
+- В `Gantt v6` отсутствуют отдельные backend-задачи `BE-SD1` (деталка симуляции) и `BE-PD1` (деталка пилота), при этом фронтенд-деталки `FE_SD1/FE_PD1` запланированы. Это трактуем как допущение плана: backend-деталки уже существуют (или входят в `BE_S1/BE_P1`). Если это не так, нужно добавить backend-работы в план.
+

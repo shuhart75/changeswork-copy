@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница "Пакеты" - Прототип</title>
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+        }
+        #root {
+            height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 240px;
+            background-color: #1a1d23;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        .sidebar-item.active {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+            border-left: 3px solid #4caf50;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            background-color: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { 
+            Box, Paper, Typography, Button, Tabs, Tab, Stack, Chip, Checkbox,
+            Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+            Select, MenuItem, FormControl, InputLabel, Badge
+        } = MaterialUI;
+        const { useState } = React;
+
+        // Mock data
+        const products = [
+            { id: 1, name: 'Premium', subproducts: ['Premium Classic', 'Premium Gold'] },
+            { id: 2, name: 'Classic', subproducts: ['Classic Standard', 'Classic Plus'] },
+            { id: 3, name: 'Express', subproducts: ['Express Quick', 'Express Instant'] }
+        ];
+
+        const mockInitiatives = [
+            { id: 1, name: 'Инициатива Premium Q1 2026', product: 'Premium' },
+            { id: 2, name: 'Инициатива Classic базовые условия', product: 'Classic' },
+            { id: 3, name: 'Инициатива Express ускорение', product: 'Express' }
+        ];
+
+        const mockPilots = [
+            {
+                id: 1,
+                name: 'Пилот Premium Q1 2026',
+                product: 'Premium',
+                status: 'requires_ratification',
+                criticality: 'HIGH',
+                initiativeId: 1,
+                createdAt: '2026-02-15',
+                scorecards: [{ id: 1, name: 'Скоркарта Premium v2.0' }],
+                ratifierName: null
+            },
+            {
+                id: 2,
+                name: 'Пилот Classic базовые условия',
+                product: 'Classic',
+                status: 'requires_ratification',
+                criticality: 'MEDIUM',
+                initiativeId: 2,
+                createdAt: '2026-02-20',
+                scorecards: [{ id: 2, name: 'Скоркарта Classic v1.5' }],
+                ratifierName: 'Иванов И.И.'
+            }
+        ];
+
+        const mockChanges = [
+            {
+                id: 1,
+                name: 'Внедрение новой скоркарты Premium',
+                product: 'Premium',
+                status: 'requires_ratification',
+                criticality: 'CRITICAL',
+                initiativeId: 1,
+                createdAt: '2026-02-18',
+                scorecards: [{ id: 1, name: 'Скоркарта Premium v2.0' }],
+                ratifierName: null
+            },
+            {
+                id: 2,
+                name: 'Снижение минимального дохода',
+                product: 'Classic',
+                status: 'in_approval',
+                criticality: 'HIGH',
+                initiativeId: 2,
+                createdAt: '2026-02-22',
+                scorecards: [{ id: 2, name: 'Скоркарта Classic v1.5' }],
+                ratifierName: 'Петров П.П.'
+            }
+        ];
+
+        const mockRatifiers = [
+            { id: 1, name: 'Иванов И.И.' },
+            { id: 2, name: 'Петров П.П.' },
+            { id: 3, name: 'Сидоров С.С.' }
+        ];
+
+        // Helper functions
+        const getCriticalityStyles = (criticality) => {
+            const styles = {
+                LOW: { bgcolor: '#e8f5e9', color: '#2e7d32', label: 'Низкая' },
+                MEDIUM: { bgcolor: '#fff3e0', color: '#e65100', label: 'Средняя' },
+                HIGH: { bgcolor: '#ffe0b2', color: '#e65100', label: 'Высокая' },
+                CRITICAL: { bgcolor: '#ffebee', color: '#c62828', label: 'Критичная' }
+            };
+            return styles[criticality] || styles.MEDIUM;
+        };
+
+        const getStatusLabel = (status) => {
+            const labels = {
+                requires_ratification: 'Требует утверждения',
+                in_approval: 'На согласовании',
+                in_ratification: 'На утверждении',
+                rejected: 'Отклонено'
+            };
+            return labels[status] || status;
+        };
+
+        // Main PackagesView component
+        function PackagesView() {
+            const [activeSection, setActiveSection] = useState('queue'); // 'queue' or 'packages'
+            const [selectedQueueItems, setSelectedQueueItems] = useState([]);
+            const [myPackages, setMyPackages] = useState([
+                {
+                    id: 1,
+                    name: 'Пакет Q1 2026',
+                    items: [],
+                    createdAt: '2026-03-16',
+                    status: 'draft'
+                }
+            ]);
+            const [addToPackageDialogOpen, setAddToPackageDialogOpen] = useState(false);
+            const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+            const [selectedPackageForSubmit, setSelectedPackageForSubmit] = useState(null);
+            const [selectedRatifier, setSelectedRatifier] = useState('');
+            const [packageDetailDialogOpen, setPackageDetailDialogOpen] = useState(false);
+            const [selectedPackageForDetail, setSelectedPackageForDetail] = useState(null);
+
+            // Queue items (awaiting ratification)
+            const queueItems = [
+                ...mockPilots.filter(p => p.status === 'requires_ratification').map(p => ({ ...p, type: 'pilot' })),
+                ...mockChanges.filter(c => c.status === 'requires_ratification').map(c => ({ ...c, type: 'change' }))
+            ];
+
+            const handleToggleQueueSelection = (itemId) => {
+                setSelectedQueueItems(prev =>
+                    prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+                );
+            };
+
+            const handleAddToPackage = () => {
+                setAddToPackageDialogOpen(true);
+            };
+
+            const handleCreateNewPackage = () => {
+                const newPackage = {
+                    id: myPackages.length + 1,
+                    name: `Пакет ${new Date().toLocaleDateString()}`,
+                    items: selectedQueueItems.map(id => {
+                        const item = queueItems.find(i => `${i.type}-${i.id}` === id);
+                        return item;
+                    }).filter(Boolean),
+                    createdAt: new Date().toISOString().split('T')[0],
+                    status: 'draft'
+                };
+                setMyPackages([...myPackages, newPackage]);
+                setSelectedQueueItems([]);
+                setAddToPackageDialogOpen(false);
+                alert(`Создан новый пакет с ${newPackage.items.length} элементами`);
+            };
+
+            const handleAddToExistingPackage = (packageId) => {
+                const pkg = myPackages.find(p => p.id === packageId);
+                if (!pkg) return;
+
+                const itemsToAdd = selectedQueueItems.map(id => {
+                    const item = queueItems.find(i => `${i.type}-${i.id}` === id);
+                    return item;
+                }).filter(Boolean);
+
+                const updatedPackages = myPackages.map(p =>
+                    p.id === packageId ? { ...p, items: [...p.items, ...itemsToAdd] } : p
+                );
+                setMyPackages(updatedPackages);
+                setSelectedQueueItems([]);
+                setAddToPackageDialogOpen(false);
+                alert(`Добавлено ${itemsToAdd.length} элементов в пакет "${pkg.name}"`);
+            };
+
+            const handleOpenSubmitDialog = (pkg) => {
+                setSelectedPackageForSubmit(pkg);
+                setSubmitDialogOpen(true);
+            };
+
+            const handleSubmitPackage = () => {
+                if (!selectedRatifier) {
+                    alert('Выберите утверждающего');
+                    return;
+                }
+                const ratifier = mockRatifiers.find(r => r.id === selectedRatifier);
+                alert(`Пакет "${selectedPackageForSubmit.name}" отправлен на утверждение к ${ratifier.name}`);
+                
+                const updatedPackages = myPackages.map(p =>
+                    p.id === selectedPackageForSubmit.id ? { ...p, status: 'pending', ratifierName: ratifier.name } : p
+                );
+                setMyPackages(updatedPackages);
+                setSubmitDialogOpen(false);
+                setSelectedRatifier('');
+                setSelectedPackageForSubmit(null);
+            };
+
+            const handleDeletePackage = (packageId) => {
+                if (confirm('Удалить пакет?')) {
+                    setMyPackages(myPackages.filter(p => p.id !== packageId));
+                    alert('Пакет удалён');
+                }
+            };
+
+            const handleRemoveItemFromPackage = (packageId, itemId) => {
+                const updatedPackages = myPackages.map(p =>
+                    p.id === packageId ? { ...p, items: p.items.filter(i => `${i.type}-${i.id}` !== itemId) } : p
+                );
+                setMyPackages(updatedPackages);
+                alert('Элемент удалён из пакета');
+            };
+
+            const handleOpenPackageDetail = (pkg) => {
+                setSelectedPackageForDetail(pkg);
+                setPackageDetailDialogOpen(true);
+            };
+
+            const getPackageCriticality = (pkg) => {
+                if (pkg.items.length === 0) return 'LOW';
+                const criticalities = pkg.items.map(i => i.criticality);
+                if (criticalities.includes('CRITICAL')) return 'CRITICAL';
+                if (criticalities.includes('HIGH')) return 'HIGH';
+                if (criticalities.includes('MEDIUM')) return 'MEDIUM';
+                return 'LOW';
+            };
+
+            const getPackageProducts = (pkg) => {
+                const products = [...new Set(pkg.items.map(i => i.product))];
+                return products;
+            };
+
+            return (
+                <Box sx={{ width: '100%' }}>
+                    <Paper>
+                        <Tabs value={activeSection === 'queue' ? 0 : 1} onChange={(e, v) => setActiveSection(v === 0 ? 'queue' : 'packages')}>
+                            <Tab label={`Очередь ожидания утверждения (${queueItems.length})`} />
+                            <Tab label={`Мои пакеты (${myPackages.length})`} />
+                        </Tabs>
+
+                        <Box sx={{ p: 3 }}>
+                            {/* Section: Queue */}
+                            {activeSection === 'queue' && (
+                                <Box>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                                        <Typography variant="h6">Очередь ожидания утверждения</Typography>
+                                        {selectedQueueItems.length > 0 && (
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<span className="material-icons">add</span>}
+                                                onClick={handleAddToPackage}
+                                                sx={{ bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                                            >
+                                                Добавить в пакет ({selectedQueueItems.length})
+                                            </Button>
+                                        )}
+                                    </Stack>
+
+                                    {queueItems.length > 0 ? (
+                                        <Stack spacing={2}>
+                                            {queueItems.map(item => {
+                                                const itemId = `${item.type}-${item.id}`;
+                                                const isSelected = selectedQueueItems.includes(itemId);
+                                                const critStyles = getCriticalityStyles(item.criticality);
+                                                const initiative = mockInitiatives.find(i => i.id === item.initiativeId);
+
+                                                return (
+                                                    <Box
+                                                        key={itemId}
+                                                        sx={{
+                                                            p: 2,
+                                                            bgcolor: isSelected ? '#e3f2fd' : '#fafafa',
+                                                            borderRadius: 1,
+                                                            border: isSelected ? '2px solid #90caf9' : '1px solid #e0e0e0'
+                                                        }}
+                                                    >
+                                                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                            <Checkbox
+                                                                checked={isSelected}
+                                                                onChange={() => handleToggleQueueSelection(itemId)}
+                                                            />
+                                                            <Box sx={{ flex: 1 }}>
+                                                                <Typography variant="body1" fontWeight={500}>
+                                                                    {item.type === 'pilot' ? 'Пилот' : 'Внедрение'}: {item.name}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {item.type === 'pilot' ? 'PLT' : 'CHG'}-{item.id} • Создан {item.createdAt}
+                                                                </Typography>
+                                                                <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                                    <Chip
+                                                                        label={critStyles.label}
+                                                                        size="small"
+                                                                        sx={{ bgcolor: critStyles.bgcolor, color: critStyles.color }}
+                                                                    />
+                                                                    <Chip label={item.product} size="small" variant="outlined" />
+                                                                    {initiative && <Chip label={initiative.name} size="small" variant="outlined" />}
+                                                                </Box>
+                                                                <Box sx={{ mt: 1 }}>
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        Скоркарты: {item.scorecards.map(s => s.name).join(', ')}
+                                                                    </Typography>
+                                                                </Box>
+                                                            </Box>
+                                                            <Chip label={getStatusLabel(item.status)} size="small" color="warning" />
+                                                        </Stack>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Stack>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">
+                                            Нет элементов в очереди ожидания утверждения
+                                        </Typography>
+                                    )}
+                                </Box>
+                            )}
+
+                            {/* Section: My Packages */}
+                            {activeSection === 'packages' && (
+                                <Box>
+                                    <Typography variant="h6" sx={{ mb: 2 }}>Мои пакеты</Typography>
+
+                                    {myPackages.length > 0 ? (
+                                        <Stack spacing={2}>
+                                            {myPackages.map(pkg => {
+                                                const criticality = getPackageCriticality(pkg);
+                                                const critStyles = getCriticalityStyles(criticality);
+                                                const products = getPackageProducts(pkg);
+                                                const isDraft = pkg.status === 'draft';
+
+                                                return (
+                                                    <Box
+                                                        key={pkg.id}
+                                                        sx={{
+                                                            p: 2,
+                                                            bgcolor: '#fafafa',
+                                                            borderRadius: 1,
+                                                            border: '1px solid #e0e0e0'
+                                                        }}
+                                                    >
+                                                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                            <Box sx={{ flex: 1 }}>
+                                                                <Typography variant="body1" fontWeight={500}>
+                                                                    {pkg.name}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    PKG-{pkg.id} • Создан {pkg.createdAt} • Элементов: {pkg.items.length}
+                                                                </Typography>
+                                                                <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                                                    <Chip
+                                                                        label={critStyles.label}
+                                                                        size="small"
+                                                                        sx={{ bgcolor: critStyles.bgcolor, color: critStyles.color }}
+                                                                    />
+                                                                    {products.map(p => (
+                                                                        <Chip key={p} label={p} size="small" variant="outlined" />
+                                                                    ))}
+                                                                    <Chip
+                                                                        label={isDraft ? 'Черновик' : 'Отправлен'}
+                                                                        size="small"
+                                                                        color={isDraft ? 'default' : 'success'}
+                                                                    />
+                                                                </Box>
+                                                            </Box>
+                                                            <Stack direction="row" spacing={1}>
+                                                                <Button
+                                                                    size="small"
+                                                                    variant="outlined"
+                                                                    onClick={() => handleOpenPackageDetail(pkg)}
+                                                                >
+                                                                    Открыть
+                                                                </Button>
+                                                                {isDraft && (
+                                                                    <>
+                                                                        <Button
+                                                                            size="small"
+                                                                            variant="contained"
+                                                                            disabled={pkg.items.length === 0}
+                                                                            onClick={() => handleOpenSubmitDialog(pkg)}
+                                                                            sx={{ bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                                                                        >
+                                                                            Отправить
+                                                                        </Button>
+                                                                        <Button
+                                                                            size="small"
+                                                                            variant="outlined"
+                                                                            color="error"
+                                                                            onClick={() => handleDeletePackage(pkg.id)}
+                                                                        >
+                                                                            Удалить
+                                                                        </Button>
+                                                                    </>
+                                                                )}
+                                                            </Stack>
+                                                        </Stack>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Stack>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">
+                                            Нет созданных пакетов
+                                        </Typography>
+                                    )}
+                                </Box>
+                            )}
+                        </Box>
+                    </Paper>
+
+                    {/* Dialog: Add to Package */}
+                    <Dialog open={addToPackageDialogOpen} onClose={() => setAddToPackageDialogOpen(false)} maxWidth="sm" fullWidth>
+                        <DialogTitle>Добавить в пакет</DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Выбрано элементов: {selectedQueueItems.length}
+                            </Typography>
+                            
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<span className="material-icons">add</span>}
+                                onClick={handleCreateNewPackage}
+                                sx={{ mb: 2, bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                            >
+                                Создать новый пакет
+                            </Button>
+
+                            {myPackages.filter(p => p.status === 'draft').length > 0 && (
+                                <>
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                        Или добавить в существующий:
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        {myPackages.filter(p => p.status === 'draft').map(pkg => (
+                                            <Button
+                                                key={pkg.id}
+                                                fullWidth
+                                                variant="outlined"
+                                                onClick={() => handleAddToExistingPackage(pkg.id)}
+                                                sx={{ justifyContent: 'flex-start' }}
+                                            >
+                                                {pkg.name} ({pkg.items.length} элементов)
+                                            </Button>
+                                        ))}
+                                    </Stack>
+                                </>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setAddToPackageDialogOpen(false)}>Отмена</Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Dialog: Submit for Ratification */}
+                    <Dialog open={submitDialogOpen} onClose={() => setSubmitDialogOpen(false)} maxWidth="sm" fullWidth>
+                        <DialogTitle>Отправить на утверждение</DialogTitle>
+                        <DialogContent>
+                            {selectedPackageForSubmit && (
+                                <>
+                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                        Пакет: {selectedPackageForSubmit.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        Элементов: {selectedPackageForSubmit.items.length}
+                                    </Typography>
+
+                                    <FormControl fullWidth sx={{ mt: 2 }}>
+                                        <InputLabel>Утверждающий</InputLabel>
+                                        <Select
+                                            value={selectedRatifier}
+                                            onChange={(e) => setSelectedRatifier(e.target.value)}
+                                            label="Утверждающий"
+                                        >
+                                            {mockRatifiers.map(r => (
+                                                <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setSubmitDialogOpen(false)}>Отмена</Button>
+                            <Button
+                                variant="contained"
+                                onClick={handleSubmitPackage}
+                                disabled={!selectedRatifier}
+                                sx={{ bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                            >
+                                Отправить
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Dialog: Package Detail */}
+                    <Dialog open={packageDetailDialogOpen} onClose={() => setPackageDetailDialogOpen(false)} maxWidth="md" fullWidth>
+                        <DialogTitle>Детали пакета</DialogTitle>
+                        <DialogContent>
+                            {selectedPackageForDetail && (
+                                <>
+                                    <Typography variant="h6" sx={{ mb: 1 }}>
+                                        {selectedPackageForDetail.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        PKG-{selectedPackageForDetail.id} • Создан {selectedPackageForDetail.createdAt}
+                                    </Typography>
+
+                                    <Box sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle2" sx={{ mb: 1 }}>Информация о пакете:</Typography>
+                                        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                                            <Chip
+                                                label={getCriticalityStyles(getPackageCriticality(selectedPackageForDetail)).label}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor: getCriticalityStyles(getPackageCriticality(selectedPackageForDetail)).bgcolor,
+                                                    color: getCriticalityStyles(getPackageCriticality(selectedPackageForDetail)).color
+                                                }}
+                                            />
+                                            <Chip
+                                                label={selectedPackageForDetail.status === 'draft' ? 'Черновик' : 'Отправлен'}
+                                                size="small"
+                                                color={selectedPackageForDetail.status === 'draft' ? 'default' : 'success'}
+                                            />
+                                        </Stack>
+                                        <Typography variant="body2">
+                                            Продукты: {getPackageProducts(selectedPackageForDetail).join(', ')}
+                                        </Typography>
+                                    </Box>
+
+                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                        Элементы пакета ({selectedPackageForDetail.items.length}):
+                                    </Typography>
+
+                                    {selectedPackageForDetail.items.length > 0 ? (
+                                        <Stack spacing={1}>
+                                            {selectedPackageForDetail.items.map(item => {
+                                                const itemId = `${item.type}-${item.id}`;
+                                                const critStyles = getCriticalityStyles(item.criticality);
+                                                const initiative = mockInitiatives.find(i => i.id === item.initiativeId);
+
+                                                return (
+                                                    <Box
+                                                        key={itemId}
+                                                        sx={{
+                                                            p: 1.5,
+                                                            bgcolor: '#fafafa',
+                                                            borderRadius: 1,
+                                                            border: '1px solid #e0e0e0'
+                                                        }}
+                                                    >
+                                                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                            <Box sx={{ flex: 1 }}>
+                                                                <Typography variant="body2" fontWeight={500}>
+                                                                    {item.type === 'pilot' ? 'Пилот' : 'Внедрение'}: {item.name}
+                                                                </Typography>
+                                                                <Typography variant="caption" color="text.secondary">
+                                                                    {item.type === 'pilot' ? 'PLT' : 'CHG'}-{item.id}
+                                                                </Typography>
+                                                                <Box sx={{ mt: 0.5, display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                                                    <Chip
+                                                                        label={critStyles.label}
+                                                                        size="small"
+                                                                        sx={{ bgcolor: critStyles.bgcolor, color: critStyles.color, height: 20, fontSize: '0.7rem' }}
+                                                                    />
+                                                                    <Chip label={item.product} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem' }} />
+                                                                    {initiative && <Chip label={initiative.name} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem' }} />}
+                                                                </Box>
+                                                            </Box>
+                                                            {selectedPackageForDetail.status === 'draft' && (
+                                                                <Button
+                                                                    size="small"
+                                                                    color="error"
+                                                                    onClick={() => {
+                                                                        handleRemoveItemFromPackage(selectedPackageForDetail.id, itemId);
+                                                                        setSelectedPackageForDetail({
+                                                                            ...selectedPackageForDetail,
+                                                                            items: selectedPackageForDetail.items.filter(i => `${i.type}-${i.id}` !== itemId)
+                                                                        });
+                                                                    }}
+                                                                >
+                                                                    Удалить
+                                                                </Button>
+                                                            )}
+                                                        </Stack>
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Stack>
+                                    ) : (
+                                        <Typography variant="body2" color="text.secondary">
+                                            Пакет пустой
+                                        </Typography>
+                                    )}
+                                </>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            {selectedPackageForDetail && selectedPackageForDetail.status === 'draft' && (
+                                <>
+                                    <Button
+                                        color="error"
+                                        onClick={() => {
+                                            handleDeletePackage(selectedPackageForDetail.id);
+                                            setPackageDetailDialogOpen(false);
+                                        }}
+                                    >
+                                        Удалить пакет
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        disabled={selectedPackageForDetail.items.length === 0}
+                                        onClick={() => {
+                                            setPackageDetailDialogOpen(false);
+                                            handleOpenSubmitDialog(selectedPackageForDetail);
+                                        }}
+                                        sx={{ bgcolor: '#2c4f7c', '&:hover': { bgcolor: '#1e3a5f' } }}
+                                    >
+                                        Отправить на утверждение
+                                    </Button>
+                                </>
+                            )}
+                            <Button onClick={() => setPackageDetailDialogOpen(false)}>Закрыть</Button>
+                        </DialogActions>
+                    </Dialog>
+                </Box>
+            );
+        }
+
+        // App component with sidebar
+        function App() {
+            const [currentView, setCurrentView] = useState('packages');
+
+            return (
+                <Box sx={{ display: 'flex', height: '100vh' }}>
+                    {/* Sidebar */}
+                    <Box className="sidebar">
+                        <Box className="sidebar-header">
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                Система управления
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                Риск-стратегии
+                            </Typography>
+                        </Box>
+                        <Box className="sidebar-menu">
+                            <Box
+                                className={`sidebar-item ${currentView === 'packages' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('packages')}
+                            >
+                                <span className="material-icons">inventory_2</span>
+                                <span>Пакеты</span>
+                            </Box>
+                            <Box className="sidebar-item">
+                                <span className="material-icons">approval</span>
+                                <span>Согласования</span>
+                            </Box>
+                            <Box className="sidebar-item">
+                                <span className="material-icons">science</span>
+                                <span>Пилоты</span>
+                            </Box>
+                            <Box className="sidebar-item">
+                                <span className="material-icons">rocket_launch</span>
+                                <span>Внедрения</span>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    {/* Main content */}
+                    <Box className="main-content">
+                        {/* Top bar */}
+                        <Box className="top-bar">
+                            <Typography variant="h6">
+                                Пакеты
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Иванов И.И. (ПРМ)
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        {/* Content area */}
+                        <Box className="content-area">
+                            {currentView === 'packages' && <PackagesView />}
+                        </Box>
+                    </Box>
+                </Box>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

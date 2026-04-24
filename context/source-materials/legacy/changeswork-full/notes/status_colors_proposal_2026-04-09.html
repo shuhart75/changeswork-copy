@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подбор цветов статусов</title>
+    <style>
+        :root {
+            --bg-page: #f5f7fa;
+            --bg-card: #ffffff;
+            --bg-muted: #f8f9fb;
+            --border: #e3e8ef;
+            --text-main: #1a1d23;
+            --text-secondary: #667085;
+            --brand: #2c4f7c;
+
+            --status-success-bg: #e8f5e9;
+            --status-success-fg: #2e7d32;
+            --status-new-bg: #dbeafe;
+            --status-new-fg: #1d4ed8;
+
+            --status-error-bg: #fbe7ea;
+            --status-error-fg: #c53b47;
+
+            --status-prom-bg: #fef1c7;
+            --status-prom-fg: #a86a00;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: Roboto, "Segoe UI", Arial, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-main);
+        }
+
+        .wrap {
+            max-width: 1240px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .lead {
+            margin: 0 0 28px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .note {
+            margin: 0 0 28px;
+            padding: 16px 18px;
+            background: #eef4fb;
+            border: 1px solid #d7e4f2;
+            border-radius: 12px;
+            color: #38516f;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        .table-card,
+        .palette-grid {
+            margin-bottom: 32px;
+        }
+
+        .table-shell {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-card);
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 14px 16px;
+            background: var(--bg-muted);
+            border-bottom: 1px solid var(--border);
+            color: #4e5968;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf1f5;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .id {
+            color: #1565c0;
+            font-weight: 600;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .chip-success {
+            background: var(--status-success-bg);
+            color: var(--status-success-fg);
+        }
+
+        .chip-new {
+            background: var(--status-new-bg);
+            color: var(--status-new-fg);
+        }
+
+        .chip-error {
+            background: var(--status-error-bg);
+            color: var(--status-error-fg);
+        }
+
+        .chip-prom {
+            background: var(--status-prom-bg);
+            color: var(--status-prom-fg);
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            padding: 22px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .preview {
+            margin-bottom: 18px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .row:last-child {
+            margin-bottom: 0;
+        }
+
+        .swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            flex: 0 0 auto;
+        }
+
+        .label {
+            width: 48px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            color: #344054;
+        }
+
+        .summary {
+            padding: 18px 20px;
+            background: #fffaf0;
+            border: 1px solid #f4dfaa;
+            border-radius: 12px;
+            color: #7a5a12;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 20px;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Подбор цветов для статусов</h1>
+        <p class="lead">
+            Новый отдельный файл с подборкой под текущий стиль интерфейса: холодная базовая палитра,
+            мягкие статусные бейджи, без слишком ярких тревожных акцентов.
+        </p>
+
+        <div class="note">
+            Рекомендованные новые цвета:
+            <strong>Ошибка</strong> — фон <strong>#FBE7EA</strong>, текст <strong>#C53B47</strong>.
+            <strong>Установка на ПРОМ</strong> — фон <strong>#FEF1C7</strong>, текст <strong>#A86A00</strong>.
+        </div>
+
+        <div class="table-card">
+            <div class="section-title">Предпросмотр в таблице</div>
+            <div class="table-shell">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название</th>
+                            <th>Статус</th>
+                            <th>Этап</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="id">SIM-CC-97</td>
+                            <td>test09.04-3</td>
+                            <td><span class="chip chip-success">Завершена</span></td>
+                            <td>Формирование отчета</td>
+                        </tr>
+                        <tr>
+                            <td class="id">SIM-CC-93</td>
+                            <td>показ0804</td>
+                            <td><span class="chip chip-error">Ошибка</span></td>
+                            <td>Агрегация данных для кредита</td>
+                        </tr>
+                        <tr>
+                            <td class="id">SIM-CC-91</td>
+                            <td>dti_cutoff_0804</td>
+                            <td><span class="chip chip-prom">Установка на ПРОМ</span></td>
+                            <td>Установка риск-параметров</td>
+                        </tr>
+                        <tr>
+                            <td class="id">SIM-CC-92</td>
+                            <td>dti_cutoff_показ</td>
+                            <td><span class="chip chip-new">Новая</span></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section-title">Коды цветов</div>
+        <div class="palette-grid">
+            <div class="card">
+                <h2>Ошибка</h2>
+                <div class="preview">
+                    <span class="chip chip-error">Ошибка</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#fbe7ea;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#FBE7EA</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#c53b47;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#C53B47</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Установка на ПРОМ</h2>
+                <div class="preview">
+                    <span class="chip chip-prom">Установка на ПРОМ</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#fef1c7;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#FEF1C7</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#a86a00;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#A86A00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Референс: Завершена</h2>
+                <div class="preview">
+                    <span class="chip chip-success">Завершена</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#e8f5e9;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#E8F5E9</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#2e7d32;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#2E7D32</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Референс: Новая</h2>
+                <div class="preview">
+                    <span class="chip chip-new">Новая</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#dbeafe;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#DBEAFE</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#1d4ed8;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#1D4ED8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <strong>Почему так:</strong> красный для <strong>Ошибка</strong> оставлен явно тревожным, но смягчён по фону,
+            чтобы не спорить с общей спокойной UI-палитрой. Янтарный для <strong>Установка на ПРОМ</strong> разведён с красным
+            по смыслу и по тону: он воспринимается как важное действие и зона внимания, а не как авария.
+        </div>
+    </div>
+</body>
+</html>

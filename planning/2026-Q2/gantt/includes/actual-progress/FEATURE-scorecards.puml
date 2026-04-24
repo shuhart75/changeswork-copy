@@ -1,0 +1,54 @@
+' FEATURE: scorecards
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SCORECARDS-001: materialized, mapping=inferred
+[PLAN BE Backend foundation, шаблоны и критичность скоркарт] as [STORY_STORY_SCORECARDS_001] starts 2026/04/03
+[STORY_STORY_SCORECARDS_001] ends 2026/04/10
+[STORY_STORY_SCORECARDS_001] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_001] is 100% completed
+
+' Story STORY-SCORECARDS-002: materialized, mapping=inferred
+[PLAN FE Workspace скоркарты: вкладка, деталка, источники и использование] as [STORY_STORY_SCORECARDS_002] starts 2026/04/08
+[STORY_STORY_SCORECARDS_002] ends 2026/04/22
+[STORY_STORY_SCORECARDS_002] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_002] is 91% completed
+
+' Story STORY-SCORECARDS-003: materialized, mapping=inferred
+[PLAN FE Создание, редактирование и привязка скоркарты] as [STORY_STORY_SCORECARDS_003] starts 2026/04/08
+[STORY_STORY_SCORECARDS_003] ends 2026/04/28
+[STORY_STORY_SCORECARDS_003] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_003] is 73% completed
+
+' Execution task layer
+[RSCON-2343 BE Сущность скоркарты] as [TASK_RSCON_2343] on {B2} lasts 5 days
+[TASK_RSCON_2343] starts 2026/04/03
+[TASK_RSCON_2343] is colored in LightBlue
+[TASK_RSCON_2343] is 100% completed
+
+[RSCON-2342 BE Оценка критичности + шаблоны для скоркарт] as [TASK_RSCON_2342] on {B3} lasts 4 days
+[TASK_RSCON_2342] starts 2026/04/07
+[TASK_RSCON_2342] is colored in LightBlue
+[TASK_RSCON_2342] is 100% completed
+
+[RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт] as [TASK_RSCON_2340] on {F2} lasts 10 days
+[TASK_RSCON_2340] starts 2026/04/08
+[TASK_RSCON_2340] is colored in LightCoral
+[TASK_RSCON_2340] is 100% completed
+
+[RSCON-2344 BE Привязка скоркарты] as [TASK_RSCON_2344] on {B2} lasts 1 days
+[TASK_RSCON_2344] starts 2026/04/10
+[TASK_RSCON_2344] is colored in LightBlue
+[TASK_RSCON_2344] is 100% completed
+
+[RSCON-2339 FE Удаление блока метрик + новая вкладка для скоркарт] as [TASK_RSCON_2339] on {TBD_FE} lasts 1 days
+[TASK_RSCON_2339] starts 2026/04/22
+[TASK_RSCON_2339] is colored in LightCoral
+[TASK_RSCON_2339] is 0% completed
+
+[RSCON-2341 FE Прикрепление существующей скоркарты] as [TASK_RSCON_2341] on {TBD_FE} lasts 4 days
+[TASK_RSCON_2341] starts 2026/04/23
+[TASK_RSCON_2341] is colored in LightCoral
+[TASK_RSCON_2341] is 0% completed

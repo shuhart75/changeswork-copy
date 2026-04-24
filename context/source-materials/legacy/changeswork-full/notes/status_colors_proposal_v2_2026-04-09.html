@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Подбор цветов статусов v2</title>
+    <style>
+        :root {
+            --page-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --muted-bg: #f8f9fb;
+            --border: #e1e7ef;
+            --text-main: #1a1d23;
+            --text-secondary: #667085;
+            --brand: #2c4f7c;
+
+            --done-bg: #c8e6c9;
+            --done-fg: #2e7d32;
+            --new-bg: #bbdefb;
+            --new-fg: #1976d2;
+            --disabled-bg: #ffcdd2;
+            --disabled-fg: #d84343;
+            --approval-bg: #ffe0b2;
+            --approval-fg: #ef6c00;
+            --cancel-bg: #e0e0e0;
+            --cancel-fg: #616161;
+
+            --error-bg: #f4eaf0;
+            --error-fg: #a12b54;
+            --prom-bg: #eef3d6;
+            --prom-fg: #637a1f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: Roboto, "Segoe UI", Arial, sans-serif;
+            background: var(--page-bg);
+            color: var(--text-main);
+        }
+
+        .wrap {
+            max-width: 1260px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .lead {
+            margin: 0 0 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .info,
+        .summary {
+            padding: 16px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .info {
+            background: #eef4fb;
+            border: 1px solid #d7e4f2;
+            color: #38516f;
+        }
+
+        .summary {
+            background: #fffaf0;
+            border: 1px solid #f3e0aa;
+            color: #7a5a12;
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--brand);
+        }
+
+        .table-shell {
+            overflow: hidden;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--card-bg);
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 14px 16px;
+            background: var(--muted-bg);
+            border-bottom: 1px solid var(--border);
+            color: #4e5968;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf1f5;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .id {
+            color: #1565c0;
+            font-weight: 600;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 24px;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .done { background: var(--done-bg); color: var(--done-fg); }
+        .new { background: var(--new-bg); color: var(--new-fg); }
+        .disabled { background: var(--disabled-bg); color: var(--disabled-fg); }
+        .approval { background: var(--approval-bg); color: var(--approval-fg); }
+        .cancel { background: var(--cancel-bg); color: var(--cancel-fg); }
+        .error { background: var(--error-bg); color: var(--error-fg); }
+        .prom { background: var(--prom-bg); color: var(--prom-fg); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            padding: 22px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+        }
+
+        .card h2 {
+            margin: 0 0 14px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .preview {
+            margin-bottom: 18px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .row:last-child {
+            margin-bottom: 0;
+        }
+
+        .swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            flex: 0 0 auto;
+        }
+
+        .label {
+            width: 56px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            color: #344054;
+        }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .mini-card {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--card-bg);
+        }
+
+        .mini-card h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 20px;
+            }
+
+            th,
+            td {
+                padding: 12px 10px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>Подбор цветов для статусов v2</h1>
+        <p class="lead">
+            Обновлённый вариант после сверки со вторым скриншотом. Здесь уже учтены занятые цветовые зоны:
+            розовый для выключенных, оранжевый для согласований, серый для отмены, синий для новых и отсутствующих разметок.
+        </p>
+
+        <div class="info">
+            <strong>Новая рекомендация:</strong>
+            <strong>Ошибка</strong> — фон <strong>#F4EAF0</strong>, текст <strong>#A12B54</strong>.
+            <strong>Установка на ПРОМ</strong> — фон <strong>#EEF3D6</strong>, текст <strong>#637A1F</strong>.
+        </div>
+
+        <div class="section-title">Предпросмотр в таблице</div>
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Статус</th>
+                        <th>Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="id">SIM-CC-97</td>
+                        <td>test09.04-3</td>
+                        <td><span class="chip done">Завершена</span></td>
+                        <td>Референс существующего зелёного</td>
+                    </tr>
+                    <tr>
+                        <td class="id">SIM-CC-92</td>
+                        <td>dti_cutoff_показ</td>
+                        <td><span class="chip new">Новая</span></td>
+                        <td>Референс существующего синего</td>
+                    </tr>
+                    <tr>
+                        <td class="id">PLT-CC-60</td>
+                        <td>tesexcl</td>
+                        <td><span class="chip disabled">Выключен</span></td>
+                        <td>Уже занятый розово-коралловый</td>
+                    </tr>
+                    <tr>
+                        <td class="id">PLT-CC-51</td>
+                        <td>LLL</td>
+                        <td><span class="chip approval">Согласование корректировки</span></td>
+                        <td>Уже занятый оранжевый</td>
+                    </tr>
+                    <tr>
+                        <td class="id">PLT-CC-54</td>
+                        <td>tttestssss</td>
+                        <td><span class="chip cancel">Отменен</span></td>
+                        <td>Уже занятый серый</td>
+                    </tr>
+                    <tr>
+                        <td class="id">SIM-CC-93</td>
+                        <td>показ0804</td>
+                        <td><span class="chip error">Ошибка</span></td>
+                        <td>Новый вариант без пересечения с выключением</td>
+                    </tr>
+                    <tr>
+                        <td class="id">SIM-CC-91</td>
+                        <td>dti_cutoff_0804</td>
+                        <td><span class="chip prom">Установка на ПРОМ</span></td>
+                        <td>Новый вариант вне оранжевой warning-зоны</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-title">Рекомендуемые новые статусы</div>
+        <div class="grid">
+            <div class="card">
+                <h2>Ошибка</h2>
+                <div class="preview">
+                    <span class="chip error">Ошибка</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#f4eaf0;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#F4EAF0</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#a12b54;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#A12B54</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Установка на ПРОМ</h2>
+                <div class="preview">
+                    <span class="chip prom">Установка на ПРОМ</span>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#eef3d6;"></div>
+                    <div class="label">Фон</div>
+                    <div class="code">#EEF3D6</div>
+                </div>
+                <div class="row">
+                    <div class="swatch" style="background:#637a1f;"></div>
+                    <div class="label">Текст</div>
+                    <div class="code">#637A1F</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Существующие занятые зоны</div>
+        <div class="mini-grid">
+            <div class="mini-card">
+                <h3>Завершена</h3>
+                <div class="preview"><span class="chip done">Завершена</span></div>
+                <div class="code">#C8E6C9 / #2E7D32</div>
+            </div>
+            <div class="mini-card">
+                <h3>Новая / Нет</h3>
+                <div class="preview"><span class="chip new">Новая</span></div>
+                <div class="code">#BBDEFB / #1976D2</div>
+            </div>
+            <div class="mini-card">
+                <h3>Выключен</h3>
+                <div class="preview"><span class="chip disabled">Выключен</span></div>
+                <div class="code">#FFCDD2 / #D84343</div>
+            </div>
+            <div class="mini-card">
+                <h3>Согласование</h3>
+                <div class="preview"><span class="chip approval">Согласование</span></div>
+                <div class="code">#FFE0B2 / #EF6C00</div>
+            </div>
+            <div class="mini-card">
+                <h3>Отменен</h3>
+                <div class="preview"><span class="chip cancel">Отменен</span></div>
+                <div class="code">#E0E0E0 / #616161</div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <strong>Почему это решение лучше:</strong> первый вариант попадал в уже занятые семейства
+            розово-красных и янтарно-оранжевых статусов. В этой версии <strong>Ошибка</strong> смещена в более холодный
+            berry-тон, а <strong>Установка на ПРОМ</strong> — в спокойный olive/sage. За счёт этого оба статуса остаются
+            заметными, но визуально не путаются с <strong>Выключен</strong>, <strong>Согласование корректировки</strong>,
+            <strong>Согласование активации</strong> и <strong>Отменен</strong>.
+        </div>
+    </div>
+</body>
+</html>

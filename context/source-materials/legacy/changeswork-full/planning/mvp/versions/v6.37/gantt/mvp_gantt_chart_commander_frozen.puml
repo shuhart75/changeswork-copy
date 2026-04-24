@@ -1,0 +1,273 @@
+@startgantt
+title COMMANDER - План разработки (baseline for leadership review; based on all_tasks_fast)
+
+' Commander baseline:
+' - source baseline: planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_all_tasks_fast.puml
+' - commander coefficient: 1.3 (durations are conservatively increased with ceil(base * 1.3))
+' - includes official Russia 2026 non-working days relevant to the project horizon
+' - includes planned vacations for FE1 and BE1
+
+' Source-of-truth for commander task decomposition/estimates:
+'   planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_commander.puml
+
+Project starts the 30th of march 2026
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/05/11 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+
+'
+' RESOURCES (team)
+'   A1/A2: analysts
+'   B1/B2/B3: backend devs
+'   F1: frontend dev (100%)
+'   F2: frontend dev (50% until 2026/05/01, then 100%)
+'   NOTE: estimates are in 100% days; 50% resource will take 2x duration.
+'   Rule for tasks crossing 2026/05/01: if most of the task is before May 1, treat whole task as 50%; otherwise treat whole task as 100%.
+'   Commander coefficient: 1.3 on all task estimates
+'   Q1: QA
+
+'
+' COMMANDER VIEW (generated from TaskJuggler plan scenario)
+'   Source: /tmp/tj-commander/mvp_plan.csv
+'   Baseline source: planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_commander.puml
+'   Notes: frozen leadership view; vacations are displayed explicitly here and enforced via TaskJuggler resource calendars
+'
+
+-- Календарь команды --
+
+[F1 отпуск 30.03-05.04] as [VAC_F1_SPRING] lasts 5 days
+[VAC_F1_SPRING] starts 2026/03/30
+
+[BE1 отпуск 20.04-03.05] as [VAC_B1_APR_MAY] lasts 9 days
+[VAC_B1_APR_MAY] starts 2026/04/20
+
+[F1 отпуск 01.05-09.05] as [VAC_F1_MAY] lasts 5 days
+[VAC_F1_MAY] starts 2026/05/04
+-- 1) Роли --
+
+[AN новые роли: роли/права/матрица] as [AN_ROLES] on {A1} lasts 2 days
+[AN_ROLES] starts 2026/03/30
+
+-- 2) Артефакты --
+
+[AN артефакты (BE): модель/контракты/права] as [AN_ART_BE] on {A2} lasts 2 days
+[AN_ART_BE] starts 2026/03/30
+
+[BE артефакты (ссылки на документы) - БД + API] as [BE_ART] on {B2} lasts 3 days
+[BE_ART] starts 2026/04/01
+
+[AN блок артефактов (FE): пилоты] as [AN_FE_PILOT_ART] on {A2} lasts 2 days
+[AN_FE_PILOT_ART] starts 2026/04/01
+
+[FE пилоты - блок артефакты + UI под ЖЦ] as [FE_PILOT_ART] on {F1} lasts 5 days
+[FE_PILOT_ART] starts 2026/04/06
+
+[AN блок артефактов (FE): симуляции] as [AN_FE_SIM_ART] on {A2} lasts 1 days
+[AN_FE_SIM_ART] starts 2026/04/03
+
+[FE симуляции - блок артефакты] as [FE_SIM_ART] on {F2:50%} lasts 3 days
+[FE_SIM_ART] starts 2026/04/06
+
+-- 3) Согласования/утверждения + Пакеты --
+
+[AN процесс согласования/утверждения (BE core)] as [AN_AP_CORE] on {A1} lasts 3 days
+[AN_AP_CORE] starts 2026/04/01
+
+[BE процесс согласования и утверждения - БД+логика] as [BE_AP_CORE] on {B1} lasts 21 days
+[BE_AP_CORE] starts 2026/04/06
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [AN_PILOT_LC_AP] on {A2} lasts 1 days
+[AN_PILOT_LC_AP] starts 2026/04/05
+
+[BE ЖЦ пилота - согласование/утверждение] as [BE_PILOT_LC_AP] on {B2} lasts 6 days
+[BE_PILOT_LC_AP] starts 2026/05/20
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [AN_AP_PAGE_BE] on {A1} lasts 1 days
+[AN_AP_PAGE_BE] starts 2026/04/06
+
+[BE страница "Согласования" - API, логика] as [BE_AP_PAGE] on {B1} lasts 3 days
+[BE_AP_PAGE] starts 2026/05/07
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [AN_AP_PAGE_FE] on {A2} lasts 2 days
+[AN_AP_PAGE_FE] starts 2026/04/07
+
+[FE страница "Согласования"] as [FE_AP_PAGE] on {F1} lasts 12 days
+[FE_AP_PAGE] starts 2026/04/14
+
+[AN страница "Пакеты" (BE): контракты/массовые действия] as [AN_PKG_BE] on {A1} lasts 2 days
+[AN_PKG_BE] starts 2026/04/07
+
+[AN страница "Пакеты" (FE): UX/компоненты/edge-cases] as [AN_PKG_FE] on {A2} lasts 1 days
+[AN_PKG_FE] starts 2026/04/10
+
+[FE страница "Пакеты"] as [FE_PKG_PAGE] on {F2:50%} lasts 25 days
+[FE_PKG_PAGE] starts 2026/04/14
+
+-- 4) Внедрения --
+
+[AN внедрения (BE): модель/контракты/права] as [AN_DEP_BE] on {A1} lasts 1 days
+[AN_DEP_BE] starts 2026/04/14
+
+[BE внедрения - БД+API] as [BE_DEP_API] on {B3} lasts 3 days
+[BE_DEP_API] starts 2026/04/15
+
+[AN ЖЦ внедрений (BE)] as [AN_DEP_LC] on {A2} lasts 2 days
+[AN_DEP_LC] starts 2026/04/15
+
+[BE ЖЦ внедрений] as [BE_DEP_LC] on {B3} lasts 3 days
+[BE_DEP_LC] starts 2026/04/19
+
+[AN список внедрений (FE)] as [AN_FE_DEP_LIST] on {A2} lasts 1 days
+[AN_FE_DEP_LIST] starts 2026/04/20
+
+[FE список внедрений] as [FE_DEP_LIST] on {F1} lasts 6 days
+[FE_DEP_LIST] starts 2026/05/12
+
+[AN форма внедрения (создание/редактирование) (FE)] as [AN_FE_DEP_FORM] on {A1} lasts 1 days
+[AN_FE_DEP_FORM] starts 2026/04/20
+
+[FE форма внедрения (создание/редактирование)] as [FE_DEP_FORM] on {F1} lasts 6 days
+[FE_DEP_FORM] starts 2026/05/21
+
+-- 5) Скоркарты (деталка + создание/редактирование) --
+
+[AN скоркарты (BE): модель/шаблоны/валидаторы] as [AN_SC_BE] on {A1} lasts 2 days
+[AN_SC_BE] starts 2026/04/15
+
+[BE скоркарты (включая шаблоны) - БД + API] as [BE_SC_API] on {B2} lasts 9 days
+[BE_SC_API] starts 2026/04/17
+
+[AN детальная скоркарты (BE)] as [AN_SCD_BE] on {A2} lasts 2 days
+[AN_SCD_BE] starts 2026/04/21
+
+[AN детальная скоркарты (FE)] as [AN_SCD_FE] on {A1} lasts 1 days
+[AN_SCD_FE] starts 2026/04/24
+
+[FE детальная скоркарты] as [FE_SCD] on {F1} lasts 12 days
+[FE_SCD] starts 2026/06/01
+
+[AN форма скоркарты (BE)] as [AN_SCF_BE] on {A2} lasts 1 days
+[AN_SCF_BE] starts 2026/04/24
+
+[BE форма создания/редактирования скоркарты] as [BE_SCF] on {B1} lasts 5 days
+[BE_SCF] starts 2026/05/13
+
+[AN форма скоркарты (FE)] as [AN_SCF_FE] on {A1} lasts 1 days
+[AN_SCF_FE] starts 2026/04/28
+
+[FE форма создания/редактирования скоркарты] as [FE_SCF] on {F2} lasts 12 days
+[FE_SCF] starts 2026/05/22
+
+-- 6) Уведомления --
+
+[AN уведомления: шаблоны/триггеры/получатели] as [AN_NOT] on {A2} lasts 1 days
+[AN_NOT] starts 2026/04/28
+
+[BE уведомления] as [BE_NOT] on {B3} lasts 2 days
+[BE_NOT] starts 2026/04/29
+
+-- 7) Trace (связанные сущности) --
+
+[AN Trace (BE): модель связей/запросы/производительность] as [AN_TRACE_BE] on {A1} lasts 1 days
+[AN_TRACE_BE] starts 2026/04/30
+
+[BE Trace - БД + логика + API] as [BE_TRACE] on {B2} lasts 2 days
+[BE_TRACE] starts 2026/05/05
+
+[AN Trace (FE): виджет блока связей] as [AN_TRACE_FE] on {A2} lasts 1 days
+[AN_TRACE_FE] starts 2026/05/05
+
+[FE Trace - пилоты/симуляции/внедрения: блок связи] as [FE_TRACE] on {F1} lasts 3 days
+[FE_TRACE] starts 2026/06/19
+
+-- QA --
+
+[QA подготовка (тест-план, тестовые данные, стенд)] as [QA_SETUP] on {Q1} lasts 3 days
+[QA_SETUP] starts 2026/03/30
+
+[QA Артефакты] as [QA_ART] on {Q1} lasts 2 days
+[QA_ART] starts 2026/04/14
+
+[QA Согласования + Пакеты] as [QA_AP] on {Q1} lasts 2 days
+[QA_AP] starts 2026/05/21
+
+[QA Скоркарты (деталка+форма)] as [QA_SC] on {Q1} lasts 2 days
+[QA_SC] starts 2026/06/18
+
+[QA Trace (блок связей)] as [QA_TRACE] on {Q1} lasts 1 days
+[QA_TRACE] starts 2026/06/25
+
+[QA Регрессия + E2E smoke] as [QA_REG] on {Q1} lasts 6 days
+[QA_REG] starts 2026/07/08
+
+[Milestone: MVP завершен] as [MVP_DONE] happens at 2026/07/16
+-- AI агент (за рамками MVP) --
+
+[BE чата AI - интеграция] as [BE_AI_CHAT] on {B1} lasts 5 days
+[BE_AI_CHAT] starts 2026/05/20
+
+[FE UI для чата с AI агентом] as [FE_AI_CHAT_UI] on {F1} lasts 3 days
+[FE_AI_CHAT_UI] starts 2026/06/25
+
+-- Табличные риск-параметры (за рамками MVP) --
+
+[BE табличных риск-параметров] as [BE_RISK_TABLE] on {B2} lasts 6 days
+[BE_RISK_TABLE] starts 2026/05/08
+
+[FE табличных риск-параметров] as [FE_RISK_TABLE] on {F2} lasts 12 days
+[FE_RISK_TABLE] starts 2026/06/10
+
+-- Доработка статусной модели симуляции (за рамками MVP) --
+
+[BE статусной модели симуляции] as [BE_STAT_SIM] on {B3} lasts 9 days
+[BE_STAT_SIM] starts 2026/05/03
+
+[FE статусной модели симуляции] as [FE_STAT_SIM] on {F1} lasts 3 days
+[FE_STAT_SIM] starts 2026/07/01
+
+-- Симуляция снепшотов конфигурации (за рамками MVP) --
+
+[BE симуляции снепшотов] as [BE_SIM_SNAP] on {B1} lasts 12 days
+[BE_SIM_SNAP] starts 2026/05/28
+
+[FE симуляции снепшотов] as [FE_SIM_SNAP] on {F1} lasts 10 days
+[FE_SIM_SNAP] starts 2026/07/06
+
+-- QA (non-MVP) --
+
+[QA AI чат] as [QA_AI_CHAT] on {Q1} lasts 1 days
+[QA_AI_CHAT] starts 2026/07/17
+
+[QA Табличные риск-параметры] as [QA_RISK_TABLE] on {Q1} lasts 3 days
+[QA_RISK_TABLE] starts 2026/07/20
+
+[QA Статусная модель симуляции] as [QA_STAT_SIM] on {Q1} lasts 1 days
+[QA_STAT_SIM] starts 2026/07/24
+
+[QA Симуляция снепшотов] as [QA_SIM_SNAP] on {Q1} lasts 3 days
+[QA_SIM_SNAP] starts 2026/07/27
+
+[QA All: smoke/regression] as [QA_ALL_REG] on {Q1} lasts 2 days
+[QA_ALL_REG] starts 2026/07/30
+
+[ALL DONE] as [ALL_DONE] happens at 2026/08/02
+@endgantt

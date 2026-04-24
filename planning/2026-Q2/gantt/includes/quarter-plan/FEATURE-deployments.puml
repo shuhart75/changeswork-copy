@@ -1,0 +1,20 @@
+' FEATURE: deployments
+[Deployments: backend foundation] as [DEP_STORY_API] lasts 6 days
+[DEP_STORY_API] starts 2026/04/14
+[DEP_STORY_API] is colored in LightBlue
+
+[Deployments: lifecycle] as [DEP_STORY_LC] lasts 6 days
+[DEP_STORY_LC] starts 2026/04/15
+[DEP_STORY_LC] is colored in LightBlue
+
+[Deployments: list] as [DEP_STORY_LIST] lasts 6 days
+[DEP_STORY_LIST] starts 2026/04/20
+[DEP_STORY_LIST] is colored in LightCoral
+
+[Deployments: form editing] as [DEP_STORY_FORM] lasts 11 days
+[DEP_STORY_FORM] starts 2026/04/20
+[DEP_STORY_FORM] is colored in LightCoral
+
+[Deployments: detail and related blocks] as [DEP_STORY_DETAIL] lasts 15 days
+[DEP_STORY_DETAIL] starts 2026/04/21
+[DEP_STORY_DETAIL] is colored in LightCoral

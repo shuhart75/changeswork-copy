@@ -1,0 +1,12 @@
+' FEATURE: scorecards
+[Scorecards: backend foundation, templates and criticality] as [SC_CMD_CORE] lasts 13 days
+[SC_CMD_CORE] starts 2026/04/15
+[SC_CMD_CORE] is colored in LightBlue
+
+[Scorecards: workspace, detail, sources and usage] as [SC_CMD_WORKSPACE] lasts 16 days
+[SC_CMD_WORKSPACE] starts 2026/04/21
+[SC_CMD_WORKSPACE] is colored in LightCoral
+
+[Scorecards: create, edit and binding] as [SC_CMD_FORM] lasts 23 days
+[SC_CMD_FORM] starts 2026/04/24
+[SC_CMD_FORM] is colored in LightCoral

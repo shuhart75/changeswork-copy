@@ -1,0 +1,723 @@
+# TaskJuggler plan: Commander opt2 (clean optimization pass)
+# Constraints:
+# - Uses ONLY tasks/durations/resources present in planning/mvp/current/gantt/mvp_gantt_chart_current.puml
+# - Estimates are given in commander form: ceil(base_estimate * 1.3)
+# - Always respect declared max productivity/capacity.
+# - Planning priority for clean commander optimization:
+#   scorecards -> deployments -> approvals -> packages / everything else
+# - FE may start about 3 working days after the corresponding backend track has started.
+# - Backend devs help FE only after all MVP backend tasks are completed.
+# - FE2 rule:
+#   * until 2026-05-01: FE2 max productivity = 50% (efficiency 0.5)
+#   * from 2026-05-01: FE2 max productivity = 100% (efficiency 1.0)
+# - Calendar mirrors PlantUML: Mon-Fri workdays, plus specified holidays
+# - Includes fixed vacation blocks for FE1 and BE1
+# - non-MVP tasks are allowed to start as soon as the resource is free (no hard gate on QA_REG)
+#
+# NOTE: This is a planning model; it mirrors the gantt sequencing and capacity laws.
+
+# NOTE: Report definitions must come *after* the project header in TJ.
+# We keep them at the end of the file.
+
+project mvp_commander_opt2 "Commander opt2" 2026-03-16 +40w {
+  timezone "Europe/Moscow"
+
+  # TaskJuggler internally schedules in hours. We snap scheduling to whole days
+  # and define the workday length so effort in "d" matches PlantUML "days".
+  timingresolution 60min
+  dailyworkinghours 9
+  timeformat "%Y-%m-%d"
+  shorttimeformat "%Y-%m-%d"
+
+  # Mirror PlantUML: Mon-Fri workdays only
+  workinghours mon - fri 9:00 - 18:00
+  workinghours sat, sun off
+
+  # Setup scenarios (nested): baseline and tracking.
+  scenario plan "Plan" {
+    scenario actual "Actual"
+  }
+
+  # Used by status-style reports to render "today" inside the project range.
+  now 2026-03-24
+}
+
+# ---- Calendar
+vacation "MayDay" 2026-05-01
+vacation "VictoryDay" 2026-05-09
+vacation "VictoryTransfer" 2026-05-11
+vacation "RussiaDay" 2026-06-12
+
+# ---- Resources
+resource A1 "Analyst 1" { efficiency 1.0 }
+resource A2 "Analyst 2" { efficiency 1.0 }
+
+resource B1 "Backend Dev 1" {
+  efficiency 1.0
+  vacation "BE1 leave" 2026-04-20 - 2026-05-03
+}
+resource B2 "Backend Dev 2" { efficiency 1.0 }
+resource B3 "Backend Dev 3" { efficiency 1.0 }
+resource B2_FE "Backend Dev 2 helping FE (50%)" { efficiency 0.5 }
+resource B3_FE "Backend Dev 3 helping FE (50%)" { efficiency 0.5 }
+
+resource F1 "Frontend Dev 1" {
+  efficiency 1.0
+  vacation "F1 spring leave" 2026-03-30 - 2026-04-05
+  vacation "F1 may leave" 2026-05-01 - 2026-05-09
+}
+resource F2_50 "Frontend Dev 2 (50% until 2026-05-01)" { efficiency 0.5 }
+resource F2_100 "Frontend Dev 2 (100% from 2026-05-01)" { efficiency 1.0 }
+
+# A very small modeling hack: treat these as separate resources and allocate tasks based on
+# whether they are mostly before or after 2026-05-01.
+# (TaskJuggler doesn't support mid-task efficiency changes the way we need here.)
+
+resource Q1 "QA" { efficiency 1.0 }
+
+# ---- Tasks (IDs mirror PlantUML codes)
+
+# Default priority: ensure TJ assigns a resource to every allocated task
+# even when there are alternate allocations/constraints.
+# (Without this, TJ may leave some duration-based tasks unassigned and only warn.)
+macro MVP_TASK_DEFAULTS [
+  priority 1000
+]
+
+# 1) Roles
+task AN_ROLES "AN новые роли: роли/права/матрица" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-16-09:00
+  duration 2d
+  allocate A1
+}
+
+# 2) Artifacts
+task AN_ART_BE "AN артефакты (BE): модель/контракты/права" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-16-09:00
+  duration 2d
+  allocate A2
+}
+
+task BE_ART "BE артефакты (ссылки на документы) - БД + API" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-19-09:00
+  duration 3d
+  depends AN_ART_BE
+  allocate B2
+}
+
+task AN_FE_PILOT_ART "AN блок артефактов (FE): пилоты" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-19-09:00
+  effort 2d
+  depends AN_ART_BE
+  allocate A2
+}
+
+task FE_PILOT_ART "FE пилоты - блок артефакты + UI под ЖЦ" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-23-09:00
+  effort 5d
+  depends AN_FE_PILOT_ART, BE_ART
+  allocate F1
+}
+
+task AN_FE_SIM_ART "AN блок артефактов (FE): симуляции" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-19-09:00
+  effort 2d
+  depends AN_ART_BE
+  allocate A1
+}
+
+task FE_SIM_ART "FE симуляции - блок артефакты" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-23-09:00
+  effort 2d
+  depends AN_FE_SIM_ART, BE_ART
+  # PlantUML: starts at FE_PILOT_ART start; in TJ we just avoid blocking on FE_PILOT_ART.
+  allocate F2_50
+}
+
+# 3) Approvals + Packages
+
+task AN_AP_CORE "AN процесс согласования/утверждения (BE core)" {
+  ${MVP_TASK_DEFAULTS}
+  duration 3d
+  # Approvals start after deployments backend is ready; FE deployments do not block it.
+  depends AN_ROLES, BE_DEP_LC, BE_SCF
+  allocate A1
+}
+
+task BE_AP_CORE "BE процесс согласования и утверждения - БД+логика" {
+  ${MVP_TASK_DEFAULTS}
+  effort 13d
+  depends AN_AP_CORE, BE_SCF
+  allocate B1
+}
+
+task AN_PILOT_LC_AP "AN ЖЦ пилота: согласование/утверждение (BE)" {
+  ${MVP_TASK_DEFAULTS}
+  duration 2d
+  depends AN_AP_CORE
+  depends AN_FE_SIM_ART
+  allocate A2
+}
+
+task BE_PILOT_LC_AP "BE ЖЦ пилота - согласование/утверждение" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  depends BE_ART, AN_PILOT_LC_AP, BE_AP_CORE
+  allocate B2
+}
+
+task AN_AP_PAGE_BE "AN страница \"Согласования\" (BE): контракты/фильтры/действия" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_AP_CORE allocate A1 }
+
+task BE_AP_PAGE "BE страница \"Согласования\" - API, логика" {
+  ${MVP_TASK_DEFAULTS}
+  effort 4d
+  depends AN_AP_PAGE_BE, BE_AP_CORE
+  allocate B1
+}
+
+task AN_AP_PAGE_FE "AN страница \"Согласования\" (FE): UX/компоненты/edge-cases" {
+  ${MVP_TASK_DEFAULTS}
+  duration 2d
+  depends AN_AP_PAGE_BE, AN_PILOT_LC_AP
+  allocate A2
+}
+
+task FE_AP_PAGE "FE страница \"Согласования\"" {
+  ${MVP_TASK_DEFAULTS}
+  effort 13d
+  # FE approvals start only after FE deployments are done.
+  depends AN_AP_PAGE_FE, FE_PILOT_ART, FE_DEP_LIST, FE_DEP_FORM, BE_AP_PAGE
+  allocate F1
+}
+
+task AN_PKG_BE "AN страница \"Пакеты\" (BE): контракты/массовые действия" { ${MVP_TASK_DEFAULTS} duration 2d depends AN_AP_PAGE_BE allocate A1 }
+
+task AN_PKG_FE "AN страница \"Пакеты\" (FE): UX/компоненты/edge-cases" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends AN_PKG_BE
+  depends AN_AP_PAGE_FE
+  allocate A2
+}
+
+task FE_PKG_PAGE "FE страница \"Пакеты\"" {
+  ${MVP_TASK_DEFAULTS}
+  effort 13d
+  # Clean opt2 rule: packages stay after scorecards+deployments, but they do not need
+  # to wait for FE approvals completion and should run in parallel on the second FE lane.
+  depends AN_PKG_FE, FE_SIM_ART, BE_TRACE, FE_DEP_FORM, FE_SCF
+  allocate F2_100
+}
+
+# 4) Deployments
+
+task AN_DEP_BE "AN внедрения (BE): модель/контракты/права" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-23-09:00
+  effort 4d
+  allocate A1
+}
+
+task BE_DEP_API "BE внедрения - БД+API" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-30-09:00
+  duration 4d
+  depends AN_DEP_BE
+  depends BE_ART
+  allocate B3
+}
+
+task AN_DEP_LC "AN ЖЦ внедрений (BE)" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends AN_DEP_BE
+  allocate A2
+}
+
+task BE_DEP_LC "BE ЖЦ внедрений" {
+  ${MVP_TASK_DEFAULTS}
+  duration 4d
+  depends AN_DEP_LC
+  depends BE_DEP_API
+  allocate B3
+}
+
+task AN_FE_DEP_LIST "AN список внедрений (FE)" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_DEP_LC allocate A2 }
+
+# FE ordering rule:
+# - scorecards are the first FE priority
+# - deployments become the second parallel FE stream
+# - FE may start a few workdays after BE start, without waiting for the whole BE scope to finish
+
+task FE_DEP_LIST "FE список внедрений" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  # Start as the second FE lane while F1 is busy with scorecards.
+  depends AN_FE_DEP_LIST, BE_DEP_API
+  allocate F2_50
+}
+
+task AN_FE_DEP_FORM "AN форма внедрения (создание/редактирование) (FE)" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_DEP_LC allocate A1 }
+
+task FE_DEP_FORM "FE форма внедрения (создание/редактирование)" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  depends AN_FE_DEP_FORM, BE_DEP_LC
+  allocate F1
+}
+
+# 5) Scorecards (detail + form)
+
+task AN_SC_BE "AN скоркарты (BE): модель/шаблоны/валидаторы" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-23-09:00
+  duration 4d
+  allocate A2
+}
+
+task BE_SC_API "BE скоркарты (включая шаблоны) - БД + API" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-03-30-09:00
+  duration 13d
+  depends AN_SC_BE
+  depends BE_ART
+  allocate B2
+}
+
+task AN_SCD_BE "AN детальная скоркарты (BE)" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends AN_SC_BE
+  allocate A2
+}
+
+task AN_SCD_FE "AN детальная скоркарты (FE)" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends AN_SCD_BE
+  allocate A1
+}
+
+task FE_SCD "FE детальная скоркарты" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-04-02-09:00
+  effort 13d
+  depends AN_SCD_FE
+  # FE starts shortly after the scorecards backend stream has begun.
+  allocate F1
+}
+
+task AN_SCF_BE "AN форма скоркарты (BE)" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_SCD_BE allocate A2 }
+
+task BE_SCF "BE форма создания/редактирования скоркарты" {
+  ${MVP_TASK_DEFAULTS}
+  duration 7d
+  depends AN_SCF_BE
+  depends BE_SC_API
+  allocate B1
+}
+
+task AN_SCF_FE "AN форма скоркарты (FE)" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_SCF_BE allocate A1 }
+
+task FE_SCF "FE форма создания/редактирования скоркарты" {
+  ${MVP_TASK_DEFAULTS}
+  start 2026-05-01-09:00
+  # Baseline estimate in 100% days; productivity is modeled via resource efficiency.
+  effort 13d
+  depends AN_SCF_FE
+  # FE2 picks the second scorecards stream as soon as the 100% slot opens.
+  allocate F2_100
+}
+
+# 6) Notifications
+
+task AN_NOT "AN уведомления: шаблоны/триггеры/получатели" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_SCF_BE allocate A2 }
+
+task BE_NOT "BE уведомления" { ${MVP_TASK_DEFAULTS} duration 4d depends AN_NOT, BE_DEP_LC allocate B3 }
+
+# 7) Trace
+
+task AN_TRACE_BE "AN Trace (BE): модель связей/запросы/производительность" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_SCF_FE allocate A1 }
+
+task BE_TRACE "BE Trace - БД + логика + API" {
+  ${MVP_TASK_DEFAULTS}
+  effort 3d
+  depends AN_TRACE_BE
+  depends BE_SC_API
+  allocate B2
+}
+
+task AN_TRACE_FE "AN Trace (FE): виджет блока связей" { ${MVP_TASK_DEFAULTS} effort 2d depends AN_TRACE_BE allocate A2 }
+
+task FE_TRACE "FE Trace - пилоты/симуляции/внедрения: блок связи" {
+  ${MVP_TASK_DEFAULTS}
+  effort 4d
+  depends AN_TRACE_FE
+  depends BE_TRACE
+  depends FE_DEP_FORM
+  depends FE_SCD
+  allocate F1
+}
+
+# QA
+
+task QA_SETUP "QA подготовка (тест-план, тестовые данные, стенд)" { ${MVP_TASK_DEFAULTS} duration 3d allocate Q1 }
+
+task QA_ART "QA Артефакты" {
+  ${MVP_TASK_DEFAULTS}
+  effort 3d
+  depends QA_SETUP
+  depends BE_ART
+  depends FE_PILOT_ART
+  depends FE_SIM_ART
+  allocate Q1
+}
+
+task QA_AP "QA Согласования + Пакеты" {
+  ${MVP_TASK_DEFAULTS}
+  duration 4d
+  depends QA_SC
+  depends BE_AP_CORE
+  depends BE_AP_PAGE
+  depends FE_AP_PAGE
+  depends FE_PKG_PAGE
+  allocate Q1
+}
+
+task QA_SC "QA Скоркарты (деталка+форма)" {
+  ${MVP_TASK_DEFAULTS}
+  duration 4d
+  depends QA_ART
+  depends BE_SC_API
+  depends BE_SCF
+  depends FE_SCD
+  depends FE_SCF
+  allocate Q1
+}
+
+task QA_TRACE "QA Trace (блок связей)" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends QA_SC
+  depends BE_TRACE
+  depends FE_TRACE
+  allocate Q1
+}
+
+task QA_REG "QA Регрессия + E2E smoke" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  depends FE_TRACE
+  depends FE_SCF
+  depends QA_AP
+  depends QA_TRACE
+
+  # Alignment buffer (PlantUML parity): introduce an explicit gap after QA_SC.
+  # We use gaplength (working days) so it doesn't change baseline estimates, only sequencing.
+  # Kept explicitly so the TaskJuggler plan scenario stays in lockstep with the frozen PlantUML commander view.
+  depends QA_SC { gaplength 11d }
+
+  allocate Q1
+}
+
+task MVP_DONE "Milestone: MVP завершен" { milestone depends QA_REG }
+
+# Out of MVP (kept from gantt)
+
+task BE_AI_CHAT "BE чата AI - интеграция" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  # Mirrors PlantUML resource-leveling: B1 non-MVP work starts after BE_SCF (no dependency on QA_REG)
+  depends BE_SCF
+  allocate B1
+}
+
+task FE_AI_CHAT_UI "FE UI для чата с AI агентом" {
+  ${MVP_TASK_DEFAULTS}
+  effort 4d
+  depends BE_AI_CHAT
+  # Clean opt2 rule: non-MVP FE work must not consume MVP frontend capacity.
+  depends MVP_DONE
+  allocate F1
+}
+
+# ============================================================
+# Resource-leveling / sequencing constraints (non-MVP; mirrors PlantUML)
+# Keep these explicit so TJ can't pull non-MVP work earlier.
+# ============================================================
+
+task F1_NON_MVP_SEQ "F1 non-MVP sequencing" {
+  milestone
+  depends FE_TRACE
+}
+
+# Ensure MVP regression can't finish before this non-MVP dev tail (PlantUML ALL DONE target)
+# so the QA tail (non-MVP) starts after full dev completion.
+# (PlantUML has QA_SIM_SNAP waiting for FE_SIM_SNAP; adding it here also prevents early QA_REG end.)
+
+# (Constraint note: QA_REG already depends on FE_TRACE and FE_SCF. We keep non-MVP gating via
+# the existing non-MVP QA chain that depends on FE_SIM_SNAP.)
+
+# (end non-MVP leveling)
+
+
+
+# Non-MVP QA is defined later in the file.
+
+# (end non-MVP constraints)
+
+
+# ---- Non-MVP tasks (kept from gantt)
+
+
+# (end non-MVP leveling)
+
+
+
+task BE_RISK_TABLE "BE табличных риск-параметров" {
+  ${MVP_TASK_DEFAULTS}
+  effort 7d
+  # v6.18: start as soon as B2 is free (no dependency on QA_REG)
+  depends BE_TRACE
+  allocate B2
+}
+
+task FE_RISK_TABLE "FE табличных риск-параметров" {
+  ${MVP_TASK_DEFAULTS}
+  effort 13d
+  depends BE_RISK_TABLE
+  # Clean opt2 rule: non-MVP FE work must not consume MVP frontend capacity.
+  depends MVP_DONE
+  depends FE_SCF
+  allocate F2_100
+}
+
+task BE_STAT_SIM "BE статусной модели симуляции" {
+  ${MVP_TASK_DEFAULTS}
+  duration 13d
+  # v6.18: start as soon as B3 is free (no dependency on QA_REG)
+  depends BE_NOT
+  allocate B3
+}
+
+task FE_STAT_SIM "FE статусной модели симуляции" {
+  ${MVP_TASK_DEFAULTS}
+  effort 4d
+  depends BE_STAT_SIM
+  # Resource-leveling (matches PlantUML): starts after FE_AI_CHAT_UI
+  depends FE_AI_CHAT_UI
+  allocate F1
+}
+
+task BE_SIM_SNAP "BE симуляции снепшотов" { ${MVP_TASK_DEFAULTS} effort 13d depends BE_AI_CHAT allocate B1 }
+
+task FE_SIM_SNAP "FE симуляции снепшотов" {
+  ${MVP_TASK_DEFAULTS}
+  duration 13d
+  depends BE_SIM_SNAP
+  # Resource-leveling (matches PlantUML): starts after FE_STAT_SIM
+  depends FE_STAT_SIM
+  allocate F1
+}
+
+task QA_AI_CHAT "QA AI чат" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends QA_REG
+  depends BE_AI_CHAT
+  depends FE_AI_CHAT_UI
+  allocate Q1
+}
+
+task QA_RISK_TABLE "QA Табличные риск-параметры" {
+  ${MVP_TASK_DEFAULTS}
+  duration 3d
+  depends QA_AI_CHAT
+  depends BE_RISK_TABLE
+  depends FE_RISK_TABLE
+  allocate Q1
+}
+
+task QA_STAT_SIM "QA Статусная модель симуляции" {
+  ${MVP_TASK_DEFAULTS}
+  effort 2d
+  depends QA_RISK_TABLE
+  depends BE_STAT_SIM
+  depends FE_STAT_SIM
+  allocate Q1
+}
+
+task QA_SIM_SNAP "QA Симуляция снепшотов" {
+  ${MVP_TASK_DEFAULTS}
+  duration 3d
+  depends QA_STAT_SIM
+  depends BE_SIM_SNAP
+  depends FE_SIM_SNAP
+  allocate Q1
+}
+
+task QA_ALL_REG "QA All: smoke/regression" {
+  ${MVP_TASK_DEFAULTS}
+  duration 3d
+  depends QA_SIM_SNAP
+  allocate Q1
+}
+
+task ALL_DONE "ALL DONE" {
+  milestone
+  depends QA_ALL_REG
+}
+
+# ---- Reports
+# TaskJuggler supports HTML and CSV out of the box.
+# PDF is not a native report format here; generate PDF by printing the HTML report.
+
+navigator navbar { hidereport 0 }
+
+textreport frame "" {
+  header -8<-
+== Commander Baseline (current / actual) ==
+<[navigator id="navbar"]>
+->8-
+  footer "----"
+
+  textreport index "Overview" {
+    formats html
+    scenarios actual
+    center '<[report id="overview"]>'
+  }
+
+  textreport "Status" {
+    formats html
+    scenarios actual
+    center -8<-
+<[report id="status.dashboard"]>
+----
+<[report id="status.completed"]>
+----
+<[report id="status.ongoing"]>
+----
+<[report id="status.future"]>
+->8-
+  }
+
+  textreport "Resources" {
+    formats html
+    scenarios actual
+    center '<[report id="resourceGraph"]>'
+  }
+}
+
+# Main gantt / overview
+macro TaskTip [
+  tooltip istask() -8<-
+    '''Start: ''' <-query attribute='start'->
+    '''End: ''' <-query attribute='end'->
+    ----
+    '''Resources:''' <-query attribute='resources'->
+    ----
+    '''Precursors: ''' <-query attribute='precursors'->
+    ----
+    '''Followers: ''' <-query attribute='followers'->
+  ->8-
+]
+
+taskreport overview "" {
+  headline "Project Overview"
+  columns bsi { title 'WBS' }, name, start, end, effort, duration, chart { ${TaskTip} scale day }
+  timeformat "%a %Y-%m-%d"
+  loadunit days
+  # Full project timeline (may require horizontal scroll in day-scale view).
+  hideresource 1
+
+  footer -8<-
+== Resource load ==
+
+See [[Resources]] for the resource allocation graph.
+->8-
+}
+
+# Status dashboard (requires project.now)
+macro AlertColor [
+  cellcolor actual.alert = 0 "#90FF90"
+  cellcolor actual.alert = 1 "#FFFF90"
+  cellcolor actual.alert = 2 "#FF9090"
+]
+
+taskreport status "" {
+  columns bsi { width 50 title 'WBS' }, name { width 220 },
+          start { width 110 }, end { width 110 },
+          effort { width 80 },
+          alert { width 120 },
+          status { width 120 }
+
+  taskreport dashboard "" {
+    headline "Dashboard (<-query attribute='now'->)"
+    columns name { title "Task" ${AlertColor} width 240 },
+            resources { width 200 ${AlertColor}
+                        listtype bullets
+                        listitem "<-query attribute='name'->" },
+            alerttrend { title "Trend" ${AlertColor} width 60 },
+            journal { width 350 ${AlertColor} }
+    journalmode status_up
+    journalattributes headline, author, date, summary, details
+    hidetask ~hasalert(0)
+    sorttasks alert.down, actual.end.up
+    period %{${now} - 1w} +1w
+  }
+
+  taskreport completed "" {
+    headline "Already completed"
+    hidetask ~(actual.end <= ${now})
+  }
+
+  taskreport ongoing "" {
+    headline "Ongoing"
+    hidetask ~((actual.start <= ${now}) & (actual.end > ${now}))
+  }
+
+  taskreport future "" {
+    headline "Future"
+    hidetask ~(actual.start > ${now})
+  }
+}
+
+# Resource allocation graph
+resourcereport resourceGraph "" {
+  headline "Resource Allocation"
+  columns no, name, effort, weekly { ${TaskTip} }
+  loadunit shortauto
+  hidetask ~(isleaf() & isleaf_())
+  sorttasks actual.start.up
+}
+
+# CSV exports (for baseline vs actual analysis)
+textreport "CSV Plan" {
+  formats csv
+  scenarios plan
+  timeformat "%Y-%m-%d"
+  taskreport "mvp_plan" {
+    columns id, name, resources, start, end, effort, duration, complete
+  }
+  purge formats
+}
+
+textreport "CSV Actual" {
+  formats csv
+  scenarios actual
+  timeformat "%Y-%m-%d"
+  taskreport "mvp_actual" {
+    columns id, name, resources, start, end, effort, duration, complete
+  }
+  purge formats
+}
+
+# Weekly tracking updates live here (git-tracked, per repo workflow A).
+include "status/actual.tji"

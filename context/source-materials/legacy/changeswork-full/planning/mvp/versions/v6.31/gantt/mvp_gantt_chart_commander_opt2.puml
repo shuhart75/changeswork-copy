@@ -1,0 +1,379 @@
+@startgantt
+title COMMANDER OPT2 - План разработки (clean optimization pass from March 16, 2026)
+
+' Commander baseline:
+' - source baseline: planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_all_tasks_fast.puml
+' - commander coefficient: 1.3 (durations are conservatively increased with ceil(base * 1.3))
+' - includes official Russia 2026 non-working days relevant to the project horizon
+' - includes planned vacations for FE1 and BE1
+
+' Source-of-truth for commander current decomposition/estimates:
+'   planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_commander_current.puml
+
+Project starts the 16th of march 2026
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/05/11 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+
+' RESOURCES (team)
+'   A1/A2: analysts
+'   B1/B2/B3: backend devs
+'   F1: frontend dev (100%)
+'   F2: frontend dev (50% until 2026/05/01, then 100%)
+'   B2/B3 may temporarily take FE-owned tasks with 50% efficiency once released from backend critical path
+'   NOTE: estimates are in 100% days; 50% resource will take 2x duration.
+'   Rule for tasks crossing 2026/05/01: if most of the task is before May 1, treat whole task as 50%; otherwise treat whole task as 100%.
+'   Commander coefficient: 1.3 on all task estimates
+'   Q1: QA
+
+' FROZEN VIEW (generated from TaskJuggler CSV)
+'   Template: planning/mvp/versions/v6.23/gantt/mvp_gantt_chart_commander_opt2.puml
+'   Schedule: /tmp/tj-v623-opt2b/mvp_actual.csv
+'   TaskJuggler is the planning source of truth.
+'   PlantUML is emitted without dependency logic to avoid false overloads.
+
+-- Календарь команды --
+
+[F1 отпуск 30.03-05.04] as [VAC_F1_SPRING] on {F1} lasts 5 days
+[VAC_F1_SPRING] starts 2026/03/30
+[VAC_F1_SPRING] is colored in silver
+
+[BE1 отпуск 20.04-03.05] as [VAC_B1_APR_MAY] on {B1} lasts 9 days
+[VAC_B1_APR_MAY] starts 2026/04/20
+[VAC_B1_APR_MAY] is colored in silver
+
+[F1 отпуск 01.05-09.05] as [VAC_F1_MAY] on {F1} lasts 5 days
+[VAC_F1_MAY] starts 2026/05/04
+[VAC_F1_MAY] is colored in silver
+
+-- 1) Роли --
+
+[AN новые роли: роли/права/матрица] as [AN_ROLES] on {A1} lasts 2 days
+[AN_ROLES] starts 2026/03/16
+[AN_ROLES] is colored in lightgreen
+[AN_ROLES] is 100% completed
+
+-- 2) Артефакты --
+
+[AN артефакты (BE): модель/контракты/права] as [AN_ART_BE] on {A2} lasts 2 days
+[AN_ART_BE] starts 2026/03/16
+[AN_ART_BE] is colored in lightgreen
+[AN_ART_BE] is 100% completed
+
+[BE артефакты (ссылки на документы) - БД + API] as [BE_ART] on {B2} lasts 3 days
+[BE_ART] starts 2026/03/19
+[BE_ART] is colored in lightblue
+[BE_ART] is 100% completed
+
+[AN блок артефактов (FE): пилоты] as [AN_FE_PILOT_ART] on {A2} lasts 2 days
+[AN_FE_PILOT_ART] starts 2026/03/19
+[AN_FE_PILOT_ART] is colored in lightgreen
+[AN_FE_PILOT_ART] is 100% completed
+
+[FE пилоты - блок артефакты + UI под ЖЦ] as [FE_PILOT_ART] on {F1} lasts 5 days
+[FE_PILOT_ART] starts 2026/03/23
+[FE_PILOT_ART] is colored in lightcoral
+[FE_PILOT_ART] is 20% completed
+
+[AN блок артефактов (FE): симуляции] as [AN_FE_SIM_ART] on {A1} lasts 2 days
+[AN_FE_SIM_ART] starts 2026/03/19
+[AN_FE_SIM_ART] is colored in lightgreen
+[AN_FE_SIM_ART] is 100% completed
+
+[FE симуляции - блок артефакты] as [FE_SIM_ART] on {F2:50%} lasts 4 days
+[FE_SIM_ART] starts 2026/03/23
+[FE_SIM_ART] is colored in lightcoral
+[FE_SIM_ART] is 25% completed
+
+-- 3) Согласования/утверждения + Пакеты --
+
+[AN процесс согласования/утверждения (BE core)] as [AN_AP_CORE] on {A1} lasts 3 days
+[AN_AP_CORE] starts 2026/04/19
+[AN_AP_CORE] is colored in lightgreen
+
+[BE процесс согласования и утверждения - БД+логика] as [BE_AP_CORE] on {B1} lasts 18 days
+[BE_AP_CORE] starts 2026/05/04
+[BE_AP_CORE] is colored in lightblue
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [AN_PILOT_LC_AP] on {A2} lasts 2 days
+[AN_PILOT_LC_AP] starts 2026/04/22
+[AN_PILOT_LC_AP] is colored in lightgreen
+
+[BE ЖЦ пилота - согласование/утверждение] as [BE_PILOT_LC_AP] on {B2} lasts 11 days
+[BE_PILOT_LC_AP] starts 2026/05/22
+[BE_PILOT_LC_AP] is colored in lightblue
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [AN_AP_PAGE_BE] on {A1} lasts 2 days
+[AN_AP_PAGE_BE] starts 2026/04/22
+[AN_AP_PAGE_BE] is colored in lightgreen
+
+[BE страница "Согласования" - API, логика] as [BE_AP_PAGE] on {B1} lasts 6 days
+[BE_AP_PAGE] starts 2026/05/22
+[BE_AP_PAGE] is colored in lightblue
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [AN_AP_PAGE_FE] on {A2} lasts 2 days
+[AN_AP_PAGE_FE] starts 2026/04/24
+[AN_AP_PAGE_FE] is colored in lightgreen
+
+[FE страница "Согласования"] as [FE_AP_PAGE] on {F1} lasts 20 days
+[FE_AP_PAGE] starts 2026/05/28
+[FE_AP_PAGE] is colored in lightcoral
+
+[AN страница "Пакеты" (BE): контракты/массовые действия] as [AN_PKG_BE] on {A1} lasts 2 days
+[AN_PKG_BE] starts 2026/04/23
+[AN_PKG_BE] is colored in lightgreen
+
+[AN страница "Пакеты" (FE): UX/компоненты/edge-cases] as [AN_PKG_FE] on {A2} lasts 2 days
+[AN_PKG_FE] starts 2026/04/27
+[AN_PKG_FE] is colored in lightgreen
+
+[FE страница "Пакеты"] as [FE_PKG_PAGE] on {F2} lasts 19 days
+[FE_PKG_PAGE] starts 2026/05/22
+[FE_PKG_PAGE] is colored in lightcoral
+
+-- 4) Внедрения --
+
+[AN внедрения (BE): модель/контракты/права] as [AN_DEP_BE] on {A1} lasts 4 days
+[AN_DEP_BE] starts 2026/03/23
+[AN_DEP_BE] is colored in lightgreen
+[AN_DEP_BE] is 25% completed
+
+[BE внедрения - БД+API] as [BE_DEP_API] on {B3} lasts 4 days
+[BE_DEP_API] starts 2026/03/30
+[BE_DEP_API] is colored in lightblue
+
+[AN ЖЦ внедрений (BE)] as [AN_DEP_LC] on {A2} lasts 2 days
+[AN_DEP_LC] starts 2026/03/31
+[AN_DEP_LC] is colored in lightgreen
+
+[BE ЖЦ внедрений] as [BE_DEP_LC] on {B3} lasts 4 days
+[BE_DEP_LC] starts 2026/04/03
+[BE_DEP_LC] is colored in lightblue
+
+[AN список внедрений (FE)] as [AN_FE_DEP_LIST] on {A2} lasts 2 days
+[AN_FE_DEP_LIST] starts 2026/04/06
+[AN_FE_DEP_LIST] is colored in lightgreen
+
+[FE список внедрений] as [FE_DEP_LIST] on {F1} lasts 20 days
+[FE_DEP_LIST] starts 2026/04/08
+[FE_DEP_LIST] is colored in lightcoral
+
+[AN форма внедрения (создание/редактирование) (FE)] as [AN_FE_DEP_FORM] on {A1} lasts 2 days
+[AN_FE_DEP_FORM] starts 2026/04/02
+[AN_FE_DEP_FORM] is colored in lightgreen
+
+[FE форма внедрения (создание/редактирование)] as [FE_DEP_FORM] on {B3:50%} lasts 20 days
+[FE_DEP_FORM] starts 2026/04/23
+[FE_DEP_FORM] is colored in lightcoral
+
+-- 5) Скоркарты (деталка + создание/редактирование) --
+
+' Note: scorecards list UI is out of MVP scope.
+[AN скоркарты (BE): модель/шаблоны/валидаторы] as [AN_SC_BE] on {A2} lasts 4 days
+[AN_SC_BE] starts 2026/03/23
+[AN_SC_BE] is colored in lightgreen
+[AN_SC_BE] is 15% completed
+
+[BE скоркарты (включая шаблоны) - БД + API] as [BE_SC_API] on {B2} lasts 13 days
+[BE_SC_API] starts 2026/03/30
+[BE_SC_API] is colored in lightblue
+
+[AN детальная скоркарты (BE)] as [AN_SCD_BE] on {A2} lasts 4 days
+[AN_SCD_BE] starts 2026/03/27
+[AN_SCD_BE] is colored in lightgreen
+
+[AN детальная скоркарты (FE)] as [AN_SCD_FE] on {A1} lasts 2 days
+[AN_SCD_FE] starts 2026/03/31
+[AN_SCD_FE] is colored in lightgreen
+
+[FE детальная скоркарты] as [FE_SCD] on {F1} lasts 17 days
+[FE_SCD] starts 2026/04/06
+[FE_SCD] is colored in lightcoral
+
+[AN форма скоркарты (BE)] as [AN_SCF_BE] on {A2} lasts 2 days
+[AN_SCF_BE] starts 2026/04/02
+[AN_SCF_BE] is colored in lightgreen
+
+[BE форма создания/редактирования скоркарты] as [BE_SCF] on {B1} lasts 7 days
+[BE_SCF] starts 2026/04/12
+[BE_SCF] is colored in lightblue
+
+[AN форма скоркарты (FE)] as [AN_SCF_FE] on {A1} lasts 2 days
+[AN_SCF_FE] starts 2026/04/06
+[AN_SCF_FE] is colored in lightgreen
+
+[FE форма создания/редактирования скоркарты] as [FE_SCF] on {F2} lasts 18 days
+[FE_SCF] starts 2026/05/04
+[FE_SCF] is colored in lightcoral
+
+-- 6) Уведомления --
+
+[AN уведомления: шаблоны/триггеры/получатели] as [AN_NOT] on {A2} lasts 2 days
+[AN_NOT] starts 2026/04/08
+[AN_NOT] is colored in lightgreen
+
+[BE уведомления] as [BE_NOT] on {B3} lasts 4 days
+[BE_NOT] starts 2026/04/09
+[BE_NOT] is colored in lightblue
+
+-- 7) Trace (связанные сущности) --
+
+[AN Trace (BE): модель связей/запросы/производительность] as [AN_TRACE_BE] on {A1} lasts 2 days
+[AN_TRACE_BE] starts 2026/04/08
+[AN_TRACE_BE] is colored in lightgreen
+
+[BE Trace - БД + логика + API] as [BE_TRACE] on {B2} lasts 3 days
+[BE_TRACE] starts 2026/04/13
+[BE_TRACE] is colored in lightblue
+
+[AN Trace (FE): виджет блока связей] as [AN_TRACE_FE] on {A2} lasts 4 days
+[AN_TRACE_FE] starts 2026/04/10
+[AN_TRACE_FE] is colored in lightgreen
+
+[FE Trace - пилоты/симуляции/внедрения: блок связи] as [FE_TRACE] on {F1} lasts 6 days
+[FE_TRACE] starts 2026/05/13
+[FE_TRACE] is colored in lightcoral
+
+-- QA --
+
+[QA подготовка (тест-план, тестовые данные, стенд)] as [QA_SETUP] on {Q1} lasts 3 days
+[QA_SETUP] starts 2026/03/16
+[QA_SETUP] is colored in gold
+[QA_SETUP] is 100% completed
+
+[QA Артефакты] as [QA_ART] on {Q1} lasts 3 days
+[QA_ART] starts 2026/03/30
+[QA_ART] is colored in gold
+
+[QA Согласования + Пакеты] as [QA_AP] on {Q1} lasts 4 days
+[QA_AP] starts 2026/06/16
+[QA_AP] is colored in gold
+
+[QA Скоркарты (деталка+форма)] as [QA_SC] on {Q1} lasts 4 days
+[QA_SC] starts 2026/05/21
+[QA_SC] is colored in gold
+
+[QA Trace (блок связей)] as [QA_TRACE] on {Q1} lasts 2 days
+[QA_TRACE] starts 2026/05/26
+[QA_TRACE] is colored in gold
+
+[QA Регрессия + E2E smoke] as [QA_REG] on {Q1} lasts 9 days
+[QA_REG] starts 2026/06/22
+[QA_REG] is colored in gold
+
+[Milestone: MVP завершен] as [MVP_DONE] happens at 2026/06/30
+
+-- AI агент (за рамками MVP) --
+
+[BE чата AI - интеграция] as [BE_AI_CHAT] on {B1} lasts 9 days
+[BE_AI_CHAT] starts 2026/05/28
+[BE_AI_CHAT] is colored in lightblue
+
+[FE UI для чата с AI агентом] as [FE_AI_CHAT_UI] on {F1} lasts 6 days
+[FE_AI_CHAT_UI] starts 2026/07/01
+[FE_AI_CHAT_UI] is colored in lightcoral
+
+-- Табличные риск-параметры (за рамками MVP) --
+
+[BE табличных риск-параметров] as [BE_RISK_TABLE] on {B2} lasts 9 days
+[BE_RISK_TABLE] starts 2026/04/16
+[BE_RISK_TABLE] is colored in lightblue
+
+[FE табличных риск-параметров] as [FE_RISK_TABLE] on {F2} lasts 17 days
+[FE_RISK_TABLE] starts 2026/07/01
+[FE_RISK_TABLE] is colored in lightcoral
+
+-- Доработка статусной модели симуляции (за рамками MVP) --
+
+[BE статусной модели симуляции] as [BE_STAT_SIM] on {B3} lasts 13 days
+[BE_STAT_SIM] starts 2026/04/13
+[BE_STAT_SIM] is colored in lightblue
+
+[FE статусной модели симуляции] as [FE_STAT_SIM] on {F1} lasts 4 days
+[FE_STAT_SIM] starts 2026/07/07
+[FE_STAT_SIM] is colored in lightcoral
+
+-- Симуляция снепшотов конфигурации (за рамками MVP) --
+
+[BE симуляции снепшотов] as [BE_SIM_SNAP] on {B1} lasts 18 days
+[BE_SIM_SNAP] starts 2026/06/08
+[BE_SIM_SNAP] is colored in lightblue
+
+[FE симуляции снепшотов] as [FE_SIM_SNAP] on {F1} lasts 13 days
+[FE_SIM_SNAP] starts 2026/07/10
+[FE_SIM_SNAP] is colored in lightcoral
+
+-- QA (non-MVP) --
+
+[QA AI чат] as [QA_AI_CHAT] on {Q1} lasts 2 days
+[QA_AI_CHAT] starts 2026/07/07
+[QA_AI_CHAT] is colored in gold
+
+[QA Табличные риск-параметры] as [QA_RISK_TABLE] on {Q1} lasts 3 days
+[QA_RISK_TABLE] starts 2026/07/17
+[QA_RISK_TABLE] is colored in gold
+
+[QA Статусная модель симуляции] as [QA_STAT_SIM] on {Q1} lasts 2 days
+[QA_STAT_SIM] starts 2026/07/21
+[QA_STAT_SIM] is colored in gold
+
+[QA Симуляция снепшотов] as [QA_SIM_SNAP] on {Q1} lasts 3 days
+[QA_SIM_SNAP] starts 2026/07/23
+[QA_SIM_SNAP] is colored in gold
+
+[QA All: smoke/regression] as [QA_ALL_REG] on {Q1} lasts 3 days
+[QA_ALL_REG] starts 2026/07/26
+[QA_ALL_REG] is colored in gold
+
+[ALL DONE] as [ALL_DONE] happens at 2026/07/29
+
+note bottom
+  MVP_DONE: 2026/06/30
+  ALL_DONE: 2026/07/29
+end note
+
+legend bottom
+  |= Цвет |= Тип работ |
+  |<#lightgreen>| Аналитика |
+  |<#lightblue>| Backend |
+  |<#lightcoral>| Frontend |
+  |<#gold>| QA |
+  |<#silver>| Отпуск / недоступность |
+  |<#orange>| Milestone |
+  
+  |= Ресурс |= Использование на диаграмме |= Окно загрузки по TJ |
+  | A1 | Analyst 1 | 2026/03/16..2026/04/25 |
+  | A2 | Analyst 2 | 2026/03/16..2026/04/28 |
+  | B1 | Backend Dev 1 | 2026/04/12..2026/06/25 |
+  | B2 | Backend Dev 2 | 2026/03/19..2026/06/01 |
+  | B3 | Backend Dev 3 | 2026/03/30..2026/04/26 |
+  | F1 | Frontend Dev 1 | 2026/03/23..2026/07/23 |
+  | F2:50% | Frontend Dev 2, 50% | 2026/03/23..2026/03/26 |
+  | F2 | Frontend Dev 2, 100% | 2026/05/04..2026/07/17 |
+  | B2:50% | Backend Dev 2 -> FE, 50% | - |
+  | B3:50% | Backend Dev 3 -> FE, 50% | 2026/04/23..2026/05/12 |
+  | Q1 | QA | 2026/03/16..2026/07/29 |
+  
+  Отпуска отображаются отдельными серебристыми блоками на шкале.
+endlegend
+
+@endgantt

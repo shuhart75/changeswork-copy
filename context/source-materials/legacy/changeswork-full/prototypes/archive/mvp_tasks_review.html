@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVP Tasks Review - Interactive Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            grid-template-rows: 1fr auto;
+            height: 100vh;
+            gap: 0;
+        }
+
+        .sidebar {
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .stat {
+            padding: 8px;
+            background: #0d1117;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .stat.keep { color: #3fb950; }
+        .stat.remove { color: #f85149; }
+        .stat.adjust { color: #d29922; }
+
+        .filters {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .filter-group {
+            margin-bottom: 12px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8b949e;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 4px 10px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #30363d;
+        }
+
+        .filter-btn.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .task-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .task-item {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            border-color: #58a6ff;
+            background: #161b22;
+        }
+
+        .task-item.active {
+            border-color: #1f6feb;
+            background: #161b22;
+        }
+
+        .task-item.keep {
+            border-left: 3px solid #3fb950;
+        }
+
+        .task-item.remove {
+            border-left: 3px solid #f85149;
+            opacity: 0.6;
+        }
+
+        .task-item.adjust {
+            border-left: 3px solid #d29922;
+        }
+
+        .task-id {
+            font-weight: 600;
+            color: #58a6ff;
+            font-size: 13px;
+        }
+
+        .task-summary {
+            font-size: 13px;
+            margin-top: 4px;
+            color: #c9d1d9;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #8b949e;
+        }
+
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .detail-header {
+            padding: 20px;
+            border-bottom: 1px solid #30363d;
+            background: #161b22;
+        }
+
+        .detail-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .decision-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .decision-btn {
+            padding: 8px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #21262d;
+            color: #c9d1d9;
+        }
+
+        .decision-btn:hover {
+            background: #30363d;
+        }
+
+        .decision-btn.keep {
+            background: #238636;
+            border-color: #238636;
+            color: white;
+        }
+
+        .decision-btn.keep:hover {
+            background: #2ea043;
+        }
+
+        .decision-btn.remove {
+            background: #da3633;
+            border-color: #da3633;
+            color: white;
+        }
+
+        .decision-btn.remove:hover {
+            background: #f85149;
+        }
+
+        .decision-btn.adjust {
+            background: #9e6a03;
+            border-color: #9e6a03;
+            color: white;
+        }
+
+        .decision-btn.adjust:hover {
+            background: #bb7506;
+        }
+
+        .detail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .field-group {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8b949e;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #1f6feb;
+        }
+
+        textarea.field-input {
+            min-height: 100px;
+        }
+
+        .field-value {
+            padding: 8px 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .criteria-list {
+            list-style: none;
+        }
+
+        .criteria-item {
+            padding: 6px 0;
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        .criteria-item::before {
+            content: '□ ';
+            color: #58a6ff;
+            margin-right: 6px;
+        }
+
+        .prompt-panel {
+            grid-column: 1 / -1;
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .prompt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .prompt-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #8b949e;
+        }
+
+        .copy-btn {
+            padding: 6px 12px;
+            background: #238636;
+            border: 1px solid #238636;
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #2ea043;
+        }
+
+        .copy-btn.copied {
+            background: #1f6feb;
+            border-color: #1f6feb;
+        }
+
+        .prompt-content {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #c9d1d9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b949e;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h1>MVP Tasks Review</h1>
+                <div class="stats">
+                    <div class="stat keep">
+                        <span class="stat-value" id="keepCount">0</span>
+                        <span>Keep</span>
+                    </div>
+                    <div class="stat remove">
+                        <span class="stat-value" id="removeCount">0</span>
+                        <span>Remove</span>
+                    </div>
+                    <div class="stat adjust">
+                        <span class="stat-value" id="adjustCount">0</span>
+                        <span>Adjust</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Task Type</label>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter-type="type" data-value="all">All</button>
+                        <button class="filter-btn" data-filter-type="type" data-value="BE">Backend</button>
+                        <button class="filter-btn" data-filter-type="type" data-value="FE">Frontend</button>
+                        <button class="filter-btn" data-filter-type="type" data-value="AN">Analytics</button>
+                        <button class="filter-btn" data-filter-type="type" data-value="QA">QA</button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Decision</label>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter-type="decision" data-value="all">All</button>
+                        <button class="filter-btn" data-filter-type="decision" data-value="pending">Pending</button>
+                        <button class="filter-btn" data-filter-type="decision" data-value="keep">Keep</button>
+                        <button class="filter-btn" data-filter-type="decision" data-value="adjust">Adjust</button>
+                        <button class="filter-btn" data-filter-type="decision" data-value="remove">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="task-list" id="taskList"></div>
+        </div>
+
+        <div class="main-panel">
+            <div class="detail-header" id="detailHeader" style="display: none;">
+                <div class="detail-title" id="detailTitle"></div>
+                <div class="decision-buttons">
+                    <button class="decision-btn keep" onclick="setDecision('keep')">✓ Keep</button>
+                    <button class="decision-btn adjust" onclick="setDecision('adjust')">⚡ Adjust</button>
+                    <button class="decision-btn remove" onclick="setDecision('remove')">✗ Remove</button>
+                </div>
+            </div>
+
+            <div class="detail-content" id="detailContent">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📋</div>
+                    <div>Select a task to review</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="prompt-panel">
+            <div class="prompt-header">
+                <div class="prompt-title">Export Summary</div>
+                <button class="copy-btn" onclick="copyPrompt()">Copy to Clipboard</button>
+            </div>
+            <div class="prompt-content" id="promptContent">No decisions made yet. Review tasks and make decisions to generate export.</div>
+        </div>
+    </div>
+
+    <script>
+        const TASKS = [
+            // Analytics tasks
+            { id: 'AN-1', type: 'AN', summary: 'Детализация требований', description: 'Детализация требований для MVP:\n- Уточнение бизнес-правил\n- Детализация процесса согласования\n- Спецификация API контрактов\n- Валидация с заказчиком', priority: 'Критический', estimate: '5 дней', dependencies: [], acceptanceCriteria: ['Все бизнес-правила задокументированы', 'Процесс согласования детализирован', 'API контракты согласованы', 'Заказчик утвердил требования'] },
+            { id: 'AN-2', type: 'AN', summary: 'Проектирование UI/UX', description: 'Проектирование пользовательского интерфейса:\n- Wireframes для всех разделов\n- UI Kit компоненты\n- Навигация и информационная архитектура\n- Responsive дизайн', priority: 'Критический', estimate: '5 дней', dependencies: [], acceptanceCriteria: ['Wireframes готовы для всех разделов', 'UI Kit задокументирован', 'Навигация спроектирована', 'Responsive дизайн учтен'] },
+            { id: 'AN-3', type: 'AN', summary: 'Документация API контрактов', description: 'Документация контрактов API:\n- Спецификация всех endpoints\n- Request/Response форматы\n- Коды ошибок\n- Примеры использования', priority: 'Высокий', estimate: '3 дня', dependencies: ['AN-1'], acceptanceCriteria: ['Все endpoints задокументированы', 'Форматы данных описаны', 'Коды ошибок определены', 'Примеры готовы'] },
+            { id: 'AN-4', type: 'AN', summary: 'Документация процессов', description: 'Документация бизнес-процессов:\n- Процесс согласования\n- Жизненный цикл сущностей\n- Права доступа\n- Use cases', priority: 'Средний', estimate: '5 дней', dependencies: ['AN-1'], acceptanceCriteria: ['Процессы задокументированы', 'Use cases описаны', 'Права доступа определены', 'Диаграммы готовы'] },
+            { id: 'AN-5', type: 'AN', summary: 'Приемочные тесты', description: 'Разработка приемочных тестов:\n- Критичные сценарии\n- Тест-кейсы для согласования\n- Проверка прав доступа\n- Негативные сценарии', priority: 'Высокий', estimate: '5 дней', dependencies: ['AN-4'], acceptanceCriteria: ['Тест-кейсы готовы', 'Критичные сценарии покрыты', 'Негативные сценарии описаны', 'Чек-листы готовы'] },
+            { id: 'AN-6', type: 'AN', summary: 'Пользовательская документация', description: 'Создание пользовательской документации:\n- Руководство пользователя\n- FAQ\n- Видео-инструкции\n- Troubleshooting guide', priority: 'Средний', estimate: '8 дней', dependencies: ['AN-5'], acceptanceCriteria: ['Руководство готово', 'FAQ составлен', 'Видео записаны', 'Troubleshooting guide готов'] },
+            { id: 'AN-7', type: 'AN', summary: 'Финальная приемка', description: 'Финальная приемка MVP:\n- Проверка всех требований\n- Приемочное тестирование\n- Подготовка к релизу\n- Документация актуальна', priority: 'Критический', estimate: '5 дней', dependencies: ['AN-6'], acceptanceCriteria: ['Все требования выполнены', 'Приемочные тесты пройдены', 'Документация актуальна', 'Готовность к релизу'] },
+
+            // Backend tasks
+            { id: 'BE-1', type: 'BE', summary: 'Миграция БД - Базовые таблицы', description: 'Создание базовых таблиц БД:\n- deployment, simulation, pilot, change\n- scorecard (упрощенная)\n- simulation_source, pilot_source, change_source\n- package, package_item', priority: 'Критический', estimate: '3 дня', dependencies: [], acceptanceCriteria: ['Все таблицы созданы', 'Foreign keys настроены', 'Индексы созданы', 'Триггеры для статусов', 'Миграция работает', 'Rollback работает'] },
+            { id: 'BE-2', type: 'BE', summary: 'Миграция БД - Согласование', description: 'Создание таблиц согласования:\n- approval_instance\n- approval_stage\n- approval_decision', priority: 'Критический', estimate: '2 дня', dependencies: ['BE-1'], acceptanceCriteria: ['Таблицы созданы', 'Связи настроены', 'Индексы созданы', 'Миграция работает'] },
+            { id: 'BE-3', type: 'BE', summary: 'Миграция БД - Артефакты и роли', description: 'Создание таблиц артефактов и ролей:\n- artifact (URL ссылки)\n- user_role (множественные роли)', priority: 'Высокий', estimate: '2 дня', dependencies: ['BE-1'], acceptanceCriteria: ['Таблицы созданы', 'Constraints настроены', 'Индексы созданы', 'Миграция работает'] },
+            { id: 'BE-4', type: 'BE', summary: 'Модели данных (ORM)', description: 'Создание ORM моделей:\n- Все сущности\n- Связи между моделями\n- Методы бизнес-логики\n- Валидация', priority: 'Критический', estimate: '3 дня', dependencies: ['BE-1', 'BE-2', 'BE-3'], acceptanceCriteria: ['Все модели созданы', 'Связи настроены', 'Методы реализованы', 'Валидация работает', 'Unit тесты', 'Документация'] },
+            { id: 'BE-5', type: 'BE', summary: 'API Deployment', description: 'REST API для Deployment:\n- CRUD операции\n- Фильтрация и пагинация\n- Автоматический расчет статуса\n- Права доступа', priority: 'Критический', estimate: '3 дня', dependencies: ['BE-4'], acceptanceCriteria: ['Все endpoints работают', 'Фильтрация работает', 'Пагинация настроена', 'Права проверяются', 'Тесты > 80%', 'API документация'] },
+            { id: 'BE-6', type: 'BE', summary: 'API Simulation', description: 'Адаптация API Simulation:\n- Добавление deployment_id\n- Обновление фильтрации\n- Валидация продукта', priority: 'Высокий', estimate: '2 дня', dependencies: ['BE-4', 'BE-5'], acceptanceCriteria: ['deployment_id обязательное', 'Фильтрация работает', 'Валидация работает', 'Тесты обновлены', 'API документация'] },
+            { id: 'BE-7', type: 'BE', summary: 'API Pilot', description: 'Адаптация API Pilot:\n- Добавление deployment_id\n- Связь со Scorecard (многие-ко-многим)\n- Валидация', priority: 'Высокий', estimate: '3 дня', dependencies: ['BE-4', 'BE-5', 'BE-8'], acceptanceCriteria: ['deployment_id обязательное', 'Связь со Scorecard работает', 'Минимум 1 scorecard', 'Валидация работает', 'Тесты обновлены'] },
+            { id: 'BE-8', type: 'BE', summary: 'API Scorecard', description: 'REST API для Scorecard:\n- CRUD операции\n- Отслеживание источника\n- Права доступа (Методолог)\n- Валидация использования', priority: 'Высокий', estimate: '3 дня', dependencies: ['BE-4'], acceptanceCriteria: ['Все endpoints работают', 'Источник отслеживается', 'Права работают', 'Нельзя удалить используемую', 'Тесты готовы'] },
+            { id: 'BE-9', type: 'BE', summary: 'API Change', description: 'REST API для Change:\n- CRUD операции\n- Связь со Scorecard\n- Отправка на согласование\n- State machine', priority: 'Критический', estimate: '4 дня', dependencies: ['BE-4', 'BE-5', 'BE-8'], acceptanceCriteria: ['Все endpoints работают', 'Связь со Scorecard', 'Submit endpoint работает', 'State machine работает', 'Тесты готовы'] },
+            { id: 'BE-10', type: 'BE', summary: 'API Lineage (визуализация)', description: 'API для визуализации Lineage:\n- GET endpoints (только чтение)\n- Чтение из таблиц источников\n- Построение графа через Scorecards\n- Фильтрация', priority: 'Высокий', estimate: '2 дня', dependencies: ['BE-4', 'BE-5', 'BE-6', 'BE-7', 'BE-9'], acceptanceCriteria: ['GET endpoints работают', 'Граф строится корректно', 'Фильтрация работает', 'Формат удобен для фронтенда', 'Тесты готовы'] },
+            { id: 'BE-11', type: 'BE', summary: 'API Package', description: 'REST API для Package:\n- Создание и отправка одновременно\n- Группировка Pilot/Change\n- Автоматический расчет критичности\n- Частичное согласование', priority: 'Критический', estimate: '3 дня', dependencies: ['BE-4', 'BE-10'], acceptanceCriteria: ['POST создает и отправляет', 'Критичность рассчитывается', 'PackageItem работает', 'Тесты готовы'] },
+            { id: 'BE-12', type: 'BE', summary: 'Бизнес-логика согласования', description: 'Процесс согласования:\n- Создание ApprovalInstance\n- Этапы approval → ratification\n- Approve/Reject endpoints\n- Обновление статусов', priority: 'Критический', estimate: '5 дней', dependencies: ['BE-4', 'BE-9', 'BE-11'], acceptanceCriteria: ['ApprovalInstance создается', 'Этапы работают', 'Approve/Reject работают', 'Права проверяются', 'Статусы обновляются', 'История сохраняется', 'Тесты готовы'] },
+            { id: 'BE-14', type: 'BE', summary: 'API Artifact Links', description: 'API для артефактов (URL ссылки):\n- CRUD операции\n- Валидация URL\n- Права доступа', priority: 'Средний', estimate: '2 дня', dependencies: ['BE-4'], acceptanceCriteria: ['Все endpoints работают', 'URL валидация', 'Права работают', 'Тесты готовы'] },
+            { id: 'BE-15', type: 'BE', summary: 'Integration тесты', description: 'Integration тесты:\n- Полный сценарий Deployment → Change\n- Lineage визуализация\n- Package и согласование\n- Права доступа', priority: 'Высокий', estimate: '4 дня', dependencies: ['BE-5', 'BE-6', 'BE-7', 'BE-8', 'BE-9', 'BE-10', 'BE-11', 'BE-12'], acceptanceCriteria: ['Happy path тесты', 'Негативные сценарии', 'Coverage > 80%', 'CI/CD настроен', 'Документация'] },
+            { id: 'BE-16', type: 'BE', summary: 'Middleware прав доступа', description: 'Middleware для прав:\n- Проверка роли\n- Проверка продукта (ПРМ)\n- Декораторы для endpoints\n- Матрица прав', priority: 'Критический', estimate: '3 дня', dependencies: ['BE-5', 'BE-6', 'BE-7', 'BE-8', 'BE-9', 'BE-12'], acceptanceCriteria: ['Middleware работает', 'Декораторы применены', 'Матрица прав реализована', 'HTTP 403 корректно', 'Тесты готовы'] },
+            { id: 'BE-17', type: 'BE', summary: 'API документация', description: 'Финализация документации:\n- OpenAPI/Swagger\n- Postman коллекция\n- README\n- Примеры curl', priority: 'Средний', estimate: '2 дня', dependencies: ['BE-15'], acceptanceCriteria: ['Swagger UI доступен', 'Все endpoints задокументированы', 'Postman коллекция', 'README готов', 'Примеры работают'] },
+            { id: 'BE-18', type: 'BE', summary: 'Оптимизация и баг-фиксы', description: 'Оптимизация и исправление багов:\n- Оптимизация запросов\n- Исправление багов\n- Code review\n- Рефакторинг', priority: 'Высокий', estimate: '6 дней', dependencies: ['BE-17'], acceptanceCriteria: ['Запросы оптимизированы', 'Баги исправлены', 'Code review пройден', 'Рефакторинг завершен'] },
+
+            // Frontend tasks
+            { id: 'FE-1', type: 'FE', summary: 'Настройка проекта и роутинг', description: 'Настройка React приложения:\n- React Router\n- Структура папок\n- API клиент\n- Конфигурация окружений\n- Базовый Layout', priority: 'Критический', estimate: '2 дня', dependencies: [], acceptanceCriteria: ['React Router настроен', 'API клиент готов', 'Layout с меню', 'Структура папок', 'Environment variables', 'Документация'] },
+            { id: 'FE-2', type: 'FE', summary: 'Компоненты UI Kit', description: 'UI компоненты на Material-UI:\n- DataTable\n- FormField\n- StatusBadge\n- ConfirmDialog\n- UrlInput\n- CommentBox', priority: 'Критический', estimate: '3 дня', dependencies: ['FE-1'], acceptanceCriteria: ['Все компоненты готовы', 'Единый стиль', 'TypeScript типы', 'Переиспользуемые', 'Storybook (опц)', 'Документация'] },
+            { id: 'FE-3', type: 'FE', summary: 'Сервисы для работы с API', description: 'API сервисы:\n- DeploymentService\n- SimulationService\n- PilotService\n- ChangeService\n- ScorecardService\n- LineageService\n- PackageService\n- ApprovalService\n- ArtifactService\n- UserService', priority: 'Критический', estimate: '2 дня', dependencies: ['FE-1'], acceptanceCriteria: ['Все сервисы готовы', 'CRUD методы', 'Обработка ошибок', 'TypeScript интерфейсы', 'Документация'] },
+            { id: 'FE-4', type: 'FE', summary: 'Управление состоянием', description: 'Context API:\n- AuthContext\n- NotificationContext\n- Хуки\n- Middleware прав', priority: 'Высокий', estimate: '2 дня', dependencies: ['FE-1', 'FE-3'], acceptanceCriteria: ['Context настроен', 'AuthContext работает', 'NotificationContext работает', 'Хуки готовы', 'Middleware работает', 'Документация'] },
+            { id: 'FE-5', type: 'FE', summary: 'Раздел Deployments', description: 'Раздел Deployments:\n- DeploymentsView (список)\n- DeploymentDetailView\n- CreateDeploymentForm\n- EditDeploymentForm\n- Breadcrumbs', priority: 'Критический', estimate: '4 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4', 'BE-5'], acceptanceCriteria: ['Список с фильтрацией', 'Детальный просмотр с табами', 'Форма создания', 'Форма редактирования', 'Статусы корректны', 'Права работают', 'Responsive', 'Unit тесты'] },
+            { id: 'FE-6', type: 'FE', summary: 'Раздел Simulations', description: 'Адаптация Simulations:\n- Обновление под новый дизайн\n- Поле deployment_id\n- Фильтрация\n- Интеграция с Layout', priority: 'Высокий', estimate: '3 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-5', 'BE-6'], acceptanceCriteria: ['Список адаптирован', 'deployment_id обязательное', 'Фильтрация работает', 'Детальный просмотр', 'Breadcrumbs', 'Responsive', 'Тесты обновлены'] },
+            { id: 'FE-7', type: 'FE', summary: 'Раздел Pilots', description: 'Адаптация Pilots:\n- Обновление под новый дизайн\n- Поле deployment_id\n- Связь со Scorecard\n- Фильтрация', priority: 'Высокий', estimate: '4 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-5', 'FE-8', 'BE-7'], acceptanceCriteria: ['Список адаптирован', 'deployment_id обязательное', 'Выбор Scorecard (multi)', 'Фильтрация работает', 'Таб Scorecards', 'Breadcrumbs', 'Responsive', 'Тесты'] },
+            { id: 'FE-8', type: 'FE', summary: 'Раздел Scorecards', description: 'Раздел Scorecards:\n- ScorecardsView\n- ScorecardDetailView\n- CreateScorecardForm\n- EditScorecardForm\n- Источник (Simulation/Pilot)', priority: 'Высокий', estimate: '4 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4', 'BE-8'], acceptanceCriteria: ['Список с фильтрацией', 'Детальный просмотр', 'Форма создания', 'Форма редактирования', 'Права (Методолог)', 'Валидация удаления', 'Responsive', 'Тесты'] },
+            { id: 'FE-9', type: 'FE', summary: 'Раздел Changes', description: 'Раздел Changes:\n- ChangesView\n- ChangeDetailView\n- CreateChangeForm\n- EditChangeForm\n- Отправка на согласование', priority: 'Критический', estimate: '5 дней', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4', 'FE-5', 'FE-8', 'BE-9'], acceptanceCriteria: ['Список с фильтрацией', 'Детальный просмотр с табами', 'Форма создания', 'Форма редактирования', 'Кнопка Submit', 'Статусы корректны', 'Права работают', 'Responsive', 'Тесты'] },
+            { id: 'FE-10', type: 'FE', summary: 'Компонент LineageVisualization', description: 'Визуализация Lineage:\n- LineageVisualization компонент\n- Интеграция в DeploymentDetailView\n- Интеграция в ChangeDetailView\n- Библиотека графов', priority: 'Высокий', estimate: '3 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-5', 'FE-6', 'FE-7', 'FE-9', 'BE-10'], acceptanceCriteria: ['Компонент готов', 'Граф визуализируется', 'Интеграция в Deployment', 'Интеграция в Change', 'Клик открывает детали', 'Responsive', 'Тесты'] },
+            { id: 'FE-12', type: 'FE', summary: 'Диалог Package', description: 'Диалог создания Package:\n- SubmitToRatificationDialog\n- Интеграция в Pilot/Change\n- Выбор Ratifier\n- Автоматический расчет критичности', priority: 'Критический', estimate: '4 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4', 'FE-7', 'FE-9', 'BE-11'], acceptanceCriteria: ['Диалог готов', 'Выбор Pilot/Change', 'Выбор Ratifier', 'Критичность рассчитывается', 'Создание и отправка', 'Валидация', 'Responsive', 'Тесты'] },
+            { id: 'FE-13', type: 'FE', summary: 'Раздел "Мои согласования"', description: 'Раздел согласований:\n- ApprovalsView\n- ApprovalDetailView\n- Кнопки Approve/Reject\n- Кнопки Ratify/Reject\n- Форма комментария\n- История', priority: 'Критический', estimate: '5 дней', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4', 'FE-12', 'BE-12'], acceptanceCriteria: ['Список с фильтрацией', 'Детальный просмотр', 'Кнопки согласования', 'Форма комментария', 'Текущий этап', 'История решений', 'Права работают', 'Уведомления', 'Responsive', 'Тесты'] },
+            { id: 'FE-14', type: 'FE', summary: 'Управление артефактами', description: 'Артефакты (URL ссылки):\n- ArtifactsList\n- AddArtifactLinkDialog\n- Переход по ссылке\n- Удаление\n- Валидация URL', priority: 'Средний', estimate: '3 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-5', 'FE-9', 'BE-14'], acceptanceCriteria: ['Список артефактов', 'Диалог добавления', 'Валидация URL', 'Переход по ссылке', 'Удаление работает', 'Права работают', 'Responsive', 'Тесты'] },
+            { id: 'FE-16', type: 'FE', summary: 'Dashboard', description: 'Главная страница:\n- Метрики\n- Последние действия\n- Быстрые ссылки', priority: 'Низкий', estimate: '3 дня', dependencies: ['FE-1', 'FE-2', 'FE-3', 'FE-4'], acceptanceCriteria: ['Карточки с метриками', 'Последние действия', 'Быстрые ссылки', 'Метрики обновляются', 'Responsive', 'Тесты'] },
+            { id: 'FE-17', type: 'FE', summary: 'Интеграция с Backend API', description: 'Интеграция с Backend:\n- Проверка API вызовов\n- Обработка ошибок\n- Toast уведомления\n- Loading состояния\n- Retry логика', priority: 'Критический', estimate: '3 дня', dependencies: ['FE-5', 'FE-6', 'FE-7', 'FE-8', 'FE-9', 'FE-10', 'FE-12', 'FE-13', 'FE-14', 'BE-5', 'BE-6', 'BE-7', 'BE-8', 'BE-9', 'BE-10', 'BE-11', 'BE-12', 'BE-14'], acceptanceCriteria: ['API вызовы работают', 'Ошибки обрабатываются', 'Toast уведомления', 'Loading индикаторы', 'Retry работает', 'Документация'] },
+            { id: 'FE-18', type: 'FE', summary: 'E2E тесты', description: 'E2E тесты:\n- Создание Deployment → Change\n- Lineage визуализация\n- Package и согласование\n- Права доступа', priority: 'Высокий', estimate: '4 дня', dependencies: ['FE-17', 'BE-17'], acceptanceCriteria: ['Happy path тесты', 'Негативные сценарии', 'Тесты для ролей', 'CI/CD настроен', 'Coverage отчет', 'Документация'] },
+            { id: 'FE-19', type: 'FE', summary: 'Оптимизация производительности', description: 'Оптимизация:\n- Code splitting\n- React.memo\n- Оптимизация ре-рендеров\n- Виртуализация списков\n- Bundle size анализ', priority: 'Средний', estimate: '2 дня', dependencies: ['FE-5', 'FE-6', 'FE-7', 'FE-8', 'FE-9', 'FE-10', 'FE-12', 'FE-13', 'FE-14'], acceptanceCriteria: ['Lazy loading', 'React.memo применен', 'Виртуализация > 100', 'Bundle < 500KB', 'Lighthouse > 90', 'Документация'] },
+            { id: 'FE-20', type: 'FE', summary: 'Финальное тестирование', description: 'Финальное тестирование:\n- Ручное тестирование\n- Разные браузеры\n- Разные разрешения\n- Баг-фиксы\n- Проверка перед релизом', priority: 'Критический', estimate: '3 дня', dependencies: ['FE-5', 'FE-6', 'FE-7', 'FE-8', 'FE-9', 'FE-10', 'FE-12', 'FE-13', 'FE-14', 'FE-16', 'FE-17', 'FE-18', 'FE-19'], acceptanceCriteria: ['Баги исправлены', 'Работает на всех браузерах', 'Responsive работает', 'Все функции работают', 'Документация актуальна', 'Готовность к релизу'] },
+
+            // QA tasks
+            { id: 'QA-1', type: 'QA', summary: 'План тестирования', description: 'Разработка плана тестирования:\n- Стратегия тестирования\n- Тест-кейсы\n- Чек-листы\n- Окружения', priority: 'Критический', estimate: '3 дня', dependencies: ['AN-1'], acceptanceCriteria: ['План готов', 'Тест-кейсы описаны', 'Чек-листы готовы', 'Окружения определены'] },
+            { id: 'QA-2', type: 'QA', summary: 'Подготовка тестовых данных', description: 'Подготовка тестовых данных:\n- Тестовые пользователи\n- Тестовые продукты\n- Тестовые Deployments\n- Скрипты генерации', priority: 'Высокий', estimate: '3 дня', dependencies: ['BE-4'], acceptanceCriteria: ['Тестовые данные готовы', 'Скрипты работают', 'Документация готова'] },
+            { id: 'QA-3', type: 'QA', summary: 'Unit тесты Backend', description: 'Unit тесты Backend:\n- Тесты моделей\n- Тесты API endpoints\n- Тесты бизнес-логики\n- Coverage > 80%', priority: 'Высокий', estimate: '5 дней', dependencies: ['BE-8'], acceptanceCriteria: ['Тесты готовы', 'Coverage > 80%', 'CI/CD настроен', 'Документация'] },
+            { id: 'QA-4', type: 'QA', summary: 'Unit тесты Frontend', description: 'Unit тесты Frontend:\n- Тесты компонентов\n- Тесты сервисов\n- Тесты хуков\n- Coverage > 70%', priority: 'Высокий', estimate: '5 дней', dependencies: ['FE-8'], acceptanceCriteria: ['Тесты готовы', 'Coverage > 70%', 'CI/CD настроен', 'Документация'] },
+            { id: 'QA-5', type: 'QA', summary: 'Integration тесты', description: 'Integration тесты:\n- Тесты процесса согласования\n- Тесты прав доступа\n- Тесты интеграции FE-BE\n- Негативные сценарии', priority: 'Высокий', estimate: '6 дней', dependencies: ['BE-12'], acceptanceCriteria: ['Тесты готовы', 'Критичные сценарии покрыты', 'Негативные сценарии', 'CI/CD настроен', 'Документация'] },
+            { id: 'QA-6', type: 'QA', summary: 'UI тесты', description: 'UI тесты:\n- Тесты навигации\n- Тесты форм\n- Тесты валидации\n- Тесты responsive', priority: 'Средний', estimate: '5 дней', dependencies: ['FE-10'], acceptanceCriteria: ['Тесты готовы', 'Навигация покрыта', 'Формы покрыты', 'Responsive покрыт', 'Документация'] },
+            { id: 'QA-7', type: 'QA', summary: 'E2E тесты', description: 'E2E тесты:\n- Полный сценарий Initiative → Deployment → Approval\n- Тесты для разных ролей\n- Тесты Lineage\n- Тесты Package', priority: 'Критический', estimate: '6 дней', dependencies: ['FE-17'], acceptanceCriteria: ['E2E тесты готовы', 'Все роли покрыты', 'Критичные сценарии', 'CI/CD настроен', 'Документация'] },
+            { id: 'QA-8', type: 'QA', summary: 'Регрессионное тестирование', description: 'Регрессионное тестирование:\n- Полное тестирование функционала\n- Проверка багов\n- Smoke тесты\n- Sanity тесты', priority: 'Критический', estimate: '5 дней', dependencies: ['QA-7'], acceptanceCriteria: ['Регрессия пройдена', 'Баги задокументированы', 'Smoke тесты готовы', 'Sanity тесты готовы'] },
+            { id: 'QA-9', type: 'QA', summary: 'Подготовка к релизу', description: 'Подготовка к релизу:\n- Финальная проверка\n- Release notes\n- Чек-лист релиза\n- Rollback план', priority: 'Критический', estimate: '3 дня', dependencies: ['QA-8'], acceptanceCriteria: ['Финальная проверка пройдена', 'Release notes готовы', 'Чек-лист готов', 'Rollback план готов'] }
+        ];
+
+        let state = {
+            tasks: TASKS.map(t => ({ ...t, decision: 'pending', comment: '', edited: false })),
+            activeTaskId: null,
+            filters: {
+                type: 'all',
+                decision: 'all'
+            }
+        };
+
+        function init() {
+            renderTaskList();
+            renderStats();
+            updatePrompt();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('[data-filter-type]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const filterType = e.target.dataset.filterType;
+                    const value = e.target.dataset.value;
+                    
+                    document.querySelectorAll(`[data-filter-type="${filterType}"]`).forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    state.filters[filterType] = value;
+                    renderTaskList();
+                });
+            });
+        }
+
+        function getFilteredTasks() {
+            return state.tasks.filter(task => {
+                if (state.filters.type !== 'all' && task.type !== state.filters.type) return false;
+                if (state.filters.decision !== 'all' && task.decision !== state.filters.decision) return false;
+                return true;
+            });
+        }
+
+        function renderTaskList() {
+            const taskList = document.getElementById('taskList');
+            const filtered = getFilteredTasks();
+            
+            if (filtered.length === 0) {
+                taskList.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div>No tasks match filters</div></div>';
+                return;
+            }
+            
+            taskList.innerHTML = filtered.map(task => `
+                <div class="task-item ${task.decision} ${state.activeTaskId === task.id ? 'active' : ''}" onclick="selectTask('${task.id}')">
+                    <div class="task-id">${task.id}</div>
+                    <div class="task-summary">${task.summary}</div>
+                    <div class="task-meta">
+                        <span>${task.priority}</span>
+                        <span>•</span>
+                        <span>${task.estimate}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectTask(taskId) {
+            state.activeTaskId = taskId;
+            const task = state.tasks.find(t => t.id === taskId);
+            
+            renderTaskList();
+            renderTaskDetail(task);
+        }
+
+        function renderTaskDetail(task) {
+            const header = document.getElementById('detailHeader');
+            const content = document.getElementById('detailContent');
+            const title = document.getElementById('detailTitle');
+            
+            header.style.display = 'block';
+            title.textContent = `${task.id}: ${task.summary}`;
+            
+            content.innerHTML = `
+                <div class="field-group">
+                    <label class="field-label">Summary</label>
+                    <input type="text" class="field-input" value="${task.summary}" onchange="updateTaskField('${task.id}', 'summary', this.value)">
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Description</label>
+                    <textarea class="field-input" onchange="updateTaskField('${task.id}', 'description', this.value)">${task.description}</textarea>
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Priority</label>
+                    <div class="field-value">${task.priority}</div>
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Estimate</label>
+                    <div class="field-value">${task.estimate}</div>
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Dependencies</label>
+                    <div class="field-value">${task.dependencies.length > 0 ? task.dependencies.join(', ') : 'None'}</div>
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Acceptance Criteria</label>
+                    <ul class="criteria-list">
+                        ${task.acceptanceCriteria.map(c => `<li class="criteria-item">${c}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="field-group">
+                    <label class="field-label">Comments / Adjustments</label>
+                    <textarea class="field-input" placeholder="Add your comments or describe adjustments..." onchange="updateTaskField('${task.id}', 'comment', this.value)">${task.comment}</textarea>
+                </div>
+            `;
+        }
+
+        function updateTaskField(taskId, field, value) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task) {
+                task[field] = value;
+                if (field === 'summary' || field === 'description') {
+                    task.edited = true;
+                }
+                renderTaskList();
+                updatePrompt();
+            }
+        }
+
+        function setDecision(decision) {
+            if (!state.activeTaskId) return;
+            
+            const task = state.tasks.find(t => t.id === state.activeTaskId);
+            if (task) {
+                task.decision = decision;
+                renderTaskList();
+                renderStats();
+                updatePrompt();
+            }
+        }
+
+        function renderStats() {
+            const keep = state.tasks.filter(t => t.decision === 'keep').length;
+            const remove = state.tasks.filter(t => t.decision === 'remove').length;
+            const adjust = state.tasks.filter(t => t.decision === 'adjust').length;
+            
+            document.getElementById('keepCount').textContent = keep;
+            document.getElementById('removeCount').textContent = remove;
+            document.getElementById('adjustCount').textContent = adjust;
+        }
+
+        function updatePrompt() {
+            const keep = state.tasks.filter(t => t.decision === 'keep');
+            const adjust = state.tasks.filter(t => t.decision === 'adjust');
+            const remove = state.tasks.filter(t => t.decision === 'remove');
+            
+            if (keep.length === 0 && adjust.length === 0 && remove.length === 0) {
+                document.getElementById('promptContent').textContent = 'No decisions made yet. Review tasks and make decisions to generate export.';
+                return;
+            }
+            
+            let prompt = '# MVP Tasks Review Summary\n\n';
+            
+            if (keep.length > 0) {
+                prompt += `## ✅ Tasks to KEEP (${keep.length})\n\n`;
+                keep.forEach(t => {
+                    prompt += `**${t.id}**: ${t.summary}\n`;
+                    if (t.comment) prompt += `  → Comment: ${t.comment}\n`;
+                    prompt += '\n';
+                });
+            }
+            
+            if (adjust.length > 0) {
+                prompt += `## ⚡ Tasks to ADJUST (${adjust.length})\n\n`;
+                adjust.forEach(t => {
+                    prompt += `**${t.id}**: ${t.summary}\n`;
+                    if (t.edited) prompt += `  → Summary/Description edited\n`;
+                    if (t.comment) prompt += `  → Adjustments: ${t.comment}\n`;
+                    prompt += '\n';
+                });
+            }
+            
+            if (remove.length > 0) {
+                prompt += `## ❌ Tasks to REMOVE (${remove.length})\n\n`;
+                remove.forEach(t => {
+                    prompt += `**${t.id}**: ${t.summary}\n`;
+                    if (t.comment) prompt += `  → Reason: ${t.comment}\n`;
+                    prompt += '\n';
+                });
+            }
+            
+            prompt += '\n---\n\n';
+            prompt += `**Total reviewed**: ${keep.length + adjust.length + remove.length} / ${state.tasks.length}\n`;
+            prompt += `**Pending**: ${state.tasks.filter(t => t.decision === 'pending').length}\n`;
+            
+            document.getElementById('promptContent').textContent = prompt;
+        }
+
+        function copyPrompt() {
+            const content = document.getElementById('promptContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy to Clipboard';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

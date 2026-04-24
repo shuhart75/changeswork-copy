@@ -1,0 +1,8 @@
+' FEATURE: approvals
+[Approvals: core и интеграция с ЖЦ] as [APPROVALS_CMD_CORE] lasts 24 days
+[APPROVALS_CMD_CORE] starts 2026/04/01
+[APPROVALS_CMD_CORE] is colored in LightBlue
+
+[Approvals: страница "Согласования"] as [APPROVALS_CMD_PAGE] lasts 29 days
+[APPROVALS_CMD_PAGE] starts 2026/04/06
+[APPROVALS_CMD_PAGE] is colored in LightCoral

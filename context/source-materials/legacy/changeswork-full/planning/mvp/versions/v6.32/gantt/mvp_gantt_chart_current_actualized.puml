@@ -1,0 +1,431 @@
+@startgantt
+title CURRENT ACTUALIZED - План разработки (fact snapshot on 2026-04-17 + current forecast)
+
+' Purpose:
+' - keep commander baseline intact for plan-vs-fact comparison
+' - show factual progress / factual current assignees from interactive capture
+' - show current execution order, which already diverged from the commander plan
+'
+' Semantics:
+' - percentages on tasks reflect factual status from the interactive status snapshot
+' - tasks with 0% use the current forecast continuation from the factual state
+' - A3 is added because in reality a third analyst is already participating
+' - current deployments block uses real backlog items RSCON-2346, RSCON-2347, RSCON-2348, RSCON-2349, RSCON-2410, RSCON-2445
+' - current scorecards block uses real backlog items RSCON-2339..RSCON-2344
+' - current risk-table block uses real backlog items RSCON-2430, RSCON-2431, RSCON-2432, RSCON-2429
+
+Project starts the 27th of march 2026
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/05/11 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+2026/04/17 is colored in #FFD9B3
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+
+' RESOURCES (current actualized view)
+'   A1/A2/A3: analysts
+'   TBD_AN: unassigned analytics not yet taken into work
+'   B1/B2/B3: backend devs
+'   TBD_BE: unassigned BE tasks that are not yet taken into work
+'   F1: frontend dev 1
+'   TBD_FE: unassigned FE tasks that are not yet taken into work
+'   F2: frontend dev 2
+'   Q1: QA
+
+-- Календарь команды --
+
+[F1 отпуск 30.03-05.04] as [VAC_F1_SPRING] lasts 5 days
+[VAC_F1_SPRING] starts 2026/03/30
+[VAC_F1_SPRING] is colored in silver
+
+[BE1 отпуск 20.04-03.05] as [VAC_B1_APR_MAY] lasts 9 days
+[VAC_B1_APR_MAY] starts 2026/04/20
+[VAC_B1_APR_MAY] is colored in silver
+
+[F1 отпуск 01.05-09.05] as [VAC_F1_MAY] lasts 5 days
+[VAC_F1_MAY] starts 2026/05/04
+[VAC_F1_MAY] is colored in silver
+
+-- 1) Роли --
+
+[AN новые роли: роли/права/матрица] as [AN_ROLES] on {A2} lasts 1 days
+[AN_ROLES] starts 2026/03/30
+[AN_ROLES] is colored in lightgreen
+[AN_ROLES] is 100% completed
+
+-- 2) Артефакты --
+
+[AN артефакты (BE): модель/контракты/права] as [AN_ART_BE] on {A2} lasts 1 days
+[AN_ART_BE] starts 2026/03/31
+[AN_ART_BE] is colored in lightgreen
+[AN_ART_BE] is 100% completed
+
+[BE артефакты (ссылки на документы) - БД + API] as [BE_ART] on {B2} lasts 3 days
+[BE_ART] starts 2026/04/01
+[BE_ART] is colored in lightblue
+[BE_ART] is 100% completed
+
+[AN блок артефактов (FE): пилоты] as [AN_FE_PILOT_ART] on {A2} lasts 1 days
+[AN_FE_PILOT_ART] starts 2026/04/01
+[AN_FE_PILOT_ART] is colored in lightgreen
+[AN_FE_PILOT_ART] is 100% completed
+
+[FE пилоты - блок артефакты + UI под ЖЦ] as [FE_PILOT_ART] on {F1} lasts 4 days
+[FE_PILOT_ART] starts 2026/04/06
+[FE_PILOT_ART] is colored in lightcoral
+[FE_PILOT_ART] is 100% completed
+
+[AN блок артефактов (FE): симуляции] as [AN_FE_SIM_ART] on {A2} lasts 1 days
+[AN_FE_SIM_ART] starts 2026/04/02
+[AN_FE_SIM_ART] is colored in lightgreen
+[AN_FE_SIM_ART] is 100% completed
+
+[FE симуляции - блок артефакты] as [FE_SIM_ART] on {F1} lasts 1 days
+[FE_SIM_ART] starts 2026/04/10
+[FE_SIM_ART] is colored in lightcoral
+[FE_SIM_ART] is 100% completed
+
+-- 3) Согласования/утверждения + Пакеты --
+
+[AN процесс согласования/утверждения (BE core)] as [AN_AP_CORE] on {A3} lasts 2 days
+[AN_AP_CORE] starts 2026/04/03
+[AN_AP_CORE] is colored in lightgreen
+[AN_AP_CORE] is 80% completed
+
+[BE процесс согласования и утверждения - БД+логика] as [BE_AP_CORE] on {B1} lasts 10 days
+[BE_AP_CORE] starts 2026/05/04
+[BE_AP_CORE] is colored in lightblue
+[BE_AP_CORE] is 0% completed
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [AN_PILOT_LC_AP] on {A3} lasts 1 days
+[AN_PILOT_LC_AP] starts 2026/04/01
+[AN_PILOT_LC_AP] is colored in lightgreen
+[AN_PILOT_LC_AP] is 100% completed
+
+[BE ЖЦ пилота - согласование/утверждение] as [BE_PILOT_LC_AP] on {B2} lasts 5 days
+[BE_PILOT_LC_AP] starts 2026/05/19
+[BE_PILOT_LC_AP] is colored in lightblue
+[BE_PILOT_LC_AP] is 0% completed
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [AN_AP_PAGE_BE] on {A1} lasts 1 days
+[AN_AP_PAGE_BE] starts 2026/04/13
+[AN_AP_PAGE_BE] is colored in lightgreen
+[AN_AP_PAGE_BE] is 0% completed
+
+[BE страница "Согласования" - API, логика] as [BE_AP_PAGE] on {B1} lasts 3 days
+[BE_AP_PAGE] starts 2026/05/19
+[BE_AP_PAGE] is colored in lightblue
+[BE_AP_PAGE] is 0% completed
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [AN_AP_PAGE_FE] on {A2} lasts 1 days
+[AN_AP_PAGE_FE] starts 2026/04/16
+[AN_AP_PAGE_FE] is colored in lightgreen
+[AN_AP_PAGE_FE] is 0% completed
+
+[FE страница "Согласования"] as [FE_AP_PAGE] on {F2} lasts 10 days
+[FE_AP_PAGE] starts 2026/05/22
+[FE_AP_PAGE] is colored in lightcoral
+[FE_AP_PAGE] is 0% completed
+
+[AN страница "Пакеты" (BE): контракты/массовые действия] as [AN_PKG_BE] on {A3} lasts 1 days
+[AN_PKG_BE] starts 2026/04/09
+[AN_PKG_BE] is colored in lightgreen
+[AN_PKG_BE] is 80% completed
+
+[AN страница "Пакеты" (FE): UX/компоненты/edge-cases] as [AN_PKG_FE] on {A3} lasts 1 days
+[AN_PKG_FE] starts 2026/04/10
+[AN_PKG_FE] is colored in lightgreen
+[AN_PKG_FE] is 80% completed
+
+[FE страница "Пакеты"] as [FE_PKG_PAGE] on {F2} lasts 10 days
+[FE_PKG_PAGE] starts 2026/04/22
+[FE_PKG_PAGE] is colored in lightcoral
+[FE_PKG_PAGE] is 0% completed
+
+-- 4) Внедрения --
+
+[RSCON-2349 BE внедрений БД + API] as [RSCON_2349] on {B3} lasts 3 days
+[RSCON_2349] starts 2026/04/17
+[RSCON_2349] is colored in lightblue
+[RSCON_2349] is 15% completed
+
+[RSCON-2445 BE Базовая функциональность для внедрений] as [RSCON_2445] on {B3} lasts 2 days
+[RSCON_2445] starts 2026/04/22
+[RSCON_2445] is colored in lightblue
+[RSCON_2445] is 0% completed
+
+[RSCON-2410 BE ЖЦ внедрений] as [RSCON_2410] on {B3} lasts 5 days
+[RSCON_2410] starts 2026/04/24
+[RSCON_2410] is colored in lightblue
+[RSCON_2410] is 0% completed
+
+[RSCON-2348 FE форма создания/редактирования внедрений] as [RSCON_2348] on {TBD_FE} lasts 5 days
+[RSCON_2348] starts 2026/04/20
+[RSCON_2348] is colored in lightcoral
+[RSCON_2348] is 0% completed
+
+[RSCON-2347 FE детальная внедрения] as [RSCON_2347] on {TBD_FE} lasts 5 days
+[RSCON_2347] starts 2026/04/13
+[RSCON_2347] is colored in lightcoral
+[RSCON_2347] is 0% completed
+
+[RSCON-2346 FE список внедрений] as [RSCON_2346] on {F1} lasts 5 days
+[RSCON_2346] starts 2026/04/06
+[RSCON_2346] is colored in lightcoral
+[RSCON_2346] is 100% completed
+
+-- 5) Скоркарты (реальный backlog) --
+
+[RSCON-2339 FE Удаление блока метрик + новая вкладка для скоркарт] as [RSCON_2339] on {TBD_FE} lasts 1 days
+[RSCON_2339] starts 2026/04/27
+[RSCON_2339] is colored in lightcoral
+[RSCON_2339] is 0% completed
+
+[RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт] as [RSCON_2340] on {F2} lasts 10 days
+[RSCON_2340] starts 2026/04/08
+[RSCON_2340] is colored in lightcoral
+[RSCON_2340] is 85% completed
+
+[RSCON-2341 FE Прикрепление существующей скоркарты] as [RSCON_2341] on {TBD_FE} lasts 4 days
+[RSCON_2341] starts 2026/04/28
+[RSCON_2341] is colored in lightcoral
+[RSCON_2341] is 0% completed
+
+[RSCON-2342 BE Оценка критичности + шаблоны для скоркарт] as [RSCON_2342] on {B3} lasts 4 days
+[RSCON_2342] starts 2026/04/07
+[RSCON_2342] is colored in lightblue
+[RSCON_2342] is 100% completed
+
+[RSCON-2343 BE Сущность скоркарты] as [RSCON_2343] on {B2} lasts 5 days
+[RSCON_2343] starts 2026/04/03
+[RSCON_2343] is colored in lightblue
+[RSCON_2343] is 100% completed
+
+[RSCON-2344 BE Привязка скоркарты] as [RSCON_2344] on {B2} lasts 1 days
+[RSCON_2344] starts 2026/04/10
+[RSCON_2344] is colored in lightblue
+[RSCON_2344] is 100% completed
+
+-- 6) Уведомления --
+
+[AN уведомления: шаблоны/триггеры/получатели] as [AN_NOT] on {A2} lasts 1 days
+[AN_NOT] starts 2026/04/17
+[AN_NOT] is colored in lightgreen
+[AN_NOT] is 0% completed
+
+[BE уведомления] as [BE_NOT] on {B3} lasts 3 days
+[BE_NOT] starts 2026/05/04
+[BE_NOT] is colored in lightblue
+[BE_NOT] is 0% completed
+
+-- 7) Trace (связанные сущности) --
+
+[AN Trace (BE): модель связей/запросы/производительность] as [AN_TRACE_BE] on {A1} lasts 1 days
+[AN_TRACE_BE] starts 2026/04/09
+[AN_TRACE_BE] is colored in lightgreen
+[AN_TRACE_BE] is 100% completed
+
+[BE Trace - БД + логика + API] as [BE_TRACE] on {B2} lasts 2 days
+[BE_TRACE] starts 2026/04/29
+[BE_TRACE] is colored in lightblue
+[BE_TRACE] is 0% completed
+
+[AN Trace (FE): виджет блока связей] as [AN_TRACE_FE] on {A1} lasts 1 days
+[AN_TRACE_FE] starts 2026/04/10
+[AN_TRACE_FE] is colored in lightgreen
+[AN_TRACE_FE] is 100% completed
+
+[FE Trace - пилоты/симуляции/внедрения: блок связи] as [FE_TRACE] on {F1} lasts 3 days
+[FE_TRACE] starts 2026/05/13
+[FE_TRACE] is colored in lightcoral
+[FE_TRACE] is 0% completed
+
+-- QA --
+
+[QA подготовка (тест-план, тестовые данные, стенд)] as [QA_SETUP] on {Q1} lasts 2 days
+[QA_SETUP] starts 2026/06/05
+[QA_SETUP] is colored in gold
+[QA_SETUP] is 0% completed
+
+[QA Артефакты] as [QA_ART] on {Q1} lasts 2 days
+[QA_ART] starts 2026/06/09
+[QA_ART] is colored in gold
+[QA_ART] is 0% completed
+
+[QA Скоркарты (деталка+форма)] as [QA_SC] on {Q1} lasts 3 days
+[QA_SC] starts 2026/06/11
+[QA_SC] is colored in gold
+[QA_SC] is 0% completed
+
+[QA Согласования + Пакеты] as [QA_AP] on {Q1} lasts 3 days
+[QA_AP] starts 2026/06/17
+[QA_AP] is colored in gold
+[QA_AP] is 0% completed
+
+[QA Trace (блок связей)] as [QA_TRACE] on {Q1} lasts 1 days
+[QA_TRACE] starts 2026/06/22
+[QA_TRACE] is colored in gold
+[QA_TRACE] is 0% completed
+
+[QA Регрессия + E2E smoke] as [QA_REG] on {Q1} lasts 5 days
+[QA_REG] starts 2026/06/23
+[QA_REG] is colored in gold
+[QA_REG] is 0% completed
+
+[Milestone: MVP завершен] as [MVP_DONE] happens at 2026/06/29
+
+-- Доработка статусной модели симуляции (за рамками MVP) --
+
+[BE статусной модели симуляции] as [BE_STAT_SIM] on {B3} lasts 10 days
+[BE_STAT_SIM] starts 2026/05/07
+[BE_STAT_SIM] is colored in lightblue
+[BE_STAT_SIM] is 0% completed
+
+[FE статусной модели симуляции] as [FE_STAT_SIM] on {F1} lasts 3 days
+[FE_STAT_SIM] starts 2026/05/18
+[FE_STAT_SIM] is colored in lightcoral
+[FE_STAT_SIM] is 0% completed
+
+-- Симуляция снепшотов конфигурации (за рамками MVP) --
+
+[AN аналитика симуляции снепшотов конфигурации] as [AN_SIM_SNAP_CFG_FACT] on {TBD_AN} lasts 21 days
+[AN_SIM_SNAP_CFG_FACT] starts 2026/03/27
+[AN_SIM_SNAP_CFG_FACT] is colored in lightgreen
+[AN_SIM_SNAP_CFG_FACT] is 40% completed
+
+[BE симуляции снепшотов] as [BE_SIM_SNAP] on {B1} lasts 10 days
+[BE_SIM_SNAP] starts 2026/05/22
+[BE_SIM_SNAP] is colored in lightblue
+[BE_SIM_SNAP] is 0% completed
+
+[FE симуляции снепшотов] as [FE_SIM_SNAP] on {F1} lasts 10 days
+[FE_SIM_SNAP] starts 2026/06/05
+[FE_SIM_SNAP] is colored in lightcoral
+[FE_SIM_SNAP] is 0% completed
+
+-- AI агент (за рамками MVP) --
+
+[BE чата AI - интеграция] as [BE_AI_CHAT] on {B1} lasts 5 days
+[BE_AI_CHAT] starts 2026/06/05
+[BE_AI_CHAT] is colored in lightblue
+[BE_AI_CHAT] is 0% completed
+
+[FE UI для чата с AI агентом] as [FE_AI_CHAT_UI] on {F1} lasts 3 days
+[FE_AI_CHAT_UI] starts 2026/06/23
+[FE_AI_CHAT_UI] is colored in lightcoral
+[FE_AI_CHAT_UI] is 0% completed
+
+-- Табличные риск-параметры (за рамками MVP) --
+
+[RSCON-2430 BE Табличные риск-параметры: API, БД, логика] as [RSCON_2430] on {B2} lasts 3 days
+[RSCON_2430] starts 2026/04/17
+[RSCON_2430] is colored in lightblue
+[RSCON_2430] is 10% completed
+
+[RSCON-2431 BE Интеграция с РП: реализовать получение, обработку табличных РП] as [RSCON_2431] on {TBD_BE} lasts 3 days
+[RSCON_2431] starts 2026/04/22
+[RSCON_2431] is colored in lightblue
+[RSCON_2431] is 0% completed
+
+[RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции] as [RSCON_2432] on {TBD_BE} lasts 3 days
+[RSCON_2432] starts 2026/04/27
+[RSCON_2432] is colored in lightblue
+[RSCON_2432] is 0% completed
+
+[RSCON-2429 FE Переделка формы для изменения риск-параметров] as [RSCON_2429] on {F1} lasts 10 days
+[RSCON_2429] starts 2026/04/20
+[RSCON_2429] is colored in lightcoral
+[RSCON_2429] is 0% completed
+
+-- QA (non-MVP) --
+
+[QA Статусная модель симуляции] as [QA_STAT_SIM] on {Q1} lasts 1 days
+[QA_STAT_SIM] starts 2026/06/30
+[QA_STAT_SIM] is colored in gold
+[QA_STAT_SIM] is 0% completed
+
+[QA Симуляция снепшотов] as [QA_SIM_SNAP] on {Q1} lasts 2 days
+[QA_SIM_SNAP] starts 2026/07/01
+[QA_SIM_SNAP] is colored in gold
+[QA_SIM_SNAP] is 0% completed
+
+[QA AI чат] as [QA_AI_CHAT] on {Q1} lasts 1 days
+[QA_AI_CHAT] starts 2026/07/03
+[QA_AI_CHAT] is colored in gold
+[QA_AI_CHAT] is 0% completed
+
+[QA Табличные риск-параметры] as [QA_RISK_TABLE] on {Q1} lasts 2 days
+[QA_RISK_TABLE] starts 2026/07/06
+[QA_RISK_TABLE] is colored in gold
+[QA_RISK_TABLE] is 0% completed
+
+[QA All: smoke/regression] as [QA_ALL_REG] on {Q1} lasts 2 days
+[QA_ALL_REG] starts 2026/07/08
+[QA_ALL_REG] is colored in gold
+[QA_ALL_REG] is 0% completed
+
+[ALL DONE] as [ALL_DONE] happens at 2026/07/10
+
+note bottom
+  Snapshot date: 2026/04/17
+  Проценты на задачах = фактический прогресс по интерактивной актуализации статусов.
+  0% блоки = текущий прогноз продолжения работ от фактического состояния.
+  Добавлены фактические аналитические задачи по табличным риск-параметрам и симуляции снепшотов конфигурации.
+  Блок внедрений заменён на реальные backlog-задачи RSCON-2346, RSCON-2347, RSCON-2348, RSCON-2349, RSCON-2410, RSCON-2445.
+  `RSCON-2349`, `RSCON-2410` и `RSCON-2445` назначены на `BE3`; `RSCON-2349` стартовала и оценена в ~15% готовности.
+  `RSCON-2445` уточнена до `2d`, поэтому старт `RSCON-2410` сдвинут на `2026/04/24`.
+  Блок табличных риск-параметров очищен от legacy/generic задач; в actualized tracking слое оставлены только `RSCON-2430`, `RSCON-2431`, `RSCON-2432`, `RSCON-2429`.
+  `RSCON-2430` назначена на `BE2`, старт `2026/04/17`, оценка `3d`, текущий статус ~`10%`.
+  `RSCON-2431` и `RSCON-2432` добавлены как backend-stream табличных РП на `TBD_BE`; `RSCON-2429` поставлена на `FE1` с оценкой `10d`.
+  Для `B3` включено resource-leveling: после старта `RSCON-2349` нулевые задачи `BE_NOT` и `BE_STAT_SIM` сдвинуты вправо.
+  Полный проход по ресурсам добавил сдвиг вправо для очередей `F1`, `Q1` и `TBD_FE`, чтобы forecast не создавал скрытых пересечений из-за отпусков/праздников и длительностей в рабочих днях.
+  На диаграмму добавлена вертикальная отметка snapshot day `2026/04/17`.
+  Блок скоркарт заменён на реальные backlog-задачи RSCON-2339..RSCON-2344.
+  Backend-блок скоркарт (`RSCON-2342`, `RSCON-2343`, `RSCON-2344`) по факту завершён на 2026/04/17.
+  `RSCON-2340` оценена в ~85% готовности; прогноз завершения - 2026/04/20-2026/04/21.
+end note
+
+legend bottom
+  |= Цвет |= Тип работ |
+  |<#lightgreen>| Аналитика |
+  |<#lightblue>| Backend |
+  |<#lightcoral>| Frontend |
+  |<#gold>| QA |
+  |<#silver>| Отпуск / недоступность |
+  |<#orange>| Milestone |
+
+  |= Ресурс |= Использование на диаграмме |= Примечание |
+  | A1 | Analyst 1 | фактические аналитические задачи внедрений и trace |
+  | A2 | Analyst 2 | фактические роли/артефакты |
+  | A3 | Analyst 3 | фактические approvals/packages + FE scorecard form analysis |
+  | TBD_AN | Unassigned Analytics | реальные аналитические задачи без назначенного исполнителя |
+  | B1 | Backend Dev 1 | approvals core/page, затем snapshots и AI |
+  | B2 | Backend Dev 2 | артефакты, RSCON-2343/RSCON-2344, trace, RSCON-2430 |
+  | B3 | Backend Dev 3 | RSCON-2342, deployment backend stream (`2349` -> `2445` -> `2410`), notifications, status model |
+  | TBD_BE | Unassigned BE | реальные BE задачи внедрений и табличных РП без назначенного исполнителя |
+  | F1 | Frontend Dev 1 | фактически закрыл артефакты и RSCON-2346; далее RSCON-2429, trace/non-MVP |
+  | F2 | Frontend Dev 2 | фактическая задача RSCON-2340 |
+  | TBD_FE | Unassigned FE | реальные FE задачи внедрений и скоркарт без назначенного исполнителя |
+  | Q1 | QA | пока все QA задачи по факту = 0% |
+
+  Командирский baseline не меняется и остаётся эталоном для сравнения план/факт.
+endlegend
+
+@endgantt

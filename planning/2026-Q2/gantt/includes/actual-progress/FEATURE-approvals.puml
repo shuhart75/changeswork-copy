@@ -1,0 +1,58 @@
+' FEATURE: approvals
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-APPROVALS-001: virtual, mapping=explicit
+[PLAN BE Approval core и интеграция с ЖЦ] as [STORY_STORY_APPROVALS_001] starts 2026/04/01
+[STORY_STORY_APPROVALS_001] ends 2026/05/26
+[STORY_STORY_APPROVALS_001] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_001] is 0% completed
+
+' Story STORY-APPROVALS-002: virtual, mapping=explicit
+[PLAN FE Страница "Согласования"] as [STORY_STORY_APPROVALS_002] starts 2026/04/06
+[STORY_STORY_APPROVALS_002] ends 2026/05/20
+[STORY_STORY_APPROVALS_002] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_002] is 0% completed
+
+' Execution task layer
+[AN процесс согласования/утверждения (BE core)] as [TASK_AN_AP_CORE] on {A1} lasts 2 days
+[TASK_AN_AP_CORE] starts 2026/04/01
+[TASK_AN_AP_CORE] is colored in LightGreen
+[TASK_AN_AP_CORE] is 0% completed
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A2} lasts 1 days
+[TASK_AN_PILOT_LC_AP] starts 2026/04/05
+[TASK_AN_PILOT_LC_AP] is colored in LightGreen
+[TASK_AN_PILOT_LC_AP] is 0% completed
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [TASK_AN_AP_PAGE_BE] on {A1} lasts 1 days
+[TASK_AN_AP_PAGE_BE] starts 2026/04/06
+[TASK_AN_AP_PAGE_BE] is colored in LightGreen
+[TASK_AN_AP_PAGE_BE] is 0% completed
+
+[BE процесс согласования и утверждения - БД+логика] as [TASK_BE_AP_CORE] on {B1} lasts 10 days
+[TASK_BE_AP_CORE] starts 2026/04/06
+[TASK_BE_AP_CORE] is colored in LightBlue
+[TASK_BE_AP_CORE] is 0% completed
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [TASK_AN_AP_PAGE_FE] on {A2} lasts 1 days
+[TASK_AN_AP_PAGE_FE] starts 2026/04/07
+[TASK_AN_AP_PAGE_FE] is colored in LightGreen
+[TASK_AN_AP_PAGE_FE] is 0% completed
+
+[FE страница "Согласования"] as [TASK_FE_AP_PAGE] on {F1} lasts 10 days
+[TASK_FE_AP_PAGE] starts 2026/04/14
+[TASK_FE_AP_PAGE] is colored in LightCoral
+[TASK_FE_AP_PAGE] is 0% completed
+
+[BE страница "Согласования" - API, логика] as [TASK_BE_AP_PAGE] on {B1} lasts 10 days
+[TASK_BE_AP_PAGE] starts 2026/05/07
+[TASK_BE_AP_PAGE] is colored in LightBlue
+[TASK_BE_AP_PAGE] is 0% completed
+
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} lasts 5 days
+[TASK_BE_PILOT_LC_AP] starts 2026/05/20
+[TASK_BE_PILOT_LC_AP] is colored in LightBlue
+[TASK_BE_PILOT_LC_AP] is 0% completed

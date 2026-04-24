@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Внедрения - Система управления риск-стратегиями</title>
+
+    <!-- Material-UI CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <!-- React and Material-UI from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+        }
+        #root {
+            height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 240px;
+            background-color: #1a1d23;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        .sidebar-item.active {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+            border-left: 3px solid #4caf50;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            background-color: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-wrapper {
+            flex: 1;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const {
+            Box, Paper, Button, Chip, TextField, Typography, Table, TableBody, TableCell,
+            TableContainer, TableHead, TableRow, ThemeProvider, createTheme,
+            IconButton, Stack, Grid, Switch, FormControl, InputLabel, Select, MenuItem,
+            Radio, RadioGroup, FormControlLabel, FormLabel, Tooltip, Autocomplete, Container,
+            Tabs, Tab
+        } = MaterialUI;
+
+        const React = window.React;
+        const { useState, useEffect } = React;
+
+        // Тема
+        const theme = createTheme({
+            palette: {
+                primary: {
+                    main: '#2c4f7c',
+                    dark: '#1e3a5f',
+                },
+                secondary: {
+                    main: '#4caf50',
+                },
+                background: {
+                    default: '#f5f7fa',
+                    paper: '#ffffff',
+                },
+                text: {
+                    primary: '#1a1d23',
+                    secondary: '#6c757d',
+                },
+            },
+            typography: {
+                fontFamily: 'Roboto, sans-serif',
+                h5: { fontWeight: 500 },
+                h6: { fontWeight: 500 },
+            },
+            components: {
+                MuiButton: {
+                    styleOverrides: {
+                        root: {
+                            textTransform: 'none',
+                            borderRadius: 4,
+                        },
+                        contained: {
+                            boxShadow: 'none',
+                            '&:hover': { boxShadow: 'none' },
+                        },
+                    },
+                },
+                MuiPaper: {
+                    styleOverrides: {
+                        root: { boxShadow: '0 1px 3px rgba(0,0,0,0.08)' },
+                    },
+                },
+                MuiChip: {
+                    styleOverrides: {
+                        root: { borderRadius: 4 },
+                    },
+                },
+            },
+        });
+
+        // Утилиты для статусов
+        const getStatusStyles = (status) => {
+            const styles = {
+                draft: { bgcolor: '#f5f5f5', color: '#616161' },
+                archived: { bgcolor: '#f5f5f5', color: '#616161' },
+                pending: { bgcolor: '#f5f5f5', color: '#616161' },
+                active: { bgcolor: '#e3f2fd', color: '#1565c0' },
+                running: { bgcolor: '#e1f5fe', color: '#0277bd' },
+                in_approval: { bgcolor: '#e1f5fe', color: '#0277bd' },
+                in_ratification: { bgcolor: '#e1f5fe', color: '#0277bd' },
+                requires_approval: { bgcolor: '#fff3e0', color: '#e65100' },
+                requires_ratification: { bgcolor: '#fff3e0', color: '#e65100' },
+                completed: { bgcolor: '#e8f5e9', color: '#2e7d32' },
+                approved: { bgcolor: '#e8f5e9', color: '#2e7d32' },
+                deployed: { bgcolor: '#e8f5e9', color: '#2e7d32' },
+                failed: { bgcolor: '#ffebee', color: '#c62828' },
+                rejected: { bgcolor: '#ffebee', color: '#c62828' },
+            };
+            return styles[status] || { bgcolor: '#f5f5f5', color: '#616161' };
+        };
+
+        const getStatusLabel = (status) => {
+            const labels = {
+                draft: 'Черновик',
+                active: 'Активен',
+                running: 'Выполняется',
+                completed: 'Завершено',
+                failed: 'Ошибка',
+                requires_approval: 'Требует одобрения',
+                requires_ratification: 'Требует утверждения',
+                in_approval: 'На согласовании',
+                in_ratification: 'На утверждении',
+                approved: 'Одобрено',
+                deployed: 'Внедрено',
+                rejected: 'Отклонено',
+            };
+            return labels[status] || status;
+        };
+
+        const getCriticalityStyles = (criticality) => {
+            if (criticality === 'high') {
+                return { bgcolor: '#ffebee', color: '#c62828' };
+            }
+            if (criticality === 'low') {
+                return { bgcolor: '#e8f5e9', color: '#2e7d32' };
+            }
+            return { bgcolor: '#f5f5f5', color: '#616161' };
+        };
+
+        const getCriticalityLabel = (criticality) => {
+            const labels = {
+                high: 'высокая',
+                low: 'низкая',
+            };
+            return labels[criticality] || 'низкая';
+        };
+
+        // Моковые данные продуктов
+        const products = [
+            { id: 'credit_cards', label: 'Кредитные карты' },
+            { id: 'auto', label: 'Автокредитование' },
+            { id: 'consumer', label: 'Потребительские кредиты' },
+            { id: 'mortgage', label: 'Жилищное кредитование' },
+        ];
+
+        // Моковые данные скоркарт
+        const mockScorecards = [
+            { id: 1, criticality: 'high', name: 'Скоркарта Premium v2.3' },
+            { id: 2, criticality: 'low', name: 'Скоркарта Premium v2.4' },
+            { id: 3, criticality: 'low', name: 'Скоркарта Standard лимиты v1.0' },
+            { id: 5, criticality: 'high', name: 'Скоркарта Антифрод v1.0' },
+            { id: 6, criticality: 'low', name: 'Скоркарта Mass ставки v1.0' },
+            { id: 7, criticality: 'low', name: 'Скоркарта Classic условия v1.0' },
+            { id: 8, criticality: 'high', name: 'Скоркарта Auto Express v1.0' },
+            { id: 9, criticality: 'high', name: 'Скоркарта Новые факторы v1.0' },
+            { id: 11, criticality: 'low', name: 'Скоркарта Молодые клиенты v1.0' },
+        ];
+
+        // Моковые данные симуляций
+        const mockSimulations = [
+            { id: 1, name: 'Симуляция изменения весов факторов', status: 'completed', resultScorecards: [1, 2] },
+            { id: 2, name: 'Симуляция новых лимитов', status: 'completed', resultScorecards: [3] },
+            { id: 3, name: 'Симуляция антифрод правил', status: 'running', resultScorecards: [5] },
+        ];
+
+        // Моковые данные пилотов
+        const mockPilots = [
+            { id: 1, name: 'Пилот Premium Q1 2026', status: 'completed', scorecards: [1, 2] },
+            { id: 2, name: 'Пилот Standard базовые условия', status: 'requires_ratification', scorecards: [3] },
+            { id: 6, name: 'Пилот новых факторов риска', status: 'completed', scorecards: [9] },
+        ];
+
+        // Моковые данные внедрений
+        const mockChanges = [
+            {
+                id: 1,
+                deploymentId: 1,
+                name: 'Внедрение новой скоркарты Premium',
+                goal: 'Повышение точности оценки кредитного риска',
+                changeDescription: 'Раскатка обновленной скоркарты в продакшн',
+                perimeter: 'Кредитные карты, сегмент Premium',
+                product: 'credit_cards',
+                status: 'approved',
+                createdAt: '2026-02-01',
+                deployedAt: null,
+                createdBy: 'Иванов И.И.',
+                scorecards: [1, 2],
+                simulationIds: [1],
+                artifacts: [
+                    { name: 'Бизнес-кейс внедрения', type: 'business_case', url: 'https://docs.bank.ru/bc-change-001' },
+                    { name: 'План раскатки', type: 'other', url: 'https://docs.bank.ru/rollout-plan-001' }
+                ]
+            },
+            {
+                id: 2,
+                deploymentId: 2,
+                name: 'Изменение лимитов Standard',
+                goal: 'Оптимизация лимитной политики для снижения рисков',
+                changeDescription: 'Внедрение новой лимитной политики',
+                perimeter: 'Кредитные карты, сегмент Standard',
+                product: 'credit_cards',
+                status: 'requires_ratification',
+                createdAt: '2026-02-15',
+                deployedAt: null,
+                createdBy: 'Петрова А.С.',
+                scorecards: [3],
+                simulationIds: [],
+                artifacts: []
+            },
+            {
+                id: 3,
+                deploymentId: 1,
+                name: 'Обновление антифрод правил',
+                goal: 'Снижение уровня мошенничества',
+                changeDescription: 'Внедрение улучшенных правил антифрода',
+                perimeter: 'Все каналы продаж',
+                product: 'credit_cards',
+                status: 'in_approval',
+                createdAt: '2026-02-18',
+                deployedAt: null,
+                createdBy: 'Морозова Е.И.',
+                scorecards: [5],
+                simulationIds: [3],
+                artifacts: []
+            },
+            {
+                id: 4,
+                deploymentId: 2,
+                name: 'Изменение процентных ставок',
+                goal: 'Повышение доходности портфеля',
+                changeDescription: 'Корректировка ставок для сегмента Mass',
+                perimeter: 'Кредитные карты, сегмент Mass',
+                product: 'credit_cards',
+                status: 'in_ratification',
+                createdAt: '2026-02-21',
+                deployedAt: null,
+                createdBy: 'Волков А.Н.',
+                scorecards: [6],
+                simulationIds: [],
+                artifacts: []
+            },
+            {
+                id: 5,
+                deploymentId: 1,
+                name: 'Снижение минимального дохода',
+                goal: 'Расширение клиентской базы',
+                changeDescription: 'Уменьшение порога минимального дохода для одобрения',
+                perimeter: 'Кредитные карты, все сегменты',
+                product: 'credit_cards',
+                status: 'rejected',
+                createdAt: '2026-02-12',
+                deployedAt: null,
+                createdBy: 'Сидоров П.А.',
+                scorecards: [7],
+                simulationIds: [],
+                artifacts: []
+            },
+            {
+                id: 6,
+                deploymentId: 3,
+                name: 'Внедрение новых факторов риска',
+                goal: 'Повышение предиктивной силы скоринговой модели',
+                changeDescription: 'Добавление дополнительных факторов в скоринговую модель',
+                perimeter: 'Все продукты розничного кредитования',
+                product: 'credit_cards',
+                status: 'in_ratification',
+                createdAt: '2026-02-23',
+                deployedAt: null,
+                createdBy: 'Сидоров П.К.',
+                scorecards: [9],
+                simulationIds: [],
+                artifacts: []
+            },
+            {
+                id: 7,
+                deploymentId: 4,
+                name: 'Оптимизация автокредитования Express',
+                goal: 'Сокращение времени принятия решения',
+                changeDescription: 'Внедрение ускоренного процесса одобрения',
+                perimeter: 'Автокредитование, онлайн-канал',
+                product: 'auto',
+                status: 'in_ratification',
+                createdAt: '2026-02-24',
+                deployedAt: null,
+                createdBy: 'Козлов В.П.',
+                scorecards: [8],
+                simulationIds: [],
+                artifacts: []
+            },
+            {
+                id: 8,
+                deploymentId: 3,
+                name: 'Корректировка лимитов для молодых клиентов',
+                goal: 'Адаптация продуктовой линейки для клиентов до 25 лет',
+                changeDescription: 'Изменение лимитной политики для клиентов до 25 лет',
+                perimeter: 'Кредитные карты, клиенты до 25 лет',
+                product: 'credit_cards',
+                status: 'in_approval',
+                createdAt: '2026-02-25',
+                deployedAt: null,
+                createdBy: 'Морозова Е.И.',
+                scorecards: [11],
+                simulationIds: [],
+                artifacts: []
+            },
+        ];
+
+        const mockDeployments = [
+            { id: 1, name: 'Оптимизация риск-стратегии Premium карт' },
+            { id: 2, name: 'Новая стратегия для Standard карт' },
+            { id: 3, name: 'Исследование новых факторов' },
+            { id: 4, name: 'Оптимизация автокредитования' },
+        ];
+
+        // Моковые данные цепочки согласования
+        const mockApprovalChain = {
+            1: {
+                stages: [
+                    {
+                        id: 1,
+                        name: 'Этап 1',
+                        status: 'completed',
+                        approvers: [
+                            { id: 1, name: 'Иванов Иван Иванович', date: '12.03.2026', status: 'approved', comment: 'Ок' },
+                            { id: 2, name: 'Петрова Анна Сергеевна', date: '13.03.2026', status: 'approved', comment: '' }
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'Этап 2',
+                        status: 'current',
+                        approvers: [
+                            { id: 3, name: 'Козлов Владимир Петрович', date: '', status: 'pending', comment: '' },
+                            { id: 4, name: 'Смирнова Елена Викторовна', date: '', status: 'pending', comment: '' }
+                        ]
+                    },
+                    {
+                        id: 3,
+                        name: 'Этап 3',
+                        status: 'pending',
+                        approvers: [
+                            { id: 5, name: 'Морозова Ирина Петровна', date: '', status: 'pending', comment: '' },
+                            { id: 6, name: 'Васильев Пётр Сергеевич', date: '', status: 'pending', comment: '' }
+                        ]
+                    },
+                    {
+                        id: 4,
+                        name: 'Утверждение',
+                        status: 'pending',
+                        approvers: [
+                            { id: 7, name: 'Волков Андрей Николаевич', date: '', status: 'pending', comment: '', isFinal: true }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Утилиты
+        const getScorecardById = (scorecardId) =>
+            mockScorecards.find(scorecard => scorecard.id === scorecardId);
+
+        const getScorecardsForEntity = (entity) =>
+            (entity.scorecards || []).map(getScorecardById).filter(Boolean);
+
+        const getEntityCriticality = (entity) => {
+            const scorecards = getScorecardsForEntity(entity);
+            if (scorecards.length === 0) return null;
+            return scorecards.some(scorecard => scorecard.criticality === 'high') ? 'high' : 'low';
+        };
+
+        const hasSharedScorecard = (pilot, change) => {
+            const pilotScorecards = pilot.scorecards || [];
+            const changeScorecards = change.scorecards || [];
+            return pilotScorecards.some(scorecardId => changeScorecards.includes(scorecardId));
+        };
+
+        const getRelatedPilotsForChange = (change, pilots = mockPilots) =>
+            pilots.filter(pilot => hasSharedScorecard(pilot, change));
+
+        const getSimulationById = (simulationId) =>
+            mockSimulations.find(sim => sim.id === simulationId);
+
+        const getResultScorecardsForSimulation = (simulationId) => {
+            const simulation = getSimulationById(simulationId);
+            if (!simulation || !simulation.resultScorecards) return [];
+            return simulation.resultScorecards.map(getScorecardById).filter(Boolean);
+        };
+
+        const getChangeType = (change) => {
+            if (change.simulationIds && change.simulationIds.length > 0) {
+                return { type: 'simulation', simulationId: change.simulationIds[0] };
+            }
+            return { type: 'general' };
+        };
+
+        function ArtifactsDisplay({ artifacts }) {
+            if (!artifacts || artifacts.length === 0) {
+                return (
+                    <Typography variant="body2" color="text.secondary">
+                        Артефакты отсутствуют
+                    </Typography>
+                );
+            }
+
+            const getArtifactIcon = (type) => {
+                switch (type) {
+                    case 'business_case': return 'description';
+                    case 'rov': return 'analytics';
+                    default: return 'insert_drive_file';
+                }
+            };
+
+            return (
+                <Stack spacing={1}>
+                    {artifacts.map((artifact, index) => (
+                        <Paper
+                            key={index}
+                            variant="outlined"
+                            sx={{
+                                p: 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: '#f5f5f5' }
+                            }}
+                            onClick={() => window.open(artifact.url, '_blank')}
+                        >
+                            <span className="material-icons" style={{ color: '#2c4f7c' }}>
+                                {getArtifactIcon(artifact.type)}
+                            </span>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" fontWeight={500}>
+                                    {artifact.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {artifact.type === 'business_case' ? 'Бизнес-кейс' :
+                                     artifact.type === 'rov' ? 'ROV анализ' : 'Документ'}
+                                </Typography>
+                            </Box>
+                            <span className="material-icons" style={{ color: '#666' }}>
+                                open_in_new
+                            </span>
+                        </Paper>
+                    ))}
+                </Stack>
+            );
+        }
+
+        // Компонент: Управление артефактами (режим редактирования)
+        function ArtifactsManager({ artifacts, onChange }) {
+            const [newArtifact, setNewArtifact] = useState({ name: '', type: 'business_case', url: '' });
+
+            const artifactTypes = [
+                { value: 'business_case', label: 'Бизнес-кейс' },
+                { value: 'rov', label: 'ROV' },
+                { value: 'other', label: 'Другое' }
+            ];
+
+            const handleAddArtifact = () => {
+                if (!newArtifact.name || !newArtifact.url) {
+                    alert('Заполните название и ссылку на артефакт');
+                    return;
+                }
+                onChange([...artifacts, { ...newArtifact, id: Date.now() }]);
+                setNewArtifact({ name: '', type: 'business_case', url: '' });
+            };
+
+            const handleRemoveArtifact = (index) => {
+                onChange(artifacts.filter((_, i) => i !== index));
+            };
+
+            return (
+                <Box>
+                    {/* Список добавленных артефактов */}
+                    {artifacts.length > 0 && (
+                        <Stack spacing={2} sx={{ mb: 2 }}>
+                            {artifacts.map((artifact, index) => (
+                                <Paper key={index} sx={{ p: 2, bgcolor: '#ffffff', border: '1px solid #e0e0e0' }}>
+                                    <Stack direction="row" spacing={2} alignItems="center">
+                                        <span className="material-icons" style={{ color: '#666' }}>description</span>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="body1" fontWeight={500}>
+                                                {artifact.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {artifactTypes.find(t => t.value === artifact.type)?.label} • {artifact.url}
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleRemoveArtifact(index)}
+                                        >
+                                            Удалить
+                                        </Button>
+                                    </Stack>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    )}
+
+                    {/* Форма добавления нового артефакта */}
+                    <Paper sx={{ p: 2, bgcolor: '#f5f5f5' }}>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Название"
+                                    value={newArtifact.name}
+                                    onChange={(e) => setNewArtifact({ ...newArtifact, name: e.target.value })}
+                                    placeholder="Например: Бизнес-кейс Q1"
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={3}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Тип</InputLabel>
+                                    <Select
+                                        value={newArtifact.type}
+                                        onChange={(e) => setNewArtifact({ ...newArtifact, type: e.target.value })}
+                                        label="Тип"
+                                    >
+                                        {artifactTypes.map(type => (
+                                            <MenuItem key={type.value} value={type.value}>
+                                                {type.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Ссылка"
+                                    value={newArtifact.url}
+                                    onChange={(e) => setNewArtifact({ ...newArtifact, url: e.target.value })}
+                                    placeholder="https://..."
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={1}>
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={handleAddArtifact}
+                                    sx={{ height: '40px' }}
+                                >
+                                    <span className="material-icons">add</span>
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Box>
+            );
+        }
+
+        // Компонент: Форма управления скоркартами (полная версия из scorecard_create.html)
+        function ScorecardForm({ effects, setEffects }) {
+            const financialMetrics = [
+                { id: 'ar', label: 'AR(абс)' },
+                { id: 'volume', label: 'Объём выдач' },
+                { id: 'rc', label: 'RC' },
+                { id: 'npv', label: 'NPV' }
+            ];
+
+            const additionalMetrics = [
+                { id: 'high_pd_share', label: 'Доля выдач с ПДН более 80%' },
+                { id: 'pd_50_80_share', label: 'Доля выдач с ПДН от 50% до 80%' },
+                { id: 'pilot_volume', label: 'Объем выдач в пилотной группе' },
+                { id: 'avg_rate', label: 'Средняя ставка выданных кредитов' },
+                { id: 'avg_check', label: 'Средний чек' },
+            ];
+
+            const [financialEffects, setFinancialEffects] = useState(() => {
+                const defaultFinancial = financialMetrics.reduce((acc, m) => ({ ...acc, [m.id]: { enabled: false, unit: '%', baseline: '=', target: '0.00' } }), {});
+                if (effects?.financial && Object.keys(effects.financial).length > 0) {
+                    return { ...defaultFinancial, ...effects.financial };
+                }
+                return defaultFinancial;
+            });
+
+            const [selectedAdditionalMetrics, setSelectedAdditionalMetrics] = useState(
+                effects?.additionalMetrics || []
+            );
+
+            const [strategyIndicators, setStrategyIndicators] = useState(
+                effects?.strategyIndicators || {}
+            );
+
+            const calculateCriticality = (indicators) => {
+                if (!indicators) return 'low';
+                return Object.values(indicators).some(value => value === true) ? 'high' : 'low';
+            };
+
+            useEffect(() => {
+                setEffects({
+                    financial: financialEffects,
+                    additionalMetrics: selectedAdditionalMetrics,
+                    strategyIndicators,
+                    criticality: calculateCriticality(strategyIndicators)
+                });
+            }, [financialEffects, selectedAdditionalMetrics, strategyIndicators]);
+
+            const handleFinancialChange = (id, field, value) => {
+                setFinancialEffects({ ...financialEffects, [id]: { ...financialEffects[id], [field]: value } });
+            };
+
+            const handleAdditionalMetricAdd = () => {
+                setSelectedAdditionalMetrics([
+                    ...selectedAdditionalMetrics,
+                    { metricId: '', unit: '%', baseline: '=', target: '0.00' }
+                ]);
+            };
+
+            const handleAdditionalMetricRemove = (index) => {
+                setSelectedAdditionalMetrics(selectedAdditionalMetrics.filter((_, i) => i !== index));
+            };
+
+            const handleAdditionalMetricChange = (index, field, value) => {
+                const updated = [...selectedAdditionalMetrics];
+                updated[index][field] = value;
+                setSelectedAdditionalMetrics(updated);
+            };
+
+            const handleStrategyIndicatorToggle = (id) => {
+                setStrategyIndicators({ ...strategyIndicators, [id]: !strategyIndicators[id] });
+            };
+
+            return (
+                <Box>
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 500, mb: 3 }}>
+                            Индикаторы изменения стратегии принятия решения по кредитам ФЛ
+                        </Typography>
+
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#d32f2f', mb: 2, pb: 1, borderBottom: '2px solid #d32f2f' }}>
+                                Высокий риск внедрения вне зависимости от эффекта
+                            </Typography>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                Продукт
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Запуск новый кредитный продукт/закрытие продукта</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_product'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_product')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Ввод нового сегмента Клиентов</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_segment'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_segment')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Включение нового канала продаж</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_channel'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_channel')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, ml: 2 }}>
+                                <Typography variant="body2">Подключение нового Партнера</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_partner'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_partner')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                Инструмент оценки риска
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Внедрение новой модели в процесс принятия решений</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_model'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_model')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Добавление <strong>внешнего</strong> источника данных в процесс принятия решения</Typography>
+                                <Switch
+                                    checked={strategyIndicators['external_source'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('external_source')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Внедрение новой стратегии ценообразования</Typography>
+                                <Switch
+                                    checked={strategyIndicators['new_pricing'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('new_pricing')}
+                                    size="small"
+                                />
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ mb: 3 }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2e7d32', mb: 2, pb: 1, borderBottom: '2px solid #2e7d32' }}>
+                                Риск внедрения в зависимости от эффекта
+                            </Typography>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                Инструмент оценки риска
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Добавление/удаление/изменение <strong>внутреннего</strong> источника данных</Typography>
+                                <Switch
+                                    checked={strategyIndicators['internal_source'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('internal_source')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Удаление модели</Typography>
+                                <Switch
+                                    checked={strategyIndicators['model_removal'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('model_removal')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Исключение модели из процесса принятия решения</Typography>
+                                <Switch
+                                    checked={strategyIndicators['model_exclusion'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('model_exclusion')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Калибровка действующей модели в части оценки риска</Typography>
+                                <Switch
+                                    checked={strategyIndicators['model_calibration'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('model_calibration')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Добавление/удаление/изменение кодов отказа</Typography>
+                                <Switch
+                                    checked={strategyIndicators['rejection_codes'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('rejection_codes')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Корректировка границ отсечения, cutoff</Typography>
+                                <Switch
+                                    checked={strategyIndicators['cutoff_limits'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('cutoff_limits')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение hard-checks</Typography>
+                                <Switch
+                                    checked={strategyIndicators['hard_checks'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('hard_checks')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение антифрод стратегии</Typography>
+                                <Switch
+                                    checked={strategyIndicators['antifraud_strategy'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('antifraud_strategy')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Добавление/изменение расчётов действующей стратегии риск-доходности</Typography>
+                                <Switch
+                                    checked={strategyIndicators['risk_return_calculations'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('risk_return_calculations')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 2 }}>
+                                Лимитная политика
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение стратегии расчета дохода / долговой нагрузки</Typography>
+                                <Switch
+                                    checked={strategyIndicators['income_debt_calculation'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('income_debt_calculation')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение лимитной политики</Typography>
+                                <Switch
+                                    checked={strategyIndicators['limit_policy'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('limit_policy')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение отсечек PTI, ПДН и пр.</Typography>
+                                <Switch
+                                    checked={strategyIndicators['pti_pdn'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('pti_pdn')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение максимальной суммы / лимита задолженности на клиента</Typography>
+                                <Switch
+                                    checked={strategyIndicators['max_debt_limit'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('max_debt_limit')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение типов принимаемых к учету данных/документов о доходе</Typography>
+                                <Switch
+                                    checked={strategyIndicators['income_document_types'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('income_document_types')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 2 }}>
+                                Фин. параметры (ставки, тарифы, COE и пр.)
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Калибровка действующей технологии ценообразования</Typography>
+                                <Switch
+                                    checked={strategyIndicators['pricing_calibration'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('pricing_calibration')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение стратегии оценки NPV клиента</Typography>
+                                <Switch
+                                    checked={strategyIndicators['npv_strategy'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('npv_strategy')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение параметров риск-доходности</Typography>
+                                <Switch
+                                    checked={strategyIndicators['risk_return_params'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('risk_return_params')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, mt: 2 }}>
+                                Клиентский путь
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Изменение клиентского пути (маршрутизация заявок, запрос документов)</Typography>
+                                <Switch
+                                    checked={strategyIndicators['customer_journey'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('customer_journey')}
+                                    size="small"
+                                />
+                            </Box>
+
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, ml: 2 }}>
+                                <Typography variant="body2">Внедрение инструментов оценки рисков без участия в принятии решения</Typography>
+                                <Switch
+                                    checked={strategyIndicators['risk_tools_no_decision'] || false}
+                                    onChange={() => handleStrategyIndicatorToggle('risk_tools_no_decision')}
+                                    size="small"
+                                />
+                            </Box>
+                        </Box>
+                    </Paper>
+
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Финансовый эффект (прогноз)</Typography>
+                        </Box>
+
+                        {financialMetrics.map((metric) => (
+                            <Box key={metric.id} sx={{ mb: 2, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={12} md={2}>
+                                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{metric.label}</Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={2}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={financialEffects[metric.id].enabled}
+                                                onChange={(e) => handleFinancialChange(metric.id, 'enabled', e.target.checked)}
+                                            />
+                                            <Typography variant="body2">Исключить влияние</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12} md={2}>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Размерность</InputLabel>
+                                            <Select
+                                                value={financialEffects[metric.id].unit}
+                                                onChange={(e) => handleFinancialChange(metric.id, 'unit', e.target.value)}
+                                                label="Размерность"
+                                            >
+                                                <MenuItem value="%">%</MenuItem>
+                                                <MenuItem value="₽">₽</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Условия сравнения</InputLabel>
+                                            <Select
+                                                value={financialEffects[metric.id].baseline}
+                                                onChange={(e) => handleFinancialChange(metric.id, 'baseline', e.target.value)}
+                                                label="Условия сравнения"
+                                            >
+                                                <MenuItem value="=">=</MenuItem>
+                                                <MenuItem value="≥">≥</MenuItem>
+                                                <MenuItem value="≤">≤</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label="Целевое значение"
+                                            value={financialEffects[metric.id].target}
+                                            onChange={(e) => handleFinancialChange(metric.id, 'target', e.target.value)}
+                                            type="text"
+                                            inputProps={{ inputMode: 'decimal' }}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        ))}
+                    </Paper>
+
+                    <Paper sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 500 }}>Дополнительные метрики</Typography>
+                            <IconButton size="small" onClick={handleAdditionalMetricAdd}>
+                                <span className="material-icons" style={{ fontSize: 18 }}>add</span>
+                            </IconButton>
+                        </Box>
+
+                        {selectedAdditionalMetrics.map((metric, index) => (
+                            <Box key={index} sx={{ mb: 2, pb: 2, borderBottom: '1px solid #e0e0e0' }}>
+                                <Grid container spacing={2} alignItems="center">
+                                    <Grid item xs={12} md={3}>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Метрика</InputLabel>
+                                            <Select
+                                                value={metric.metricId}
+                                                onChange={(e) => handleAdditionalMetricChange(index, 'metricId', e.target.value)}
+                                                label="Метрика"
+                                            >
+                                                {additionalMetrics.map(m => (
+                                                    <MenuItem key={m.id} value={m.id}>{m.label}</MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} md={2}>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Размерность</InputLabel>
+                                            <Select
+                                                value={metric.unit}
+                                                onChange={(e) => handleAdditionalMetricChange(index, 'unit', e.target.value)}
+                                                label="Размерность"
+                                            >
+                                                <MenuItem value="%">%</MenuItem>
+                                                <MenuItem value="₽">₽</MenuItem>
+                                                <MenuItem value="млн.руб.">млн.руб.</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Условия сравнения</InputLabel>
+                                            <Select
+                                                value={metric.baseline}
+                                                onChange={(e) => handleAdditionalMetricChange(index, 'baseline', e.target.value)}
+                                                label="Условия сравнения"
+                                            >
+                                                <MenuItem value="=">=</MenuItem>
+                                                <MenuItem value="≥">≥</MenuItem>
+                                                <MenuItem value="≤">≤</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} md={3}>
+                                        <TextField
+                                            fullWidth
+                                            size="small"
+                                            label="Целевое значение"
+                                            value={metric.target}
+                                            onChange={(e) => handleAdditionalMetricChange(index, 'target', e.target.value)}
+                                            type="text"
+                                            inputProps={{ inputMode: 'decimal' }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} md={1}>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleAdditionalMetricRemove(index)}
+                                            color="error"
+                                        >
+                                            <span className="material-icons">delete</span>
+                                        </IconButton>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+                        ))}
+
+                        {selectedAdditionalMetrics.length === 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                                Нажмите "+" чтобы добавить метрику
+                            </Typography>
+                        )}
+                    </Paper>
+                </Box>
+            );
+        }
+
+        function CriticalityChip({ criticality, size = 'small', prefix = 'Критичность' }) {
+            const styles = getCriticalityStyles(criticality);
+            const prefixWithSeparator = prefix ? `${prefix}: ` : '';
+            const label = criticality
+                ? `${prefixWithSeparator}${getCriticalityLabel(criticality)}`
+                : `${prefixWithSeparator}не рассчитана`;
+
+            return (
+                <Chip
+                    label={label}
+                    size={size}
+                    sx={{
+                        bgcolor: styles.bgcolor,
+                        color: styles.color,
+                        fontWeight: 500
+                    }}
+                />
+            );
+        }
+
+        function ChangeTypeChip({ change }) {
+            const changeType = getChangeType(change);
+
+            if (changeType.type === 'general') {
+                return (
+                    <Chip
+                        label="Общий"
+                        size="small"
+                        sx={{
+                            bgcolor: '#f5f5f5',
+                            color: '#616161',
+                            fontWeight: 500
+                        }}
+                    />
+                );
+            }
+
+            return (
+                <Chip
+                    label="По симуляции"
+                    size="small"
+                    sx={{
+                        bgcolor: '#e1f5fe',
+                        color: '#0277bd',
+                        fontWeight: 500
+                    }}
+                />
+            );
+        }
+
+        function ChangeSimulationBanner({ change, onSelectSimulation }) {
+            const changeType = getChangeType(change);
+
+            if (changeType.type === 'general') {
+                return null;
+            }
+
+            const simulation = getSimulationById(changeType.simulationId);
+            if (!simulation) {
+                return null;
+            }
+
+            return (
+                <Box sx={{ mb: 3 }}>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: 2,
+                            bgcolor: '#e1f5fe',
+                            borderColor: '#81d4fa',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2
+                        }}
+                    >
+                        <span className="material-icons" style={{ color: '#0277bd', fontSize: 24 }}>
+                            science
+                        </span>
+                        <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                                Внедрение по результатам
+                            </Typography>
+                            <Chip
+                                label={`SIM-${simulation.id}: ${simulation.name}`}
+                                onClick={onSelectSimulation ? () => onSelectSimulation(simulation) : undefined}
+                                sx={{
+                                    bgcolor: '#b3e5fc',
+                                    color: '#01579b',
+                                    fontWeight: 500,
+                                    cursor: onSelectSimulation ? 'pointer' : 'default',
+                                    '&:hover': onSelectSimulation ? { opacity: 0.8 } : {}
+                                }}
+                            />
+                        </Box>
+                    </Paper>
+                </Box>
+            );
+        }
+
+        // Компонент: Модальное окно цепочки согласования
+        function ApprovalChainDialog({ changeId, onClose }) {
+            const approvalChain = mockApprovalChain[changeId];
+
+            if (!approvalChain) {
+                return (
+                    <Box sx={{ p: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            Данные о согласовании отсутствуют
+                        </Typography>
+                    </Box>
+                );
+            }
+
+            const getStatusColor = (status) => {
+                switch (status) {
+                    case 'completed': return '#4caf50';
+                    case 'current': return '#2196f3';
+                    case 'pending': return '#bdbdbd';
+                    default: return '#bdbdbd';
+                }
+            };
+
+            const getStatusBg = (status) => {
+                switch (status) {
+                    case 'approved': return '#e8f5e9';
+                    case 'pending': return '#fff3e0';
+                    case 'rejected': return '#ffebee';
+                    default: return '#f5f5f5';
+                }
+            };
+
+            const getStatusTextColor = (status) => {
+                switch (status) {
+                    case 'approved': return '#2e7d32';
+                    case 'pending': return '#f57c00';
+                    case 'rejected': return '#c62828';
+                    default: return '#666';
+                }
+            };
+
+            const getStatusLabel = (status) => {
+                switch (status) {
+                    case 'approved': return 'Согласовано';
+                    case 'pending': return 'Ожидает';
+                    case 'rejected': return 'Отклонено';
+                    default: return status;
+                }
+            };
+
+            const currentStageIndex = approvalChain.stages.findIndex(s => s.status === 'current');
+            const finalStageIndex = approvalChain.stages.findIndex(s => s.name === 'Утверждение');
+
+            return (
+                <Box>
+                    {/* Прогресс-бар этапов */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, px: 2 }}>
+                        {approvalChain.stages.map((stage, index) => {
+                            const isCompleted = stage.status === 'completed';
+                            const isCurrent = stage.status === 'current';
+                            const isFinal = stage.name === 'Утверждение';
+                            const connectorColor = index < approvalChain.stages.length - 1
+                                ? (isCompleted || (index === currentStageIndex - 1 && currentStageIndex > 0))
+                                    ? getStatusColor('completed')
+                                    : (isCurrent ? getStatusColor('current') : getStatusColor('pending'))
+                                : 'transparent';
+
+                            return (
+                                <React.Fragment key={stage.id}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <Box
+                                            sx={{
+                                                width: 36,
+                                                height: 36,
+                                                borderRadius: '50%',
+                                                bgcolor: isCompleted ? getStatusColor('completed') :
+                                                    isCurrent ? getStatusColor('current') : getStatusColor('pending'),
+                                                color: '#fff',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontWeight: 600,
+                                                fontSize: '0.875rem'
+                                            }}
+                                        >
+                                            {isCompleted ? 'check' : stage.id}
+                                        </Box>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                mt: 1,
+                                                color: isCurrent ? getStatusColor('current') :
+                                                    isCompleted ? getStatusColor('completed') : '#999',
+                                                fontWeight: isCurrent ? 600 : 400,
+                                                textAlign: 'center',
+                                                maxWidth: 80
+                                            }}
+                                        >
+                                            {stage.name}
+                                        </Typography>
+                                    </Box>
+                                    {index < approvalChain.stages.length - 1 && (
+                                        <Box
+                                            sx={{
+                                                flex: 1,
+                                                height: 2,
+                                                bgcolor: connectorColor,
+                                                mx: 1,
+                                                mb: 3
+                                            }}
+                                        />
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </Box>
+
+                    {/* Карточки этапов */}
+                    <Stack spacing={2}>
+                        {approvalChain.stages.map((stage) => {
+                            const isCurrent = stage.status === 'current';
+                            const isFinal = stage.name === 'Утверждение';
+                            const allPending = stage.approvers.every(a => a.status === 'pending');
+                            const isWaitingForStages = isFinal && currentStageIndex >= 0 && currentStageIndex < approvalChain.stages.length - 1;
+
+                            return (
+                                <Paper
+                                    key={stage.id}
+                                    variant="outlined"
+                                    sx={{
+                                        p: 2,
+                                        borderLeft: isCurrent ? '4px solid #2196f3' : '4px solid transparent',
+                                        bgcolor: isFinal && !allPending ? '#f1f8e9' : '#fff',
+                                        borderColor: isFinal && !allPending ? '#4caf50' : '#e0e0e0'
+                                    }}
+                                >
+                                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                                        {stage.name}{isCurrent && ' (текущий)'}
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        {stage.approvers.map((approver) => (
+                                            <Box
+                                                key={approver.id}
+                                                sx={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    py: 1,
+                                                    borderBottom: approver !== stage.approvers[stage.approvers.length - 1] ? '1px solid #f0f0f0' : 'none'
+                                                }}
+                                            >
+                                                <Box>
+                                                    <Typography variant="body1" fontWeight={500}>
+                                                        {approver.name}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {approver.date ? (
+                                                            <>{approver.date}{approver.comment && ` • Комментарий: ${approver.comment}`}</>
+                                                        ) : (
+                                                            isWaitingForStages ? 'Ожидает завершения этапов' : 'Ожидает'
+                                                        )}
+                                                    </Typography>
+                                                </Box>
+                                                <Chip
+                                                    label={getStatusLabel(approver.status)}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: getStatusBg(approver.status),
+                                                        color: getStatusTextColor(approver.status),
+                                                        fontWeight: 500,
+                                                        fontSize: '0.75rem'
+                                                    }}
+                                                />
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </Paper>
+                            );
+                        })}
+                    </Stack>
+                </Box>
+            );
+        }
+
+        function ScorecardLinks({ entity, maxItems = 3, onSelectScorecard }) {
+            const scorecards = getScorecardsForEntity(entity);
+
+            if (scorecards.length === 0) {
+                return (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        Скоркарты: не привязаны
+                    </Typography>
+                );
+            }
+
+            return (
+                <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mt: 0.5 }}>
+                    {scorecards.slice(0, maxItems).map(scorecard => {
+                        const styles = getCriticalityStyles(scorecard.criticality);
+                        return (
+                            <Chip
+                                key={scorecard.id}
+                                size="small"
+                                label={`SC-${scorecard.id} • ${scorecard.name} • ${getCriticalityLabel(scorecard.criticality)}`}
+                                onClick={onSelectScorecard ? () => onSelectScorecard(scorecard) : undefined}
+                                sx={{
+                                    bgcolor: styles.bgcolor,
+                                    color: styles.color,
+                                    fontWeight: 500,
+                                    cursor: onSelectScorecard ? 'pointer' : 'default',
+                                    '&:hover': onSelectScorecard ? { opacity: 0.8 } : {}
+                                }}
+                            />
+                        );
+                    })}
+                    {scorecards.length > maxItems && (
+                        <Chip
+                            size="small"
+                            label={`+${scorecards.length - maxItems} ещё`}
+                            sx={{ bgcolor: '#f5f5f5', color: '#616161' }}
+                        />
+                    )}
+                </Stack>
+            );
+        }
+
+        // Компонент фильтра по продуктам
+        function ProductFilterBar({ productFilter, setProductFilter }) {
+            return (
+                <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0 }}>
+                        <Button
+                            onClick={() => setProductFilter('all')}
+                            sx={{
+                                textTransform: 'none',
+                                borderRadius: 0,
+                                borderBottom: productFilter === 'all' ? 2 : 0,
+                                borderColor: '#2c4f7c',
+                                color: productFilter === 'all' ? '#2c4f7c' : 'text.secondary',
+                                fontWeight: productFilter === 'all' ? 600 : 400,
+                                px: 2,
+                                py: 1
+                            }}
+                        >
+                            Все продукты
+                        </Button>
+                        {products.map(product => (
+                            <Button
+                                key={product.id}
+                                onClick={() => setProductFilter(product.id)}
+                                sx={{
+                                    textTransform: 'none',
+                                    borderRadius: 0,
+                                    borderBottom: productFilter === product.id ? 2 : 0,
+                                    borderColor: '#2c4f7c',
+                                    color: productFilter === product.id ? '#2c4f7c' : 'text.secondary',
+                                    fontWeight: productFilter === product.id ? 600 : 400,
+                                    px: 2,
+                                    py: 1,
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
+                                {product.label}
+                            </Button>
+                        ))}
+                    </Box>
+                </Box>
+            );
+        }
+
+        // Компонент: Внедрения (табличный вид)
+        function ChangesView({ data, productFilter, onSelectChange }) {
+            const filteredData = productFilter === 'all'
+                ? data
+                : data.filter(item => item.product === productFilter);
+
+            return (
+                <Box sx={{ width: '100%' }}>
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: '#f8f9fa' }}>
+                                    <TableCell sx={{ fontWeight: 600 }}>ID</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Название</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Тип</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Статус</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Критичность</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Создал</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Создано</TableCell>
+                                    <TableCell sx={{ fontWeight: 600 }}>Развернуто</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {filteredData.map(change => {
+                                    const changeCriticality = getEntityCriticality(change);
+
+                                    return (
+                                        <TableRow
+                                            key={change.id}
+                                            hover
+                                            sx={{
+                                                cursor: 'pointer',
+                                                '&:hover': { bgcolor: '#f5f5f5' }
+                                            }}
+                                            onClick={() => onSelectChange && onSelectChange(change)}
+                                        >
+                                            <TableCell>CHG-{change.id}</TableCell>
+                                            <TableCell>
+                                                <Typography variant="body2" fontWeight={500}>
+                                                    {change.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <ChangeTypeChip change={change} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={getStatusLabel(change.status)}
+                                                    size="small"
+                                                    sx={{
+                                                        ...getStatusStyles(change.status),
+                                                        fontWeight: 500,
+                                                        fontSize: 12,
+                                                        height: 24
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={changeCriticality === 'high' ? 'высокая' : 'низкая'}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: changeCriticality === 'high' ? '#ffebee' : '#e8f5e9',
+                                                        color: changeCriticality === 'high' ? '#c62828' : '#2e7d32',
+                                                        fontWeight: 500
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{change.createdBy}</TableCell>
+                                            <TableCell>{change.createdAt}</TableCell>
+                                            <TableCell>{change.deployedAt || '—'}</TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+            );
+        }
+
+        // Компонент: Детальная страница внедрения
+        function ChangeDetailView({ change, onBack, onSelectScorecard }) {
+            const [isEditMode, setIsEditMode] = useState(false);
+            const [activeTab, setActiveTab] = useState('details');
+            const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+            const [editableName, setEditableName] = useState(change.name);
+            const [editableGoal, setEditableGoal] = useState(change.goal || '');
+            const [editableDescription, setEditableDescription] = useState(change.changeDescription || '');
+            const [editablePerimeter, setEditablePerimeter] = useState(change.perimeter || '');
+            const [editableChangeType, setEditableChangeType] = useState(() => {
+                const changeType = getChangeType(change);
+                return changeType.type === 'simulation' ? 'simulation' : 'general';
+            });
+            const [editableSimulationId, setEditableSimulationId] = useState(() => {
+                const changeType = getChangeType(change);
+                return changeType.type === 'simulation' ? changeType.simulationId : null;
+            });
+            const [editableArtifacts, setEditableArtifacts] = useState(change.artifacts || []);
+            const [isArtifactsEditMode, setIsArtifactsEditMode] = useState(false);
+            const [editableScorecards, setEditableScorecards] = useState(() => {
+                // Инициализируем скоркарты на основе связанных ID
+                return (change.scorecards || []).map(scorecardId => {
+                    const scorecard = getScorecardById(scorecardId);
+                    return {
+                        id: scorecardId,
+                        creationMode: 'manual',
+                        sourceSimulationId: null,
+                        existingScorecardId: null,
+                        isFromSimulation: false,
+                        name: scorecard?.name || `Скоркарта ${scorecardId}`,
+                        showEffects: false,
+                        effects: {
+                            financial: {},
+                            additionalMetrics: [],
+                            strategyIndicators: {}
+                        }
+                    };
+                });
+            });
+
+            // Эффект для автоматического добавления/замены скоркарты из симуляции
+            useEffect(() => {
+                if (editableChangeType === 'simulation' && editableSimulationId) {
+                    const resultScorecards = getResultScorecardsForSimulation(editableSimulationId);
+                    if (resultScorecards.length > 0) {
+                        const simulationScorecard = resultScorecards[0];
+                        setEditableScorecards(prev => {
+                            // Находим существующую скоркарту из симуляции
+                            const existingIndex = prev.findIndex(sc => sc.isFromSimulation);
+                            if (existingIndex !== -1) {
+                                // Заменяем существующую скоркарту из симуляции
+                                const updated = [...prev];
+                                updated[existingIndex] = {
+                                    ...updated[existingIndex],
+                                    id: simulationScorecard.id,
+                                    name: simulationScorecard.name,
+                                    sourceSimulationId: editableSimulationId
+                                };
+                                return updated;
+                            } else {
+                                // Добавляем новую скоркарту из симуляции в начало списка
+                                return [{
+                                    id: simulationScorecard.id,
+                                    creationMode: 'from_simulation',
+                                    sourceSimulationId: editableSimulationId,
+                                    existingScorecardId: null,
+                                    isFromSimulation: true,
+                                    name: simulationScorecard.name,
+                                    showEffects: false,
+                                    effects: {
+                                        financial: {},
+                                        additionalMetrics: [],
+                                        strategyIndicators: {}
+                                    }
+                                }, ...prev];
+                            }
+                        });
+                    }
+                } else if (editableChangeType === 'general') {
+                    // Если тип сменился на "общий", удаляем все скоркарты из симуляции
+                    setEditableScorecards(prev => prev.filter(sc => !sc.isFromSimulation));
+                }
+            }, [editableChangeType, editableSimulationId]);
+
+            const deployment = mockDeployments.find(d => d.id === change.deploymentId);
+            const changeCriticality = getEntityCriticality(change);
+            const relatedSimulations = mockSimulations.filter(s => change.simulationIds?.includes(s.id));
+            const relatedPilots = getRelatedPilotsForChange(change, mockPilots);
+
+            const handleEdit = () => {
+                setIsEditMode(true);
+            };
+
+            const handleSave = () => {
+                console.log('Saving changes:', {
+                    name: editableName,
+                    goal: editableGoal,
+                    changeDescription: editableDescription,
+                    perimeter: editablePerimeter,
+                    changeType: editableChangeType,
+                    simulationId: editableChangeType === 'simulation' ? editableSimulationId : null,
+                    scorecards: editableScorecards,
+                    artifacts: editableArtifacts
+                });
+                setIsEditMode(false);
+            };
+
+            const handleCancel = () => {
+                const changeType = getChangeType(change);
+                setEditableName(change.name);
+                setEditableGoal(change.goal || '');
+                setEditableDescription(change.changeDescription || '');
+                setEditablePerimeter(change.perimeter || '');
+                setEditableChangeType(changeType.type === 'simulation' ? 'simulation' : 'general');
+                setEditableSimulationId(changeType.type === 'simulation' ? changeType.simulationId : null);
+                setEditableArtifacts(change.artifacts || []);
+
+                // Восстанавливаем скоркарты, включая автоматическую из симуляции если нужно
+                const baseScorecards = (change.scorecards || []).map(scorecardId => {
+                    const scorecard = getScorecardById(scorecardId);
+                    return {
+                        id: scorecardId,
+                        creationMode: 'manual',
+                        sourceSimulationId: null,
+                        existingScorecardId: null,
+                        isFromSimulation: false,
+                        name: scorecard?.name || `Скоркарта ${scorecardId}`,
+                        showEffects: false,
+                        effects: {
+                            financial: {},
+                            additionalMetrics: [],
+                            strategyIndicators: {}
+                        }
+                    };
+                });
+
+                // Если тип внедрения - по симуляции, добавляем скоркарту из симуляции
+                if (changeType.type === 'simulation' && changeType.simulationId) {
+                    const resultScorecards = getResultScorecardsForSimulation(changeType.simulationId);
+                    if (resultScorecards.length > 0) {
+                        const simulationScorecard = resultScorecards[0];
+                        baseScorecards.unshift({
+                            id: simulationScorecard.id,
+                            creationMode: 'from_simulation',
+                            sourceSimulationId: changeType.simulationId,
+                            existingScorecardId: null,
+                            isFromSimulation: true,
+                            name: simulationScorecard.name,
+                            showEffects: false,
+                            effects: {
+                                financial: {},
+                                additionalMetrics: [],
+                                strategyIndicators: {}
+                            }
+                        });
+                    }
+                }
+
+                setEditableScorecards(baseScorecards);
+                setIsEditMode(false);
+            };
+
+            const handleAddScorecard = () => {
+                setEditableScorecards([
+                    ...editableScorecards,
+                    {
+                        id: Date.now(),
+                        creationMode: 'manual',
+                        sourceSimulationId: null,
+                        existingScorecardId: null,
+                        name: '',
+                        showEffects: false,
+                        effects: {
+                            financial: {},
+                            additionalMetrics: []
+                        }
+                    }
+                ]);
+            };
+
+            const handleRemoveScorecard = (index) => {
+                // Нельзя удалить скоркарту из симуляции
+                if (editableScorecards[index].isFromSimulation) {
+                    alert('Невозможно удалить скоркарту, так как она является результатом выбранной симуляции');
+                    return;
+                }
+                setEditableScorecards(editableScorecards.filter((_, i) => i !== index));
+            };
+
+            const handleScorecardEffectsChange = (index, effects) => {
+                const updated = [...editableScorecards];
+                updated[index].effects = effects;
+                setEditableScorecards(updated);
+            };
+
+            // Обработчики действий согласования
+            const handleSendToApproval = () => {
+                console.log('Отправка на согласование:', change.id);
+                // Логика отправки на согласование
+            };
+
+            const handleSendToRatification = () => {
+                console.log('Отправка на утверждение:', change.id);
+                // Логика отправки на утверждение
+            };
+
+            const handleWithdraw = () => {
+                console.log('Отзыв внедрения:', change.id);
+                // Логика отзыва
+            };
+
+            const handleScorecardFieldChange = (index, field, value) => {
+                const updated = [...editableScorecards];
+                updated[index][field] = value;
+                setEditableScorecards(updated);
+            };
+
+            const handleCreationModeChange = (index, mode) => {
+                const updated = [...editableScorecards];
+                updated[index].creationMode = mode;
+                updated[index].sourceSimulationId = mode === 'from_simulation' ? updated[index].sourceSimulationId : null;
+                updated[index].existingScorecardId = mode === 'existing' ? updated[index].existingScorecardId : null;
+                // Если меняем режим для скоркарты из симуляции, сбрасываем флаг isFromSimulation
+                if (updated[index].isFromSimulation && mode !== 'from_simulation') {
+                    updated[index].isFromSimulation = false;
+                }
+                setEditableScorecards(updated);
+            };
+
+            return (
+                <Box sx={{ width: '100%' }}>
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                            <IconButton onClick={onBack}>
+                                <span className="material-icons">arrow_back</span>
+                            </IconButton>
+                            <Typography variant="h5" fontWeight={600}>
+                                Внедрение CHG-{change.id}
+                            </Typography>
+                        </Stack>
+
+                        {/* Вкладки */}
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                            <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+                                <Tab label="Основная информация" value="details" />
+                                <Tab label="Артефакты" value="artifacts" />
+                                <Tab label="Согласование" value="approval" />
+                            </Tabs>
+                        </Box>
+
+                        {/* Основная информация (видна на всех вкладках) */}
+                        <Box sx={{ mb: 3 }}>
+                        {!isEditMode ? (
+                            <>
+                                <Typography variant="h5" fontWeight={600} gutterBottom>
+                                    {change.name}
+                                </Typography>
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                                        Цель
+                                    </Typography>
+                                    <Typography variant="body1" paragraph>
+                                        {change.goal || 'Не указана'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                                        Описание изменений
+                                    </Typography>
+                                    <Typography variant="body1" paragraph>
+                                        {change.changeDescription || 'Не указано'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+                                        Периметр применения
+                                    </Typography>
+                                    <Typography variant="body1" paragraph>
+                                        {change.perimeter || 'Не указан'}
+                                    </Typography>
+                                </Box>
+                            </>
+                        ) : (
+                            <>
+                                <TextField
+                                    fullWidth
+                                    label="Название"
+                                    value={editableName}
+                                    onChange={(e) => setEditableName(e.target.value)}
+                                    sx={{ mb: 2 }}
+                                />
+                                <TextField
+                                    fullWidth
+                                    label="Цель"
+                                    value={editableGoal}
+                                    onChange={(e) => setEditableGoal(e.target.value)}
+                                    sx={{ mb: 2 }}
+                                />
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    label="Описание изменений"
+                                    value={editableDescription}
+                                    onChange={(e) => setEditableDescription(e.target.value)}
+                                    sx={{ mb: 2 }}
+                                />
+                                <TextField
+                                    fullWidth
+                                    label="Периметр применения"
+                                    value={editablePerimeter}
+                                    onChange={(e) => setEditablePerimeter(e.target.value)}
+                                    sx={{ mb: 2 }}
+                                />
+
+                                {/* Тип внедрения */}
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel>Тип внедрения</InputLabel>
+                                    <Select
+                                        value={editableChangeType}
+                                        onChange={(e) => setEditableChangeType(e.target.value)}
+                                        label="Тип внедрения"
+                                    >
+                                        <MenuItem value="general">Общий</MenuItem>
+                                        <MenuItem value="simulation">По симуляции</MenuItem>
+                                    </Select>
+                                </FormControl>
+
+                                {/* Выбор симуляции (если тип - по симуляции) */}
+                                {editableChangeType === 'simulation' && (
+                                    <FormControl fullWidth sx={{ mb: 2 }}>
+                                        <InputLabel>Симуляция</InputLabel>
+                                        <Select
+                                            value={editableSimulationId || ''}
+                                            onChange={(e) => setEditableSimulationId(e.target.value ? Number(e.target.value) : null)}
+                                            label="Симуляция"
+                                        >
+                                            {mockSimulations.map(sim => (
+                                                <MenuItem key={sim.id} value={sim.id}>
+                                                    SIM-{sim.id}: {sim.name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                            </>
+                        )}
+                    </Box>
+
+                        {/* Контент вкладки "Основная информация" */}
+                        {activeTab === 'details' && (
+                            <>
+
+                        {!isEditMode && (
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Критичность
+                                        </Typography>
+                                        <CriticalityChip criticality={changeCriticality} size="small" prefix="" />
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Статус
+                                        </Typography>
+                                        <Chip
+                                            label={getStatusLabel(change.status)}
+                                            size="small"
+                                            sx={{
+                                                ...getStatusStyles(change.status),
+                                                fontWeight: 500
+                                            }}
+                                        />
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Тип
+                                        </Typography>
+                                        <ChangeTypeChip change={change} />
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Автор
+                                        </Typography>
+                                        <Typography variant="body2">{change.createdBy}</Typography>
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Дата создания
+                                        </Typography>
+                                        <Typography variant="body2">{change.createdAt}</Typography>
+                                    </Paper>
+                                </Grid>
+                                <Grid item xs={12} md={4}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Дата внедрения
+                                        </Typography>
+                                        <Typography variant="body2">{change.deployedAt || '—'}</Typography>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        )}
+
+                        {/* Внедрение по результатам симуляции */}
+                        <Paper sx={{ p: 2, mb: 3, mt: 3 }}>
+                            <ChangeSimulationBanner
+                                change={isEditMode ? {
+                                    ...change,
+                                    simulationIds: editableChangeType === 'simulation' && editableSimulationId ? [editableSimulationId] : []
+                                } : change}
+                                onSelectSimulation={(sim) => {
+                                    console.log('Navigate to simulation:', sim);
+                                }}
+                            />
+                        </Paper>
+
+                        {/* Связанные скоркарты */}
+                        {!isEditMode && (
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Paper variant="outlined" sx={{ p: 2 }}>
+                                        <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                            Связанные скоркарты
+                                        </Typography>
+                                        <ScorecardLinks entity={change} maxItems={8} onSelectScorecard={onSelectScorecard} />
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        )}
+
+                        <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+                            {!isEditMode ? (
+                                <>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<span className="material-icons">edit</span>}
+                                        onClick={handleEdit}
+                                    >
+                                        Редактировать
+                                    </Button>
+                                    {change.status === 'approved' && (
+                                        <Button variant="contained" color="success" startIcon={<span className="material-icons">rocket_launch</span>}>
+                                            Внедрить
+                                        </Button>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="contained"
+                                        onClick={handleSave}
+                                    >
+                                        Сохранить
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        onClick={handleCancel}
+                                    >
+                                        Отменить
+                                    </Button>
+                                </>
+                            )}
+                        </Stack>
+
+                    {/* Скоркарты - в режиме редактирования показываем формы */}
+                    {isEditMode && (
+                        <Box sx={{ mb: 3 }}>
+                            <Paper sx={{ p: 3, mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 500 }}>
+                                        Критичность и целевые метрики
+                                    </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<span className="material-icons">add</span>}
+                                        onClick={handleAddScorecard}
+                                    >
+                                        Добавить скоркарту
+                                    </Button>
+                                </Box>
+
+                                {editableScorecards.length === 0 ? (
+                                    <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', border: '1px dashed #bdbdbd' }}>
+                                        <Typography color="text.secondary" variant="body2">
+                                            Добавьте хотя бы одну скоркарту для внедрения
+                                        </Typography>
+                                    </Paper>
+                                ) : (
+                                    <Stack spacing={2}>
+                                        {editableScorecards.map((scorecard, index) => (
+                                            <Paper
+                                                key={scorecard.id}
+                                                variant="outlined"
+                                                sx={{
+                                                    p: 2,
+                                                    bgcolor: '#fafafa',
+                                                    border: scorecard.isFromSimulation ? '2px solid #2c4f7c' : '1px solid #e0e0e0',
+                                                    position: 'relative'
+                                                }}
+                                            >
+                                                {/* Пометка для скоркарты из симуляции */}
+                                                {scorecard.isFromSimulation && (
+                                                    <Box
+                                                        sx={{
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            right: 0,
+                                                            bgcolor: '#2c4f7c',
+                                                            color: '#fff',
+                                                            px: 1.5,
+                                                            py: 0.5,
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 600,
+                                                            borderBottomLeftRadius: 4,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 0.5
+                                                        }}
+                                                    >
+                                                        <span className="material-icons" style={{ fontSize: 14 }}>lock</span>
+                                                        Из симуляции
+                                                    </Box>
+                                                )}
+                                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', mt: scorecard.isFromSimulation ? 2 : 0 }}>
+                                                    <Box sx={{ flex: 1 }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                                            <Typography variant="subtitle2" color="text.secondary">
+                                                                Скоркарта #{index + 1}
+                                                            </Typography>
+                                                            <Chip
+                                                                label="низкая"
+                                                                size="small"
+                                                                sx={{
+                                                                    bgcolor: '#e8f5e9',
+                                                                    color: '#2e7d32',
+                                                                    fontWeight: 500
+                                                                }}
+                                                            />
+                                                            <Tooltip title="Рассчитывается автоматически на основе индикаторов риска" arrow>
+                                                                <IconButton size="small" sx={{ p: 0.5 }}>
+                                                                    <span className="material-icons" style={{ fontSize: 16, color: '#666' }}>info</span>
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </Box>
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <FormControl component="fieldset">
+                                                                    <FormLabel component="legend" sx={{ fontSize: '0.875rem', mb: 1 }}>
+                                                                        Способ создания
+                                                                    </FormLabel>
+                                                                    <RadioGroup
+                                                                        row
+                                                                        value={scorecard.creationMode}
+                                                                        onChange={(e) => handleCreationModeChange(index, e.target.value)}
+                                                                        disabled={scorecard.isFromSimulation}
+                                                                    >
+                                                                        <FormControlLabel
+                                                                            value="manual"
+                                                                            control={<Radio size="small" />}
+                                                                            label="Создать вручную"
+                                                                        />
+                                                                        <FormControlLabel
+                                                                            value="from_simulation"
+                                                                            control={<Radio size="small" />}
+                                                                            label="На основе симуляции"
+                                                                        />
+                                                                        <FormControlLabel
+                                                                            value="existing"
+                                                                            control={<Radio size="small" />}
+                                                                            label="Использовать существующую"
+                                                                        />
+                                                                    </RadioGroup>
+                                                                </FormControl>
+                                                            </Grid>
+                                                            {scorecard.creationMode === 'from_simulation' && (
+                                                                <Grid item xs={12}>
+                                                                    <Autocomplete
+                                                                        size="small"
+                                                                        options={mockSimulations}
+                                                                        value={mockSimulations.find(s => s.id === scorecard.sourceSimulationId) || null}
+                                                                        onChange={(event, newValue) => {
+                                                                            handleScorecardFieldChange(index, 'sourceSimulationId', newValue ? newValue.id : null);
+                                                                        }}
+                                                                        getOptionLabel={(option) => `SIM-${option.id}: ${option.name}`}
+                                                                        renderInput={(params) => (
+                                                                            <TextField {...params} label="Выберите симуляцию" />
+                                                                        )}
+                                                                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                                                                        disabled={scorecard.isFromSimulation}
+                                                                    />
+                                                                </Grid>
+                                                            )}
+                                                            {scorecard.creationMode === 'existing' && (
+                                                                <Grid item xs={12}>
+                                                                    <Autocomplete
+                                                                        size="small"
+                                                                        options={mockScorecards}
+                                                                        value={mockScorecards.find(s => s.id === scorecard.existingScorecardId) || null}
+                                                                        onChange={(event, newValue) => {
+                                                                            handleScorecardFieldChange(index, 'existingScorecardId', newValue ? newValue.id : null);
+                                                                            if (newValue) {
+                                                                                handleScorecardFieldChange(index, 'name', newValue.name);
+                                                                            }
+                                                                        }}
+                                                                        getOptionLabel={(option) => `SC-${option.id}: ${option.name}`}
+                                                                        renderInput={(params) => (
+                                                                            <TextField {...params} label="Выберите существующую скоркарту" />
+                                                                        )}
+                                                                        isOptionEqualToValue={(option, value) => option.id === value.id}
+                                                                    />
+                                                                </Grid>
+                                                            )}
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    size="small"
+                                                                    label="Название скоркарты"
+                                                                    value={scorecard.name}
+                                                                    onChange={(e) => handleScorecardFieldChange(index, 'name', e.target.value)}
+                                                                    disabled={scorecard.creationMode === 'existing' && !!scorecard.existingScorecardId || scorecard.isFromSimulation}
+                                                                />
+                                                            </Grid>
+                                                            <Grid item xs={12}>
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    size="small"
+                                                                    startIcon={<span className="material-icons">{scorecard.showEffects ? 'expand_less' : 'expand_more'}</span>}
+                                                                    onClick={() => handleScorecardFieldChange(index, 'showEffects', !scorecard.showEffects)}
+                                                                >
+                                                                    {scorecard.showEffects ? 'Скрыть' : 'Настроить'} Эффекты и метрики
+                                                                </Button>
+                                                            </Grid>
+                                                        </Grid>
+                                                    </Box>
+                                                    {!scorecard.isFromSimulation && (
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleRemoveScorecard(index)}
+                                                        >
+                                                            <span className="material-icons">delete</span>
+                                                        </IconButton>
+                                                    )}
+                                                </Box>
+                                                {scorecard.showEffects && (
+                                                    <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                        <ScorecardForm
+                                                            effects={scorecard.effects}
+                                                            setEffects={(effects) => handleScorecardEffectsChange(index, effects)}
+                                                        />
+                                                    </Box>
+                                                )}
+                                            </Paper>
+                                        ))}
+                                    </Stack>
+                                )}
+                            </Paper>
+                        </Box>
+                    )}
+
+                    {/* Связанные сущности - скрываем в режиме редактирования */}
+                    {!isEditMode && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Typography variant="h6" gutterBottom>Связанные сущности</Typography>
+
+                            {relatedSimulations.length > 0 && (
+                                <Box sx={{ mb: 3 }}>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        Симуляции ({relatedSimulations.length})
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        {relatedSimulations.map(sim => (
+                                            <Chip
+                                                key={sim.id}
+                                                icon={<span className="material-icons" style={{ fontSize: 16 }}>science</span>}
+                                                label={`SIM-${sim.id}: ${sim.name}`}
+                                                sx={{ justifyContent: 'flex-start', cursor: 'pointer' }}
+                                            />
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            )}
+
+                            {relatedPilots.length > 0 && (
+                                <Box>
+                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                        Пилоты ({relatedPilots.length})
+                                    </Typography>
+                                    <Stack spacing={1}>
+                                        {relatedPilots.map(pilot => (
+                                            <Chip
+                                                key={pilot.id}
+                                                icon={<span className="material-icons" style={{ fontSize: 16 }}>flight_takeoff</span>}
+                                                label={`PLT-${pilot.id}: ${pilot.name}`}
+                                                sx={{ justifyContent: 'flex-start', cursor: 'pointer' }}
+                                            />
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            )}
+
+                            {relatedSimulations.length === 0 && relatedPilots.length === 0 && (
+                                <Typography variant="body2" color="text.secondary">
+                                    Нет связанных сущностей
+                                </Typography>
+                            )}
+                        </Paper>
+                    )}
+                        </>
+                    )}
+                </Paper>
+
+                    {/* Контент вкладки "Согласование" */}
+                    {activeTab === 'approval' && (
+                        <>
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6" fontWeight={600}>
+                                    Цепочка согласования
+                                </Typography>
+                            </Box>
+                            <ApprovalChainDialog changeId={change.id} />
+                        </Paper>
+
+                        {/* Кнопки действий согласования */}
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                                {change.status === 'draft' && (
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={handleSendToApproval}
+                                        startIcon={<span className="material-icons">send</span>}
+                                    >
+                                        Отправить на согласование
+                                    </Button>
+                                )}
+                                {change.status === 'in_approval' && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={handleWithdraw}
+                                        startIcon={<span className="material-icons">undo</span>}
+                                    >
+                                        Отозвать
+                                    </Button>
+                                )}
+                                {change.status === 'approved' && (
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        onClick={handleSendToRatification}
+                                        startIcon={<span className="material-icons">verified</span>}
+                                    >
+                                        Отправить на утверждение
+                                    </Button>
+                                )}
+                                {change.status === 'in_ratification' && (
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        onClick={handleWithdraw}
+                                        startIcon={<span className="material-icons">undo</span>}
+                                    >
+                                        Отозвать
+                                    </Button>
+                                )}
+                            </Box>
+                        </Paper>
+                        </>
+                    )}
+
+                    {/* Контент вкладки "Артефакты" */}
+                    {activeTab === 'artifacts' && (
+                        <Paper sx={{ p: 3, mb: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6" fontWeight={600}>
+                                    Артефакты
+                                </Typography>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<span className="material-icons">{isArtifactsEditMode ? 'check' : 'edit'}</span>}
+                                    onClick={() => setIsArtifactsEditMode(!isArtifactsEditMode)}
+                                >
+                                    {isArtifactsEditMode ? 'Сохранить' : 'Редактировать'}
+                                </Button>
+                            </Box>
+                            {!isArtifactsEditMode ? (
+                                <ArtifactsDisplay artifacts={editableArtifacts} />
+                            ) : (
+                                <ArtifactsManager artifacts={editableArtifacts} onChange={setEditableArtifacts} />
+                            )}
+                        </Paper>
+                    )}
+                </Box>
+            );
+        }
+
+        // Главный компонент приложения
+        function App() {
+            const [currentView, setCurrentView] = useState('changes');
+            const [selectedChange, setSelectedChange] = useState(null);
+            const [selectedScorecard, setSelectedScorecard] = useState(null);
+            const [productFilter, setProductFilter] = useState('all');
+
+            return (
+                <ThemeProvider theme={theme}>
+                    <Box sx={{ display: 'flex', height: '100vh', width: '100%' }}>
+                        {/* Sidebar */}
+                        <Box className="sidebar">
+                            <Box className="sidebar-header">
+                                <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600 }}>
+                                    Риск-стратегии MVP
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                                    Архитектура на основе Внедрений
+                                </Typography>
+                            </Box>
+                            <Box className="sidebar-menu">
+                                <div
+                                    className={`sidebar-item ${currentView === 'deployments' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('deployments')}
+                                >
+                                    <span className="material-icons">folder</span>
+                                    <span>Инициативы</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'simulations' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('simulations')}
+                                    style={{ paddingLeft: '40px', fontSize: '14px' }}
+                                >
+                                    <span className="material-icons" style={{ fontSize: '18px' }}>science</span>
+                                    <span>Симуляции</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'pilots' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('pilots')}
+                                    style={{ paddingLeft: '40px', fontSize: '14px' }}
+                                >
+                                    <span className="material-icons" style={{ fontSize: '18px' }}>flight_takeoff</span>
+                                    <span>Пилоты</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'changes' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('changes')}
+                                    style={{ paddingLeft: '40px', fontSize: '14px' }}
+                                >
+                                    <span className="material-icons" style={{ fontSize: '18px' }}>published_with_changes</span>
+                                    <span>Внедрения</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'scorecards' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('scorecards')}
+                                >
+                                    <span className="material-icons">credit_score</span>
+                                    <span>Реестр</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'packages' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('packages')}
+                                >
+                                    <span className="material-icons">inventory_2</span>
+                                    <span>Отправка на согласование</span>
+                                </div>
+                                <div
+                                    className={`sidebar-item ${currentView === 'approvals' ? 'active' : ''}`}
+                                    onClick={() => setCurrentView('approvals')}
+                                >
+                                    <span className="material-icons">task_alt</span>
+                                    <span>Согласования</span>
+                                </div>
+                            </Box>
+                        </Box>
+
+                        {/* Main Content */}
+                        <Box className="main-content">
+                            {/* Top Bar */}
+                            <Box className="top-bar">
+                                <Typography variant="h6">
+                                    Внедрения
+                                </Typography>
+                            </Box>
+
+                            {/* Content */}
+                            <Box className="content-wrapper">
+                                {!selectedChange && !selectedScorecard && (
+                                    <ProductFilterBar
+                                        productFilter={productFilter}
+                                        setProductFilter={setProductFilter}
+                                    />
+                                )}
+
+                                {selectedChange ? (
+                                    <ChangeDetailView
+                                        change={selectedChange}
+                                        onBack={() => setSelectedChange(null)}
+                                        onSelectScorecard={(scorecard) => {
+                                            setSelectedChange(null);
+                                            setSelectedScorecard(scorecard);
+                                        }}
+                                    />
+                                ) : selectedScorecard ? (
+                                    <Box sx={{ width: '100%' }}>
+                                        <Paper sx={{ p: 3 }}>
+                                            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                                                <IconButton onClick={() => setSelectedScorecard(null)}>
+                                                    <span className="material-icons">arrow_back</span>
+                                                </IconButton>
+                                                <Typography variant="h5" fontWeight={600}>
+                                                    Скоркарта SC-{selectedScorecard.id}
+                                                </Typography>
+                                            </Stack>
+                                            <Typography variant="h6" gutterBottom>
+                                                {selectedScorecard.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Критичность: {getCriticalityLabel(selectedScorecard.criticality)}
+                                            </Typography>
+                                        </Paper>
+                                    </Box>
+                                ) : (
+                                    <ChangesView
+                                        data={mockChanges}
+                                        productFilter={productFilter}
+                                        onSelectChange={setSelectedChange}
+                                    />
+                                )}
+                            </Box>
+                        </Box>
+                    </Box>
+                </ThemeProvider>
+            );
+        }
+
+        // Рендер приложения
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>

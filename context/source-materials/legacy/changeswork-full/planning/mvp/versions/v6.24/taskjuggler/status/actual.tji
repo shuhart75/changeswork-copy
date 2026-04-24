@@ -1,0 +1,83 @@
+# Actual progress overrides (tracking)
+#
+# Workflow (minimal):
+# - Update task completion weekly (or when a task changes materially).
+# - Keep all changes here so the baseline plan in mvp_v6.20.tjp remains stable.
+#
+# Examples:
+# task FE_AP_PAGE { complete 20 }
+# task BE_AP_CORE { complete 50 }
+# task QA_SETUP { complete 100 }
+#
+# Notes:
+# - 'complete' is a percent (0..100).
+# - If you later want richer tracking (spent effort / remaining effort, journals),
+#   we can extend this file and the reports accordingly.
+
+# Interactive status capture from 2026-04-17
+task AN_ROLES { complete 100 }
+task AN_ART_BE { complete 100 }
+task BE_ART { complete 100 }
+task AN_FE_PILOT_ART { complete 100 }
+task FE_PILOT_ART { complete 100 }
+task AN_FE_SIM_ART { complete 100 }
+task FE_SIM_ART { complete 100 }
+
+task AN_DEP_BE { complete 100 }
+task BE_DEP_API { complete 0 }
+task AN_DEP_LC { complete 100 }
+task BE_DEP_LC { complete 0 }
+task AN_FE_DEP_LIST { complete 100 }
+task FE_DEP_LIST { complete 0 }
+task AN_FE_DEP_FORM { complete 100 }
+task FE_DEP_FORM { complete 0 }
+
+task AN_SC_BE { complete 100 }
+task BE_SC_API { complete 100 }
+task AN_SCD_BE { complete 100 }
+task AN_SCD_FE { complete 100 }
+task FE_SCD { complete 30 }
+task AN_SCF_BE { complete 100 }
+task BE_SCF { complete 100 }
+task AN_SCF_FE { complete 100 }
+task FE_SCF { complete 30 }
+
+task AN_AP_CORE { complete 80 }
+task BE_AP_CORE { complete 0 }
+task AN_PILOT_LC_AP { complete 100 }
+task BE_PILOT_LC_AP { complete 0 }
+task AN_AP_PAGE_BE { complete 0 }
+task BE_AP_PAGE { complete 0 }
+task AN_AP_PAGE_FE { complete 0 }
+task FE_AP_PAGE { complete 0 }
+task AN_PKG_BE { complete 80 }
+task AN_PKG_FE { complete 80 }
+task FE_PKG_PAGE { complete 0 }
+
+task AN_NOT { complete 0 }
+task BE_NOT { complete 0 }
+task AN_TRACE_BE { complete 100 }
+task BE_TRACE { complete 0 }
+task AN_TRACE_FE { complete 100 }
+task FE_TRACE { complete 0 }
+
+task QA_SETUP { complete 0 }
+task QA_ART { complete 0 }
+task QA_SC { complete 0 }
+task QA_TRACE { complete 0 }
+task QA_AP { complete 0 }
+task QA_REG { complete 0 }
+
+task BE_AI_CHAT { complete 0 }
+task FE_AI_CHAT_UI { complete 0 }
+task BE_RISK_TABLE { complete 0 }
+task FE_RISK_TABLE { complete 0 }
+task BE_STAT_SIM { complete 0 }
+task FE_STAT_SIM { complete 0 }
+task BE_SIM_SNAP { complete 0 }
+task FE_SIM_SNAP { complete 0 }
+task QA_AI_CHAT { complete 0 }
+task QA_RISK_TABLE { complete 0 }
+task QA_STAT_SIM { complete 0 }
+task QA_SIM_SNAP { complete 0 }
+task QA_ALL_REG { complete 0 }

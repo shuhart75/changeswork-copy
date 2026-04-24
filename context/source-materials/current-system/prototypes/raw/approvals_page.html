@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Страница "Согласования" - Макет для требований</title>
+
+    <!-- Material-UI CSS -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <!-- React and Material-UI from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.20/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+        }
+        #root {
+            height: 100vh;
+            display: flex;
+        }
+        .sidebar {
+            width: 240px;
+            background-color: #1a1d23;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-menu {
+            flex: 1;
+            padding: 10px 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s;
+            position: relative;
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+        }
+        .sidebar-item.active {
+            background-color: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+            border-left: 3px solid #4caf50;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            background-color: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const {
+            Box, Button, Paper, Typography, Tabs, Tab, Stack, Chip,
+            Dialog, DialogTitle, DialogContent, DialogActions,
+            TextField, Checkbox, Grid, Stepper, Step, StepLabel, StepContent
+        } = MaterialUI;
+        const { useState } = React;
+
+        // Helper functions
+        const getCriticalityStyles = (criticality) => {
+            if (criticality === 'high') {
+                return { bgcolor: '#ffebee', color: '#c62828' };
+            }
+            if (criticality === 'low') {
+                return { bgcolor: '#e8f5e9', color: '#2e7d32' };
+            }
+            return { bgcolor: '#f5f5f5', color: '#616161' };
+        };
+
+        const getCriticalityLabel = (criticality) => {
+            const labels = {
+                high: 'высокая',
+                low: 'низкая',
+            };
+            return labels[criticality] || 'низкая';
+        };
+
+        // Mock data
+        const products = [
+            {
+                id: 'auto',
+                label: 'Автокредитование',
+                subproducts: [
+                    { id: 'auto_new', label: 'Новые автомобили' },
+                    { id: 'auto_used', label: 'Подержанные автомобили' }
+                ]
+            },
+            {
+                id: 'credit_cards',
+                label: 'Кредитные карты',
+                subproducts: [
+                    { id: 'cc_standard', label: 'Стандартная карта' },
+                    { id: 'cc_premium', label: 'Премиум карта' }
+                ]
+            },
+            {
+                id: 'consumer',
+                label: 'Потребительские кредиты',
+                subproducts: [
+                    { id: 'consumer_standard', label: 'Стандартный ПК' },
+                    { id: 'consumer_express', label: 'Экспресс ПК' }
+                ]
+            }
+        ];
+
+        const mockDeployments = [
+            { id: 1, name: 'Инициатива: Снижение рисков Q1 2024', product: 'credit_cards' },
+            { id: 2, name: 'Инициатива: Оптимизация андеррайтинга', product: 'auto' },
+            { id: 3, name: 'Инициатива: Расширение клиентской базы', product: 'consumer' }
+        ];
+
+        const mockSimulations = [
+            { id: 1, name: 'Симуляция: Оптимизация скоринга КК Q1 2024' },
+            { id: 2, name: 'Симуляция: Анализ рисков автокредитования' }
+        ];
+
+        const mockScorecards = [
+            {
+                id: 1,
+                name: 'Скоркарта v2.1 - Кредитные карты',
+                isManual: false,
+                simulationId: 1,
+                criticality: 'high',
+                createdAt: '2024-01-15',
+                financialEffects: {
+                    ar: '+0.5%',
+                    volume: '+15M',
+                    npv: '+2.3M',
+                    rc: '-0.2%'
+                }
+            },
+            {
+                id: 2,
+                name: 'Скоркарта v1.8 - Автокредиты',
+                isManual: true,
+                simulationId: null,
+                criticality: 'low',
+                createdAt: '2024-02-10',
+                financialEffects: {
+                    ar: '+0.3%',
+                    volume: '+8M',
+                    npv: '+1.1M',
+                    rc: '-0.1%'
+                }
+            }
+        ];
+
+        const mockPilots = [
+            {
+                id: 1,
+                name: 'Пилот: Новая модель скоринга для премиум карт',
+                description: 'Тестирование улучшенной модели скоринга на сегменте премиум клиентов',
+                product: 'credit_cards',
+                subproducts: ['cc_premium'],
+                criticality: 'high',
+                status: 'in_approval',
+                deploymentId: 1,
+                scorecards: [1],
+                createdAt: '2024-03-01',
+                packageId: null,
+                approvalRoute: {
+                    currentStage: 'approval',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-02 14:30', comment: 'Согласовано. Модель прошла валидацию.' },
+                                { name: 'Сидорова А.И.', role: 'Начальник управления', status: 'approved', date: '2024-03-03 10:15', comment: null },
+                                { name: 'Иванов И.И.', role: 'Согласующий', status: 'pending', date: null, comment: null }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                name: 'Пилот: Снижение порога одобрения для новых авто',
+                description: 'Эксперимент по снижению минимального порога для одобрения кредита на новые автомобили',
+                product: 'auto',
+                subproducts: ['auto_new'],
+                criticality: 'low',
+                status: 'in_ratification',
+                deploymentId: 2,
+                scorecards: [2],
+                createdAt: '2024-02-28',
+                packageId: 1,
+                approvalRoute: {
+                    currentStage: 'ratification',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-01 16:20', comment: 'Согласовано' },
+                                { name: 'Сидорова А.И.', role: 'Начальник управления', status: 'approved', date: '2024-03-02 09:45', comment: null }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'approved', date: '2024-03-04 11:00', comment: 'Утверждено с учетом рекомендаций' },
+                                { name: 'Морозов М.М.', role: 'Заместитель директора', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                id: 3,
+                name: 'Пилот: Оптимизация лимитов для потребительских кредитов',
+                description: 'Тестирование новых правил расчета кредитных лимитов для сегмента потребительских кредитов',
+                product: 'consumer',
+                subproducts: ['consumer_standard'],
+                criticality: 'high',
+                status: 'in_ratification',
+                deploymentId: 3,
+                scorecards: [1],
+                createdAt: '2024-03-08',
+                packageId: null,
+                approvalRoute: {
+                    currentStage: 'ratification',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-09 12:00', comment: 'Согласовано' }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ];
+        const mockChanges = [
+            {
+                id: 1,
+                name: 'Внедрение: Обновление правил андеррайтинга',
+                description: 'Внедрение новых правил андеррайтинга для потребительских кредитов',
+                product: 'consumer',
+                subproducts: [],
+                criticality: 'high',
+                status: 'in_approval',
+                deploymentId: 3,
+                scorecards: [1, 2],
+                createdAt: '2024-03-05',
+                packageId: null,
+                approvalRoute: {
+                    currentStage: 'approval',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-06 09:30', comment: 'Согласовано' },
+                                { name: 'Сидорова А.И.', role: 'Начальник управления', status: 'pending', date: null, comment: null }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                id: 2,
+                name: 'Внедрение: Расширение лимитов для кредитных карт',
+                description: 'Увеличение кредитных лимитов для клиентов с хорошей кредитной историей',
+                product: 'credit_cards',
+                subproducts: ['cc_standard', 'cc_premium'],
+                criticality: 'low',
+                status: 'in_ratification',
+                deploymentId: 1,
+                scorecards: [1],
+                createdAt: '2024-03-03',
+                packageId: 1,
+                approvalRoute: {
+                    currentStage: 'ratification',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-04 14:00', comment: null },
+                                { name: 'Сидорова А.И.', role: 'Начальник управления', status: 'approved', date: '2024-03-05 10:30', comment: 'Согласовано с замечаниями' }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                id: 3,
+                name: 'Внедрение: Новые правила верификации для автокредитов',
+                description: 'Внедрение усиленной верификации документов для заявок на автокредиты',
+                product: 'auto',
+                subproducts: ['auto_new', 'auto_used'],
+                criticality: 'low',
+                status: 'in_ratification',
+                deploymentId: 2,
+                scorecards: [2],
+                createdAt: '2024-03-07',
+                packageId: null,
+                approvalRoute: {
+                    currentStage: 'ratification',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-08 11:20', comment: 'Согласовано' }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ];
+
+        const mockPackages = [
+            {
+                id: 1,
+                name: 'Пакет Q1 2024: Кредитные продукты',
+                description: 'Комплексное обновление кредитных продуктов в рамках квартальной инициативы',
+                createdAt: '2024-03-10',
+                approvalRoute: {
+                    currentStage: 'ratification',
+                    stages: [
+                        {
+                            name: 'Согласование',
+                            approvers: [
+                                { name: 'Петров П.П.', role: 'Руководитель отдела рисков', status: 'approved', date: '2024-03-11 15:00', comment: 'Согласовано. Все элементы пакета прошли проверку.' },
+                                { name: 'Сидорова А.И.', role: 'Начальник управления', status: 'approved', date: '2024-03-12 11:45', comment: null },
+                                { name: 'Иванов И.И.', role: 'Согласующий', status: 'approved', date: '2024-03-13 09:20', comment: null }
+                            ]
+                        },
+                        {
+                            name: 'Утверждение',
+                            approvers: [
+                                { name: 'Козлов К.К.', role: 'Директор департамента', status: 'approved', date: '2024-03-14 16:30', comment: 'Утверждено с учетом всех рекомендаций' },
+                                { name: 'Морозов М.М.', role: 'Заместитель директора', status: 'pending', date: null, comment: null }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ];
+
+        // ApprovalsView Component
+        function ApprovalsView() {
+            const [activeTab, setActiveTab] = useState(0);
+            const [selectedItems, setSelectedItems] = useState([]);
+            const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+            const [selectedItem, setSelectedItem] = useState(null);
+            const [detailDialogTab, setDetailDialogTab] = useState(0);
+            const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+            const [actionType, setActionType] = useState(null);
+            const [comment, setComment] = useState('');
+            const [packageDetailOpen, setPackageDetailOpen] = useState(false);
+            const [selectedPackage, setSelectedPackage] = useState(null);
+            const [packageDetailTab, setPackageDetailTab] = useState(0);
+
+            // Get items on approval and ratification
+            const inApprovalItems = [
+                ...mockPilots.filter(p => p.status === 'in_approval').map(p => ({...p, type: 'pilot', stage: 'approval'})),
+                ...mockChanges.filter(c => c.status === 'in_approval').map(c => ({...c, type: 'change', stage: 'approval'}))
+            ];
+
+            const inRatificationItems = [
+                ...mockPilots.filter(p => p.status === 'in_ratification').map(p => ({...p, type: 'pilot', stage: 'ratification'})),
+                ...mockChanges.filter(c => c.status === 'in_ratification').map(c => ({...c, type: 'change', stage: 'ratification'}))
+            ];
+
+            const currentItems = activeTab === 0 ? inApprovalItems : inRatificationItems;
+            const currentStage = activeTab === 0 ? 'approval' : 'ratification';
+
+            // Group by package
+            const groupByPackage = (items) => {
+                const packaged = {};
+                const standalone = [];
+
+                items.forEach(item => {
+                    if (item.packageId) {
+                        if (!packaged[item.packageId]) {
+                            const pkg = mockPackages.find(p => p.id === item.packageId);
+                            packaged[item.packageId] = {
+                                package: pkg,
+                                items: []
+                            };
+                        }
+                        packaged[item.packageId].items.push(item);
+                    } else {
+                        standalone.push(item);
+                    }
+                });
+
+                return {
+                    packages: Object.values(packaged),
+                    standalone
+                };
+            };
+
+            const handleToggleSelection = (itemId) => {
+                setSelectedItems(prev =>
+                    prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]
+                );
+            };
+
+            const handleSelectAll = (items) => {
+                const itemIds = items.map(item => `${item.type}-${item.id}`);
+                setSelectedItems(itemIds);
+            };
+
+            const handleDeselectAll = () => {
+                setSelectedItems([]);
+            };
+
+            const handleTabChange = (e, newValue) => {
+                setActiveTab(newValue);
+                setSelectedItems([]);
+            };
+
+            const handleOpenDetail = (item) => {
+                setSelectedItem(item);
+                setDetailDialogOpen(true);
+            };
+
+            const handleBulkAction = (action) => {
+                setActionType(action);
+                setCommentDialogOpen(true);
+            };
+
+            const handleSubmitAction = () => {
+                const actionText = actionType === 'approve' ? 'согласовано' :
+                                   actionType === 'reject' ? 'отклонено' : 'утверждено';
+                alert(`${selectedItems.length} элемент(ов) ${actionText}. Комментарий: ${comment || 'не указан'}`);
+                setCommentDialogOpen(false);
+                setSelectedItems([]);
+                setComment('');
+            };
+
+            const handleItemAction = (item, action) => {
+                setSelectedItem(item);
+                setActionType(action);
+                setCommentDialogOpen(true);
+            };
+
+            const handlePackageAction = (pkg, action) => {
+                setSelectedPackage(pkg);
+                setActionType(action);
+                setCommentDialogOpen(true);
+            };
+
+            const getItemId = (item) => `${item.type}-${item.id}`;
+
+            const renderItemCard = (item) => {
+                const itemId = getItemId(item);
+                const isSelected = selectedItems.includes(itemId);
+                const deployment = mockDeployments.find(d => d.id === item.deploymentId);
+
+                return (
+                    <Paper
+                        key={itemId}
+                        variant="outlined"
+                        sx={{
+                            p: 2,
+                            bgcolor: isSelected ? '#f0f7ff' : 'white',
+                            border: isSelected ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': { bgcolor: '#fafafa', boxShadow: 1 }
+                        }}
+                    >
+                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Checkbox
+                                checked={isSelected}
+                                onChange={() => handleToggleSelection(itemId)}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                            <Box sx={{ flex: 1 }} onClick={() => handleOpenDetail(item)}>
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                                    <Chip
+                                        icon={<span className="material-icons" style={{ fontSize: 16 }}>
+                                            {item.type === 'pilot' ? 'flight_takeoff' : 'published_with_changes'}
+                                        </span>}
+                                        label={item.type === 'pilot' ? `PLT-${item.id}` : `CHG-${item.id}`}
+                                        size="small"
+                                        sx={{
+                                            bgcolor: item.type === 'pilot' ? '#e3f2fd' : '#e8f5e9',
+                                            color: item.type === 'pilot' ? '#1565c0' : '#2e7d32',
+                                            fontWeight: 600
+                                        }}
+                                    />
+                                    <Chip
+                                        label={`Критичность: ${getCriticalityLabel(item.criticality)}`}
+                                        size="small"
+                                        sx={{
+                                            ...getCriticalityStyles(item.criticality),
+                                            fontWeight: 500
+                                        }}
+                                    />
+                                </Stack>
+                                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
+                                    {item.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {item.description}
+                                </Typography>
+                                <Stack direction="row" spacing={2} sx={{ mb: 1 }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        <strong>Инициатива:</strong> {deployment?.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        <strong>Продукт:</strong> {products.find(p => p.id === item.product)?.label}
+                                    </Typography>
+                                </Stack>
+                            </Box>
+                            <Stack spacing={1}>
+                                <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="success"
+                                    startIcon={<span className="material-icons" style={{ fontSize: 16 }}>check</span>}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleItemAction(item, item.stage === 'approval' ? 'approve' : 'ratify');
+                                    }}
+                                >
+                                    {item.stage === 'approval' ? 'Согласовать' : 'Утвердить'}
+                                </Button>
+                                <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<span className="material-icons" style={{ fontSize: 16 }}>close</span>}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleItemAction(item, 'reject');
+                                    }}
+                                >
+                                    Отклонить
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    </Paper>
+                );
+            };
+
+            const renderPackageCard = (packageGroup) => {
+                const pkg = packageGroup.package;
+                const items = packageGroup.items;
+
+                return (
+                    <Paper
+                        key={pkg.id}
+                        variant="outlined"
+                        sx={{
+                            p: 2,
+                            bgcolor: '#fafafa',
+                            border: '2px solid #9c27b0'
+                        }}
+                    >
+                        <Stack spacing={2}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={() => {
+                                    setSelectedPackage(pkg);
+                                    setPackageDetailOpen(true);
+                                }}>
+                                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                                        <Chip
+                                            icon={<span className="material-icons" style={{ fontSize: 16 }}>inventory_2</span>}
+                                            label={`PKG-${pkg.id}`}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: '#f3e5f5',
+                                                color: '#7b1fa2',
+                                                fontWeight: 600
+                                            }}
+                                        />
+                                        <Chip
+                                            label={`${items.length} элемент(ов)`}
+                                            size="small"
+                                            sx={{ bgcolor: '#e0e0e0' }}
+                                        />
+                                    </Stack>
+                                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
+                                        {pkg.name}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                        {pkg.description}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        <strong>Продукты:</strong> {(() => {
+                                            const uniqueProducts = [...new Set(items.map(item => item.product))];
+                                            const productLabels = uniqueProducts.map(prodId => {
+                                                const prod = products.find(p => p.id === prodId);
+                                                return prod?.label || prodId;
+                                            });
+                                            return productLabels.join(', ');
+                                        })()}
+                                    </Typography>
+                                </Box>
+                                <Stack spacing={1}>
+                                    <Button
+                                        size="small"
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<span className="material-icons" style={{ fontSize: 16 }}>check_circle</span>}
+                                        onClick={() => handlePackageAction(pkg, items[0].stage === 'approval' ? 'approve' : 'ratify')}
+                                    >
+                                        {items[0].stage === 'approval' ? 'Согласовать пакет' : 'Утвердить пакет'}
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<span className="material-icons" style={{ fontSize: 16 }}>cancel</span>}
+                                        onClick={() => handlePackageAction(pkg, 'reject')}
+                                    >
+                                        Отклонить пакет
+                                    </Button>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<span className="material-icons" style={{ fontSize: 16 }}>visibility</span>}
+                                        onClick={() => {
+                                            setSelectedPackage(pkg);
+                                            setPackageDetailOpen(true);
+                                        }}
+                                    >
+                                        Детали
+                                    </Button>
+                                </Stack>
+                            </Stack>
+                            <Box sx={{ pl: 2, borderLeft: '3px solid #9c27b0' }}>
+                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                    Элементы пакета:
+                                </Typography>
+                                <Stack spacing={1}>
+                                    {items.map(item => {
+                                        const deployment = mockDeployments.find(d => d.id === item.deploymentId);
+                                        const itemId = getItemId(item);
+                                        const isSelected = selectedItems.includes(itemId);
+                                        return (
+                                            <Paper
+                                                key={itemId}
+                                                variant="outlined"
+                                                sx={{
+                                                    p: 1.5,
+                                                    bgcolor: isSelected ? '#f0f7ff' : 'white',
+                                                    border: isSelected ? '2px solid #1976d2' : '1px solid #e0e0e0'
+                                                }}
+                                            >
+                                                <Stack direction="row" spacing={1} alignItems="center">
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onChange={() => handleToggleSelection(itemId)}
+                                                        size="small"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    />
+                                                    <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={() => handleOpenDetail(item)}>
+                                                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                                            <Chip
+                                                                icon={<span className="material-icons" style={{ fontSize: 14 }}>
+                                                                    {item.type === 'pilot' ? 'flight_takeoff' : 'published_with_changes'}
+                                                                </span>}
+                                                                label={item.type === 'pilot' ? `PLT-${item.id}` : `CHG-${item.id}`}
+                                                                size="small"
+                                                                sx={{
+                                                                    bgcolor: item.type === 'pilot' ? '#e3f2fd' : '#e8f5e9',
+                                                                    color: item.type === 'pilot' ? '#1565c0' : '#2e7d32',
+                                                                    fontSize: '0.7rem'
+                                                                }}
+                                                            />
+                                                            <Chip
+                                                                label={getCriticalityLabel(item.criticality)}
+                                                                size="small"
+                                                                sx={{
+                                                                    ...getCriticalityStyles(item.criticality),
+                                                                    fontSize: '0.7rem'
+                                                                }}
+                                                            />
+                                                            <Typography variant="body2" fontWeight={600}>
+                                                                {item.name}
+                                                            </Typography>
+                                                        </Stack>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {deployment?.name}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Button
+                                                        size="small"
+                                                        variant="text"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleOpenDetail(item);
+                                                        }}
+                                                    >
+                                                        Подробнее
+                                                    </Button>
+                                                </Stack>
+                                            </Paper>
+                                        );
+                                    })}
+                                </Stack>
+                            </Box>
+                        </Stack>
+                    </Paper>
+                );
+            };
+
+            return (
+                <Box sx={{ width: '100%' }}>
+                    <Paper>
+                        <Tabs value={activeTab} onChange={handleTabChange}>
+                            <Tab label={`На согласовании (${inApprovalItems.length})`} />
+                            <Tab label={`На утверждении (${inRatificationItems.length})`} />
+                        </Tabs>
+
+                        <Box sx={{ p: 3 }}>
+                            {/* Tab 0: На согласовании */}
+                            {activeTab === 0 && (
+                                <Box>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                                        <Typography variant="h6">
+                                            На согласовании ({inApprovalItems.length})
+                                        </Typography>
+                                        {selectedItems.length > 0 && (
+                                            <Stack direction="row" spacing={1}>
+                                                <Button
+                                                    variant="contained"
+                                                    color="success"
+                                                    startIcon={<span className="material-icons">check</span>}
+                                                    onClick={() => handleBulkAction('approve')}
+                                                >
+                                                    Согласовать выбранные ({selectedItems.length})
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    startIcon={<span className="material-icons">close</span>}
+                                                    onClick={() => handleBulkAction('reject')}
+                                                >
+                                                    Отклонить выбранные
+                                                </Button>
+                                                <Button
+                                                    variant="text"
+                                                    onClick={handleDeselectAll}
+                                                >
+                                                    Снять выделение
+                                                </Button>
+                                            </Stack>
+                                        )}
+                                        {selectedItems.length === 0 && inApprovalItems.length > 0 && (
+                                            <Button
+                                                variant="text"
+                                                onClick={() => handleSelectAll(inApprovalItems)}
+                                            >
+                                                Выбрать все
+                                            </Button>
+                                        )}
+                                    </Stack>
+
+                                    {(() => {
+                                        const { packages, standalone } = groupByPackage(inApprovalItems);
+                                        return (
+                                            <Stack spacing={2}>
+                                                {packages.map(pkg => renderPackageCard(pkg))}
+                                                {standalone.map(item => renderItemCard(item))}
+                                                {inApprovalItems.length === 0 && (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                                        Нет элементов на согласовании
+                                                    </Typography>
+                                                )}
+                                            </Stack>
+                                        );
+                                    })()}
+                                </Box>
+                            )}
+
+                            {/* Tab 1: На утверждении */}
+                            {activeTab === 1 && (
+                                <Box>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                                        <Typography variant="h6">
+                                            На утверждении ({inRatificationItems.length})
+                                        </Typography>
+                                        {selectedItems.length > 0 && (
+                                            <Stack direction="row" spacing={1}>
+                                                <Button
+                                                    variant="contained"
+                                                    color="success"
+                                                    startIcon={<span className="material-icons">verified</span>}
+                                                    onClick={() => handleBulkAction('ratify')}
+                                                >
+                                                    Утвердить выбранные ({selectedItems.length})
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    startIcon={<span className="material-icons">close</span>}
+                                                    onClick={() => handleBulkAction('reject')}
+                                                >
+                                                    Отклонить выбранные
+                                                </Button>
+                                                <Button
+                                                    variant="text"
+                                                    onClick={handleDeselectAll}
+                                                >
+                                                    Снять выделение
+                                                </Button>
+                                            </Stack>
+                                        )}
+                                        {selectedItems.length === 0 && inRatificationItems.length > 0 && (
+                                            <Button
+                                                variant="text"
+                                                onClick={() => handleSelectAll(inRatificationItems)}
+                                            >
+                                                Выбрать все
+                                            </Button>
+                                        )}
+                                    </Stack>
+
+                                    {(() => {
+                                        const { packages, standalone } = groupByPackage(inRatificationItems);
+                                        return (
+                                            <Stack spacing={2}>
+                                                {packages.map(pkg => renderPackageCard(pkg))}
+                                                {standalone.map(item => renderItemCard(item))}
+                                                {inRatificationItems.length === 0 && (
+                                                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                                        Нет элементов на утверждении
+                                                    </Typography>
+                                                )}
+                                            </Stack>
+                                        );
+                                    })()}
+                                </Box>
+                            )}
+                        </Box>
+                    </Paper>
+
+                    {/* Диалог детального просмотра элемента */}
+                    <Dialog
+                        open={detailDialogOpen}
+                        onClose={() => setDetailDialogOpen(false)}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        {selectedItem && (
+                            <>
+                                <DialogTitle>
+                                    <Stack spacing={1.5}>
+                                        <Box>
+                                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                                <Chip
+                                                    icon={<span className="material-icons" style={{ fontSize: 16 }}>
+                                                        {selectedItem.type === 'pilot' ? 'flight_takeoff' : 'published_with_changes'}
+                                                    </span>}
+                                                    label={selectedItem.type === 'pilot' ? `PLT-${selectedItem.id}` : `CHG-${selectedItem.id}`}
+                                                    sx={{
+                                                        bgcolor: selectedItem.type === 'pilot' ? '#e3f2fd' : '#e8f5e9',
+                                                        color: selectedItem.type === 'pilot' ? '#1565c0' : '#2e7d32',
+                                                        fontWeight: 600
+                                                    }}
+                                                />
+                                                <Typography variant="h6">{selectedItem.name}</Typography>
+                                            </Stack>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                                sx={{
+                                                    fontStyle: 'italic',
+                                                    lineHeight: 1.6,
+                                                    pl: 0.5,
+                                                    mb: 0.5
+                                                }}
+                                            >
+                                                {selectedItem.description}
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                color="primary"
+                                                sx={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 0.5,
+                                                    cursor: 'pointer',
+                                                    ml: 0.5,
+                                                    fontSize: '0.7rem',
+                                                    '&:hover': { textDecoration: 'underline' }
+                                                }}
+                                                onClick={() => window.open('#', '_blank')}
+                                            >
+                                                <span className="material-icons" style={{ fontSize: 14 }}>open_in_new</span>
+                                                Открыть детальную страницу {selectedItem.type === 'pilot' ? 'пилота' : 'внедрения'}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+                                </DialogTitle>
+                                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                    <Tabs value={detailDialogTab} onChange={(e, newValue) => setDetailDialogTab(newValue)}>
+                                        <Tab label="Детали" />
+                                        <Tab label="Маршрут согласования" />
+                                    </Tabs>
+                                </Box>
+                                <DialogContent dividers>
+                                    {detailDialogTab === 0 && (
+                                    <Stack spacing={3}>
+                                        <Box>
+                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                Бриф
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                Прошу {selectedItem.stage === 'approval' ? 'согласовать' : 'утвердить'}{' '}
+                                                {selectedItem.type === 'pilot' ? 'активацию пилота' : 'внедрение'}{' '}
+                                                {selectedItem.type === 'pilot' ? `PLT-${selectedItem.id}` : `CHG-${selectedItem.id}`}{' '}
+                                                "{selectedItem.name}"
+                                            </Typography>
+
+                                            <Box sx={{ pl: 2, mb: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Цель
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    Учёт доходности (NPV) кредитного портфеля при принятии решения о выдаче кредита
+                                                    на основе прогнозной модели по потоку клиентов, обращающихся за кредитными картами
+                                                    в онлайн-канале.
+                                                </Typography>
+                                            </Box>
+
+                                            <Box sx={{ pl: 2, mb: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Основные изменения
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem', mb: 1 }}>
+                                                    {selectedItem.type === 'pilot'
+                                                        ? 'Проведение пилотного тестирования по следующим направлениям:'
+                                                        : 'Внедрение изменений по следующим направлениям:'}
+                                                </Typography>
+                                                <Box component="ul" sx={{ m: 0, pl: 3, '& li': { mb: 0.5 } }}>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Обновление весовых коэффициентов факторов скоринговой модели
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Корректировка пороговых значений для сегментов Mass и Premium
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Изменение лимитной политики для клиентов с ПДН {'>'} 50%
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Внедрение дополнительных правил верификации для онлайн-канала
+                                                        </Typography>
+                                                    </li>
+                                                </Box>
+                                            </Box>
+
+                                            <Box sx={{ pl: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Периметр применения
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    КК Standard, КК Premium, КК онлайн, Кредитные карты с кэшбэком
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12}>
+                                                <Paper
+                                                    variant="outlined"
+                                                    sx={{
+                                                        p: 1.5,
+                                                        bgcolor: '#f0f7ff',
+                                                        borderLeft: '4px solid #1976d2',
+                                                        borderColor: '#1976d2'
+                                                    }}
+                                                >
+                                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                                        <span className="material-icons" style={{ color: '#1976d2', fontSize: 20 }}>
+                                                            {selectedItem.type === 'pilot' ? 'schedule' : 'rocket_launch'}
+                                                        </span>
+                                                        <Box>
+                                                            <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                                                Запрошено {selectedItem.stage === 'approval' ? 'согласование' : 'утверждение'}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ fontWeight: 500, color: '#1565c0' }}>
+                                                                {selectedItem.type === 'pilot'
+                                                                    ? 'Согласование активации с отложенной датой'
+                                                                    : 'Внедрение в ПРОМ'}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Paper>
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Typography variant="subtitle2" color="text.secondary">
+                                                    Критичность
+                                                </Typography>
+                                                <Chip
+                                                    label={getCriticalityLabel(selectedItem.criticality)}
+                                                    size="small"
+                                                    sx={{ ...getCriticalityStyles(selectedItem.criticality), mt: 0.5 }}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Typography variant="subtitle2" color="text.secondary">
+                                                    Продукт
+                                                </Typography>
+                                                <Typography variant="body2">
+                                                    {products.find(p => p.id === selectedItem.product)?.label}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Typography variant="subtitle2" color="text.secondary">
+                                                    Дата создания
+                                                </Typography>
+                                                <Typography variant="body2">{selectedItem.createdAt}</Typography>
+                                            </Grid>
+                                        </Grid>
+
+                                        {(() => {
+                                            const scorecards = mockScorecards.filter(s => selectedItem.scorecards?.includes(s.id));
+                                            return scorecards.length > 0 && (
+                                                <Box>
+                                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                        Скоркарты ({scorecards.length})
+                                                    </Typography>
+                                                    <Stack spacing={2}>
+                                                        {scorecards.map(sc => (
+                                                            <Paper key={sc.id} variant="outlined" sx={{ p: 2 }}>
+                                                                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                                                    SC-{sc.id}: {sc.name}
+                                                                </Typography>
+                                                                <Grid container spacing={2} sx={{ mt: 1 }}>
+                                                                    <Grid item xs={6}>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            Источник формирования
+                                                                        </Typography>
+                                                                        <Box sx={{ mt: 0.5 }}>
+                                                                            {sc.isManual ? (
+                                                                                <Typography variant="body2">Вручную</Typography>
+                                                                            ) : (
+                                                                                <Chip
+                                                                                    icon={<span className="material-icons" style={{ fontSize: 16 }}>science</span>}
+                                                                                    label={`SIM-${sc.simulationId}: ${mockSimulations.find(s => s.id === sc.simulationId)?.name || 'Симуляция'}`}
+                                                                                    size="small"
+                                                                                    onClick={() => window.open('#', '_blank')}
+                                                                                    sx={{
+                                                                                        bgcolor: '#e3f2fd',
+                                                                                        color: '#1565c0',
+                                                                                        cursor: 'pointer',
+                                                                                        '&:hover': { bgcolor: '#bbdefb' }
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                        </Box>
+                                                                    </Grid>
+                                                                    <Grid item xs={6}>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            Критичность
+                                                                        </Typography>
+                                                                        <Box sx={{ mt: 0.5 }}>
+                                                                            <Chip
+                                                                                label={getCriticalityLabel(sc.criticality)}
+                                                                                size="small"
+                                                                                sx={getCriticalityStyles(sc.criticality)}
+                                                                            />
+                                                                        </Box>
+                                                                    </Grid>
+                                                                </Grid>
+
+                                                                {sc.financialEffects && (
+                                                                    <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                                        <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                                                            Финансовые эффекты
+                                                                        </Typography>
+                                                                        <Grid container spacing={1}>
+                                                                            <Grid item xs={3}>
+                                                                                <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                        AR(абс)
+                                                                                    </Typography>
+                                                                                    <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                        {sc.financialEffects.ar}
+                                                                                    </Typography>
+                                                                                </Paper>
+                                                                            </Grid>
+                                                                            <Grid item xs={3}>
+                                                                                <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                        Объём
+                                                                                    </Typography>
+                                                                                    <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                        {sc.financialEffects.volume}
+                                                                                    </Typography>
+                                                                                </Paper>
+                                                                            </Grid>
+                                                                            <Grid item xs={3}>
+                                                                                <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                        NPV
+                                                                                    </Typography>
+                                                                                    <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                        {sc.financialEffects.npv}
+                                                                                    </Typography>
+                                                                                </Paper>
+                                                                            </Grid>
+                                                                            <Grid item xs={3}>
+                                                                                <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                        RC
+                                                                                    </Typography>
+                                                                                    <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                        {sc.financialEffects.rc}
+                                                                                    </Typography>
+                                                                                </Paper>
+                                                                            </Grid>
+                                                                        </Grid>
+                                                                    </Box>
+                                                                )}
+
+                                                                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                                                        Индикаторы изменения стратегии
+                                                                    </Typography>
+                                                                    <Grid container spacing={2}>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                Продукт
+                                                                            </Typography>
+                                                                            <Box sx={{ pl: 1 }}>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Запуск нового продукта
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый сегмент клиентов
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый канал продаж
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение условий продукта
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                Инструмент оценки риска
+                                                                            </Typography>
+                                                                            <Box sx={{ pl: 1 }}>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Новая скоринг модель
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение весов факторов
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение Cut-off
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новые правила андеррайтинга
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                Лимитная политика
+                                                                            </Typography>
+                                                                            <Box sx={{ pl: 1 }}>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение лимитов
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение правил расчёта
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новая методика лимитов
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        </Grid>
+                                                                        <Grid item xs={6}>
+                                                                            <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                Финансовые параметры
+                                                                            </Typography>
+                                                                            <Box sx={{ pl: 1 }}>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение ставок
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение комиссий
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                    <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение условий льготного периода
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        </Grid>
+                                                                    </Grid>
+                                                                </Box>
+                                                            </Paper>
+                                                        ))}
+                                                    </Stack>
+                                                </Box>
+                                            );
+                                        })()}
+                                    </Stack>
+                                    )}
+
+                                    {detailDialogTab === 1 && selectedItem.approvalRoute && (
+                                        <Box>
+                                            <Typography variant="h6" sx={{ mb: 3 }}>
+                                                Маршрут согласования
+                                            </Typography>
+
+                                            <Stepper orientation="vertical">
+                                                {selectedItem.approvalRoute.stages.map((stage, stageIndex) => (
+                                                    <Step key={stageIndex} active={true} completed={stage.name === 'Согласование' && selectedItem.approvalRoute.currentStage === 'ratification'}>
+                                                        <StepLabel>
+                                                            <Typography variant="subtitle1" fontWeight={600}>
+                                                                {stage.name}
+                                                            </Typography>
+                                                        </StepLabel>
+                                                        <StepContent>
+                                                            <Stack spacing={2} sx={{ mt: 1 }}>
+                                                                {stage.approvers.map((approver, approverIndex) => (
+                                                                    <Paper key={approverIndex} variant="outlined" sx={{ p: 2 }}>
+                                                                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                                                                            <Box sx={{ flex: 1 }}>
+                                                                                <Typography variant="body1" fontWeight={600}>
+                                                                                    {approver.name}
+                                                                                </Typography>
+                                                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                                                    {approver.role}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                            <Box sx={{ textAlign: 'right' }}>
+                                                                                {approver.status === 'approved' && (
+                                                                                    <>
+                                                                                        <Chip
+                                                                                            icon={<span className="material-icons" style={{ fontSize: 16 }}>check_circle</span>}
+                                                                                            label="Согласовано"
+                                                                                            size="small"
+                                                                                            sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 500 }}
+                                                                                        />
+                                                                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                                                                            {approver.date}
+                                                                                        </Typography>
+                                                                                    </>
+                                                                                )}
+                                                                                {approver.status === 'pending' && (
+                                                                                    <Chip
+                                                                                        icon={<span className="material-icons" style={{ fontSize: 16 }}>schedule</span>}
+                                                                                        label="Ожидает"
+                                                                                        size="small"
+                                                                                        sx={{ bgcolor: '#fff3e0', color: '#e65100', fontWeight: 500 }}
+                                                                                    />
+                                                                                )}
+                                                                                {approver.status === 'rejected' && (
+                                                                                    <>
+                                                                                        <Chip
+                                                                                            icon={<span className="material-icons" style={{ fontSize: 16 }}>cancel</span>}
+                                                                                            label="Отклонено"
+                                                                                            size="small"
+                                                                                            sx={{ bgcolor: '#ffebee', color: '#c62828', fontWeight: 500 }}
+                                                                                        />
+                                                                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                                                                            {approver.date}
+                                                                                        </Typography>
+                                                                                    </>
+                                                                                )}
+                                                                            </Box>
+                                                                        </Stack>
+                                                                        {approver.comment && (
+                                                                            <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid #e0e0e0' }}>
+                                                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                                                                                    Комментарий:
+                                                                                </Typography>
+                                                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                                                    {approver.comment}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        )}
+                                                                    </Paper>
+                                                                ))}
+                                                            </Stack>
+                                                        </StepContent>
+                                                    </Step>
+                                                ))}
+                                            </Stepper>
+                                        </Box>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={() => setDetailDialogOpen(false)}>
+                                        Закрыть
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<span className="material-icons">check</span>}
+                                        onClick={() => {
+                                            setDetailDialogOpen(false);
+                                            handleItemAction(selectedItem, selectedItem.stage === 'approval' ? 'approve' : 'ratify');
+                                        }}
+                                    >
+                                        {selectedItem.stage === 'approval' ? 'Согласовать' : 'Утвердить'}
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<span className="material-icons">close</span>}
+                                        onClick={() => {
+                                            setDetailDialogOpen(false);
+                                            handleItemAction(selectedItem, 'reject');
+                                        }}
+                                    >
+                                        Отклонить
+                                    </Button>
+                                </DialogActions>
+                            </>
+                        )}
+                    </Dialog>
+
+                    {/* Диалог комментария для действия */}
+                    <Dialog
+                        open={commentDialogOpen}
+                        onClose={() => setCommentDialogOpen(false)}
+                        maxWidth="sm"
+                        fullWidth
+                    >
+                        <DialogTitle>
+                            {actionType === 'approve' && 'Согласование'}
+                            {actionType === 'ratify' && 'Утверждение'}
+                            {actionType === 'reject' && 'Отклонение'}
+                        </DialogTitle>
+                        <DialogContent>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                {selectedItem
+                                    ? `Вы собираетесь ${actionType === 'approve' ? 'согласовать' : actionType === 'reject' ? 'отклонить' : 'утвердить'} элемент: ${selectedItem.name}`
+                                    : selectedPackage
+                                    ? `Вы собираетесь ${actionType === 'approve' ? 'согласовать' : actionType === 'reject' ? 'отклонить' : 'утвердить'} пакет: ${selectedPackage.name}`
+                                    : `Вы собираетесь ${actionType === 'approve' ? 'согласовать' : actionType === 'reject' ? 'отклонить' : 'утвердить'} выбранные элементы (${selectedItems.length})`
+                                }
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                multiline
+                                rows={4}
+                                label={actionType === 'reject' ? 'Причина отклонения (обязательно)' : 'Комментарий (опционально)'}
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                placeholder="Введите комментарий..."
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => {
+                                setCommentDialogOpen(false);
+                                setComment('');
+                                setSelectedItem(null);
+                                setSelectedPackage(null);
+                            }}>
+                                Отмена
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color={actionType === 'reject' ? 'error' : 'success'}
+                                onClick={handleSubmitAction}
+                                disabled={actionType === 'reject' && !comment.trim()}
+                            >
+                                Подтвердить
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Диалог деталей пакета */}
+                    <Dialog
+                        open={packageDetailOpen}
+                        onClose={() => setPackageDetailOpen(false)}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        {selectedPackage && (
+                            <>
+                                <DialogTitle>
+                                    <Stack spacing={1.5}>
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <Chip
+                                                icon={<span className="material-icons" style={{ fontSize: 16 }}>inventory_2</span>}
+                                                label={`PKG-${selectedPackage.id}`}
+                                                sx={{
+                                                    bgcolor: '#f3e5f5',
+                                                    color: '#7b1fa2',
+                                                    fontWeight: 600
+                                                }}
+                                            />
+                                            <Typography variant="h6">{selectedPackage.name}</Typography>
+                                        </Stack>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                fontStyle: 'italic',
+                                                lineHeight: 1.6,
+                                                pl: 0.5
+                                            }}
+                                        >
+                                            {selectedPackage.description}
+                                        </Typography>
+                                    </Stack>
+                                </DialogTitle>
+                                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                    <Tabs value={packageDetailTab} onChange={(e, newValue) => setPackageDetailTab(newValue)}>
+                                        <Tab label="Детали" />
+                                        <Tab label="Маршрут согласования" />
+                                    </Tabs>
+                                </Box>
+                                <DialogContent dividers>
+                                    {packageDetailTab === 0 && (
+                                        <Stack spacing={3}>
+                                        <Box>
+                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                Бриф
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                                Прошу утвердить пакет изменений PKG-{selectedPackage.id} "{selectedPackage.name}"
+                                            </Typography>
+
+                                            <Box sx={{ pl: 2, mb: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Цель
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    Комплексное обновление кредитных продуктов в рамках квартальной инициативы
+                                                    по оптимизации риск-стратегий и повышению доходности портфеля.
+                                                </Typography>
+                                            </Box>
+
+                                            <Box sx={{ pl: 2, mb: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Основные изменения
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem', mb: 1 }}>
+                                                    Пакет включает следующие изменения:
+                                                </Typography>
+                                                <Box component="ul" sx={{ m: 0, pl: 3, '& li': { mb: 0.5 } }}>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Обновление скоринговых моделей для кредитных карт
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Корректировка лимитной политики для различных сегментов
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Внедрение новых правил андеррайтинга
+                                                        </Typography>
+                                                    </li>
+                                                    <li>
+                                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                            Пилотное тестирование изменений перед массовым внедрением
+                                                        </Typography>
+                                                    </li>
+                                                </Box>
+                                            </Box>
+
+                                            <Box sx={{ pl: 2 }}>
+                                                <Typography variant="body2" fontWeight={600} color="text.primary" gutterBottom>
+                                                    Периметр применения
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                                                    {(() => {
+                                                        const packageItems = [
+                                                            ...mockPilots.filter(p => p.packageId === selectedPackage.id),
+                                                            ...mockChanges.filter(c => c.packageId === selectedPackage.id)
+                                                        ];
+                                                        const uniqueProducts = [...new Set(packageItems.map(item => item.product))];
+                                                        const productLabels = uniqueProducts.map(prodId => {
+                                                            const prod = products.find(p => p.id === prodId);
+                                                            return prod?.label || prodId;
+                                                        });
+                                                        return productLabels.join(', ');
+                                                    })()}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+
+                                        {(() => {
+                                            const packageItems = [
+                                                ...mockPilots.filter(p => p.packageId === selectedPackage.id).map(p => ({...p, type: 'pilot'})),
+                                                ...mockChanges.filter(c => c.packageId === selectedPackage.id).map(c => ({...c, type: 'change'}))
+                                            ];
+                                            return (
+                                                <Box>
+                                                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                        Элементы пакета ({packageItems.length})
+                                                    </Typography>
+                                                    <Stack spacing={2}>
+                                                        {packageItems.map(item => {
+                                                            const deployment = mockDeployments.find(d => d.id === item.deploymentId);
+                                                            const scorecards = mockScorecards.filter(s => item.scorecards?.includes(s.id));
+                                                            return (
+                                                                <Paper key={getItemId(item)} variant="outlined" sx={{ p: 2 }}>
+                                                                    <Stack spacing={2}>
+                                                                        <Box>
+                                                                            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                                                                                <Chip
+                                                                                    icon={<span className="material-icons" style={{ fontSize: 16 }}>
+                                                                                        {item.type === 'pilot' ? 'flight_takeoff' : 'published_with_changes'}
+                                                                                    </span>}
+                                                                                    label={item.type === 'pilot' ? `PLT-${item.id}` : `CHG-${item.id}`}
+                                                                                    size="small"
+                                                                                    sx={{
+                                                                                        bgcolor: item.type === 'pilot' ? '#e3f2fd' : '#e8f5e9',
+                                                                                        color: item.type === 'pilot' ? '#1565c0' : '#2e7d32',
+                                                                                        fontWeight: 600
+                                                                                    }}
+                                                                                />
+                                                                                <Typography variant="subtitle2" fontWeight={600}>
+                                                                                    {item.name}
+                                                                                </Typography>
+                                                                            </Stack>
+                                                                            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', lineHeight: 1.6, mb: 0.5 }}>
+                                                                                {item.description}
+                                                                            </Typography>
+                                                                            <Typography
+                                                                                variant="caption"
+                                                                                color="primary"
+                                                                                sx={{
+                                                                                    display: 'inline-flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: 0.5,
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '0.7rem',
+                                                                                    '&:hover': { textDecoration: 'underline' }
+                                                                                }}
+                                                                                onClick={() => window.open('#', '_blank')}
+                                                                            >
+                                                                                <span className="material-icons" style={{ fontSize: 14 }}>open_in_new</span>
+                                                                                Открыть детальную страницу {item.type === 'pilot' ? 'пилота' : 'внедрения'}
+                                                                            </Typography>
+                                                                        </Box>
+
+                                                                        <Grid container spacing={2}>
+                                                                            <Grid item xs={12}>
+                                                                                <Paper
+                                                                                    variant="outlined"
+                                                                                    sx={{
+                                                                                        p: 1.5,
+                                                                                        bgcolor: '#f0f7ff',
+                                                                                        borderLeft: '4px solid #1976d2',
+                                                                                        borderColor: '#1976d2'
+                                                                                    }}
+                                                                                >
+                                                                                    <Stack direction="row" spacing={1.5} alignItems="center">
+                                                                                        <span className="material-icons" style={{ color: '#1976d2', fontSize: 20 }}>
+                                                                                            {item.type === 'pilot' ? 'schedule' : 'rocket_launch'}
+                                                                                        </span>
+                                                                                        <Box>
+                                                                                            <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                                                                                                Запрошено утверждение
+                                                                                            </Typography>
+                                                                                            <Typography variant="body2" sx={{ fontWeight: 500, color: '#1565c0' }}>
+                                                                                                {item.type === 'pilot'
+                                                                                                    ? 'Согласование активации с отложенной датой'
+                                                                                                    : 'Внедрение в ПРОМ'}
+                                                                                            </Typography>
+                                                                                        </Box>
+                                                                                    </Stack>
+                                                                                </Paper>
+                                                                            </Grid>
+                                                                            <Grid item xs={4}>
+                                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                                    Критичность
+                                                                                </Typography>
+                                                                                <Chip
+                                                                                    label={getCriticalityLabel(item.criticality)}
+                                                                                    size="small"
+                                                                                    sx={{ ...getCriticalityStyles(item.criticality), mt: 0.5 }}
+                                                                                />
+                                                                            </Grid>
+                                                                            <Grid item xs={4}>
+                                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                                    Продукт
+                                                                                </Typography>
+                                                                                <Typography variant="body2">
+                                                                                    {products.find(p => p.id === item.product)?.label}
+                                                                                </Typography>
+                                                                            </Grid>
+                                                                            <Grid item xs={4}>
+                                                                                <Typography variant="subtitle2" color="text.secondary">
+                                                                                    Дата создания
+                                                                                </Typography>
+                                                                                <Typography variant="body2">{item.createdAt}</Typography>
+                                                                            </Grid>
+                                                                        </Grid>
+
+                                                                        {scorecards.length > 0 && (
+                                                                            <Box>
+                                                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                                                                    Скоркарты ({scorecards.length})
+                                                                                </Typography>
+                                                                                <Stack spacing={2}>
+                                                                                    {scorecards.map(sc => (
+                                                                                        <Paper key={sc.id} variant="outlined" sx={{ p: 2 }}>
+                                                                                            <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                                                                                                SC-{sc.id}: {sc.name}
+                                                                                            </Typography>
+                                                                                            <Grid container spacing={2} sx={{ mt: 1 }}>
+                                                                                                <Grid item xs={6}>
+                                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                                        Источник формирования
+                                                                                                    </Typography>
+                                                                                                    <Box sx={{ mt: 0.5 }}>
+                                                                                                        {sc.isManual ? (
+                                                                                                            <Typography variant="body2">Вручную</Typography>
+                                                                                                        ) : (
+                                                                                                            <Chip
+                                                                                                                icon={<span className="material-icons" style={{ fontSize: 16 }}>science</span>}
+                                                                                                                label={`SIM-${sc.simulationId}: ${mockSimulations.find(s => s.id === sc.simulationId)?.name || 'Симуляция'}`}
+                                                                                                                size="small"
+                                                                                                                onClick={() => window.open('#', '_blank')}
+                                                                                                                sx={{
+                                                                                                                    bgcolor: '#e3f2fd',
+                                                                                                                    color: '#1565c0',
+                                                                                                                    cursor: 'pointer',
+                                                                                                                    '&:hover': { bgcolor: '#bbdefb' }
+                                                                                                                }}
+                                                                                                            />
+                                                                                                        )}
+                                                                                                    </Box>
+                                                                                                </Grid>
+                                                                                                <Grid item xs={6}>
+                                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                                        Критичность
+                                                                                                    </Typography>
+                                                                                                    <Box sx={{ mt: 0.5 }}>
+                                                                                                        <Chip
+                                                                                                            label={getCriticalityLabel(sc.criticality)}
+                                                                                                            size="small"
+                                                                                                            sx={getCriticalityStyles(sc.criticality)}
+                                                                                                        />
+                                                                                                    </Box>
+                                                                                                </Grid>
+                                                                                            </Grid>
+
+                                                                                            {sc.financialEffects && (
+                                                                                                <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                                                                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                                                                                        Финансовые эффекты
+                                                                                                    </Typography>
+                                                                                                    <Grid container spacing={1}>
+                                                                                                        <Grid item xs={3}>
+                                                                                                            <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                                                    AR(абс)
+                                                                                                                </Typography>
+                                                                                                                <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                                                    {sc.financialEffects.ar}
+                                                                                                                </Typography>
+                                                                                                            </Paper>
+                                                                                                        </Grid>
+                                                                                                        <Grid item xs={3}>
+                                                                                                            <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                                                    Объём
+                                                                                                                </Typography>
+                                                                                                                <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                                                    {sc.financialEffects.volume}
+                                                                                                                </Typography>
+                                                                                                            </Paper>
+                                                                                                        </Grid>
+                                                                                                        <Grid item xs={3}>
+                                                                                                            <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                                                    NPV
+                                                                                                                </Typography>
+                                                                                                                <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                                                    {sc.financialEffects.npv}
+                                                                                                                </Typography>
+                                                                                                            </Paper>
+                                                                                                        </Grid>
+                                                                                                        <Grid item xs={3}>
+                                                                                                            <Paper variant="outlined" sx={{ p: 1, bgcolor: '#f8f9fa', textAlign: 'center' }}>
+                                                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                                                    RC
+                                                                                                                </Typography>
+                                                                                                                <Typography variant="body2" fontWeight={600} color="primary">
+                                                                                                                    {sc.financialEffects.rc}
+                                                                                                                </Typography>
+                                                                                                            </Paper>
+                                                                                                        </Grid>
+                                                                                                    </Grid>
+                                                                                                </Box>
+                                                                                            )}
+
+                                                                                            <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
+                                                                                                <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                                                                                                    Индикаторы изменения стратегии
+                                                                                                </Typography>
+                                                                                                <Grid container spacing={2}>
+                                                                                                    <Grid item xs={6}>
+                                                                                                        <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                                            Продукт
+                                                                                                        </Typography>
+                                                                                                        <Box sx={{ pl: 1 }}>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Запуск нового продукта
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый сегмент клиентов
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новый канал продаж
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение условий продукта
+                                                                                                            </Typography>
+                                                                                                        </Box>
+                                                                                                    </Grid>
+                                                                                                    <Grid item xs={6}>
+                                                                                                        <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                                            Инструмент оценки риска
+                                                                                                        </Typography>
+                                                                                                        <Box sx={{ pl: 1 }}>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Новая скоринг модель
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение весов факторов
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение Cut-off
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новые правила андеррайтинга
+                                                                                                            </Typography>
+                                                                                                        </Box>
+                                                                                                    </Grid>
+                                                                                                    <Grid item xs={6}>
+                                                                                                        <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                                            Лимитная политика
+                                                                                                        </Typography>
+                                                                                                        <Box sx={{ pl: 1 }}>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение лимитов
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение правил расчёта
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Новая методика лимитов
+                                                                                                            </Typography>
+                                                                                                        </Box>
+                                                                                                    </Grid>
+                                                                                                    <Grid item xs={6}>
+                                                                                                        <Typography variant="caption" fontWeight={600} color="text.primary" display="block" sx={{ mb: 0.5 }}>
+                                                                                                            Финансовые параметры
+                                                                                                        </Typography>
+                                                                                                        <Box sx={{ pl: 1 }}>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение ставок
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.3 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#9e9e9e' }}>check_box_outline_blank</span> Изменение комиссий
+                                                                                                            </Typography>
+                                                                                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                                                                                <span className="material-icons" style={{ fontSize: 14, color: '#4caf50' }}>check_box</span> Изменение условий льготного периода
+                                                                                                            </Typography>
+                                                                                                        </Box>
+                                                                                                    </Grid>
+                                                                                                </Grid>
+                                                                                            </Box>
+                                                                                        </Paper>
+                                                                                    ))}
+                                                                                </Stack>
+                                                                            </Box>
+                                                                        )}
+                                                                    </Stack>
+                                                                </Paper>
+                                                            );
+                                                        })}
+                                                    </Stack>
+                                                </Box>
+                                            );
+                                        })()}
+                                    </Stack>
+                                    )}
+                                    {packageDetailTab === 1 && selectedPackage.approvalRoute && (
+                                        <Box>
+                                            <Stepper orientation="vertical">
+                                                {selectedPackage.approvalRoute.stages.map((stage, stageIndex) => (
+                                                    <Step key={stageIndex} active={true}>
+                                                        <StepLabel>{stage.name}</StepLabel>
+                                                        <StepContent>
+                                                            <Stack spacing={2}>
+                                                                {stage.approvers.map((approver, approverIndex) => (
+                                                                    <Paper
+                                                                        key={approverIndex}
+                                                                        variant="outlined"
+                                                                        sx={{
+                                                                            p: 2,
+                                                                            bgcolor: approver.status === 'approved' ? '#f1f8f4' :
+                                                                                     approver.status === 'pending' ? '#fff8e1' :
+                                                                                     approver.status === 'rejected' ? '#ffebee' : 'white'
+                                                                        }}
+                                                                    >
+                                                                        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                                            <Box>
+                                                                                <Typography variant="subtitle2" fontWeight={600}>
+                                                                                    {approver.name}
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                    {approver.role}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                            <Box sx={{ textAlign: 'right' }}>
+                                                                                {approver.status === 'approved' && (
+                                                                                    <>
+                                                                                        <Chip
+                                                                                            icon={<span className="material-icons" style={{ fontSize: 16 }}>check_circle</span>}
+                                                                                            label="Согласовано"
+                                                                                            size="small"
+                                                                                            sx={{ bgcolor: '#e8f5e9', color: '#2e7d32', fontWeight: 500 }}
+                                                                                        />
+                                                                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                                                                            {approver.date}
+                                                                                        </Typography>
+                                                                                    </>
+                                                                                )}
+                                                                                {approver.status === 'pending' && (
+                                                                                    <Chip
+                                                                                        icon={<span className="material-icons" style={{ fontSize: 16 }}>schedule</span>}
+                                                                                        label="Ожидает"
+                                                                                        size="small"
+                                                                                        sx={{ bgcolor: '#fff3e0', color: '#e65100', fontWeight: 500 }}
+                                                                                    />
+                                                                                )}
+                                                                                {approver.status === 'rejected' && (
+                                                                                    <>
+                                                                                        <Chip
+                                                                                            icon={<span className="material-icons" style={{ fontSize: 16 }}>cancel</span>}
+                                                                                            label="Отклонено"
+                                                                                            size="small"
+                                                                                            sx={{ bgcolor: '#ffebee', color: '#c62828', fontWeight: 500 }}
+                                                                                        />
+                                                                                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                                                                            {approver.date}
+                                                                                        </Typography>
+                                                                                    </>
+                                                                                )}
+                                                                            </Box>
+                                                                        </Stack>
+                                                                        {approver.comment && (
+                                                                            <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid #e0e0e0' }}>
+                                                                                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                                                                                    Комментарий:
+                                                                                </Typography>
+                                                                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                                                    {approver.comment}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        )}
+                                                                    </Paper>
+                                                                ))}
+                                                            </Stack>
+                                                        </StepContent>
+                                                    </Step>
+                                                ))}
+                                            </Stepper>
+                                        </Box>
+                                    )}
+                                </DialogContent>
+                                <DialogActions>
+                                    <Button onClick={() => setPackageDetailOpen(false)}>
+                                        Закрыть
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        color="success"
+                                        startIcon={<span className="material-icons">verified</span>}
+                                        onClick={() => {
+                                            setPackageDetailOpen(false);
+                                            handlePackageAction(selectedPackage, 'ratify');
+                                        }}
+                                    >
+                                        Утвердить пакет
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<span className="material-icons">close</span>}
+                                        onClick={() => {
+                                            setPackageDetailOpen(false);
+                                            handlePackageAction(selectedPackage, 'reject');
+                                        }}
+                                    >
+                                        Отклонить пакет
+                                    </Button>
+                                </DialogActions>
+                            </>
+                        )}
+                    </Dialog>
+                </Box>
+            );
+        }
+
+        // Main App Component
+        function App() {
+            const [currentView, setCurrentView] = useState('approvals');
+
+            return (
+                <Box sx={{ display: 'flex', height: '100vh', width: '100%' }}>
+                    {/* Sidebar */}
+                    <Box className="sidebar">
+                        <Box className="sidebar-header">
+                            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 600 }}>
+                                Риск-стратегии MVP
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+                                Страница "Согласования"
+                            </Typography>
+                        </Box>
+                        <Box className="sidebar-menu">
+                            <div
+                                className="sidebar-item"
+                                onClick={() => alert('Симуляции - не реализовано в этом макете')}
+                            >
+                                <span className="material-icons">science</span>
+                                <span>Симуляции</span>
+                            </div>
+                            <div
+                                className="sidebar-item"
+                                onClick={() => alert('Пилоты - не реализовано в этом макете')}
+                            >
+                                <span className="material-icons">flight_takeoff</span>
+                                <span>Пилоты</span>
+                            </div>
+                            <div
+                                className="sidebar-item"
+                                onClick={() => alert('Внедрения - не реализовано в этом макете')}
+                            >
+                                <span className="material-icons">published_with_changes</span>
+                                <span>Внедрения</span>
+                            </div>
+                            <div
+                                className="sidebar-item"
+                                onClick={() => alert('Пакеты - не реализовано в этом макете')}
+                            >
+                                <span className="material-icons">inventory_2</span>
+                                <span>Пакеты</span>
+                            </div>
+                            <div
+                                className={`sidebar-item ${currentView === 'approvals' ? 'active' : ''}`}
+                                onClick={() => setCurrentView('approvals')}
+                            >
+                                <span className="material-icons">task_alt</span>
+                                <span>Согласования</span>
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '8px',
+                                    right: '12px',
+                                    backgroundColor: '#d32f2f',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    padding: '2px 8px',
+                                    fontSize: '12px',
+                                    fontWeight: 600,
+                                    minWidth: '20px',
+                                    textAlign: 'center'
+                                }}>
+                                    3
+                                </span>
+                            </div>
+                        </Box>
+                    </Box>
+
+                    {/* Main Content */}
+                    <Box className="main-content">
+                        {/* Top Bar */}
+                        <Box className="top-bar">
+                            <Typography variant="h6">
+                                Согласования
+                            </Typography>
+                            <Stack direction="row" spacing={2} alignItems="center">
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <span className="material-icons" style={{ color: '#666' }}>account_circle</span>
+                                    <Box>
+                                        <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.2 }}>
+                                            Иванов Иван Иванович
+                                        </Typography>
+                                        <Typography variant="caption" sx={{ color: '#666', lineHeight: 1.2 }}>
+                                            Согласующий
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Stack>
+                        </Box>
+
+                        {/* Content Area */}
+                        <Box className="content-area">
+                            {currentView === 'approvals' && <ApprovalsView />}
+                        </Box>
+                    </Box>
+                </Box>
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

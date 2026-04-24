@@ -1,0 +1,499 @@
+@startuml
+
+title Диаграммы состояний v3.1 - Архитектура на основе Инициатив
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ ИНИЦИАТИВЫ
+' ========================
+
+state "Состояния Инициативы" as InitiativeStates {
+  state "Черновик" as initDraft
+  state "Активна" as initActive
+  state "Завершена" as initCompleted
+  state "Архивирована" as initArchived
+
+  [*] --> initDraft : Создание Инициативы
+
+  initDraft : Доступные действия:
+  initDraft : - Редактирование деталей
+  initDraft : - Создание Симуляций
+  initDraft : - Создание Пилотов
+  initDraft : - Создание Внедрений
+  initDraft : - Активация
+  initDraft : - Удаление
+
+  initActive : Доступные действия:
+  initActive : - Создание/управление Симуляциями
+  initActive : - Создание/управление Пилотами
+  initActive : - Создание/управление Внедрениями
+  initActive : - Создание Цепочек
+  initActive : - Завершение
+  initActive : - Архивирование
+
+  initCompleted : Доступные действия:
+  initCompleted : - Только просмотр
+  initCompleted : - Архивирование
+
+  initArchived : Доступные действия:
+  initArchived : - Только просмотр
+  initArchived : - Восстановление
+
+  initDraft --> initActive : Активация
+  initDraft --> initArchived : Удаление
+  initActive --> initCompleted : Завершение
+  initActive --> initArchived : Архивирование
+  initCompleted --> initArchived : Архивирование
+  initArchived --> initDraft : Восстановление
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ СИМУЛЯЦИИ
+' ========================
+
+state "Состояния Симуляции" as SimulationStates {
+  state "Черновик" as simDraft
+  state "Выполняется" as simRunning
+  state "Завершена" as simCompleted
+  state "Ошибка" as simFailed
+
+  [*] --> simDraft : Создание Симуляции
+
+  simDraft : Доступные действия:
+  simDraft : - Редактирование параметров
+  simDraft : - Установка периода данных
+  simDraft : - Запуск симуляции
+  simDraft : - Удаление
+
+  simRunning : Доступные действия:
+  simRunning : - Мониторинг прогресса
+  simRunning : - Отмена
+
+  simCompleted : Доступные действия:
+  simCompleted : - Просмотр результатов
+  simCompleted : - Создание Скоркарты из результатов
+  simCompleted : - Добавление в Цепочку
+  simCompleted : - Использование как источник для Пилота
+
+  simFailed : Доступные действия:
+  simFailed : - Просмотр логов ошибок
+  simFailed : - Редактирование и перезапуск
+  simFailed : - Удаление
+
+  simDraft --> simRunning : Запуск
+  simDraft --> [*] : Удаление
+  simRunning --> simCompleted : Успех
+  simRunning --> simFailed : Ошибка
+  simRunning --> simDraft : Отмена
+  simFailed --> simDraft : Редактирование и перезапуск
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ СКОРКАРТЫ
+' ========================
+
+state "Состояния Скоркарты" as ScorecardStates {
+  state "Черновик" as scDraft
+  state "Требует одобрения" as scRequiresApproval
+  state "На согласовании" as scInApproval
+  state "На утверждении" as scInRatification
+  state "Одобрена" as scApproved
+  state "Активна" as scActive
+  state "Отклонена" as scRejected
+  state "Архивирована" as scArchived
+
+  [*] --> scDraft : Создание Скоркарты
+
+  scDraft : Доступные действия:
+  scDraft : - Редактирование конфигурации
+  scDraft : - Связь с Пилотом
+  scDraft : - Связь с Внедрением
+  scDraft : - Создание новой версии
+  scDraft : - Удаление
+
+  scRequiresApproval : Доступные действия:
+  scRequiresApproval : - Просмотр деталей
+  scRequiresApproval : - Ожидание отправки на согласование
+  scRequiresApproval :
+  scRequiresApproval : Статус синхронизируется с Пилотом/Внедрением
+
+  scInApproval : Доступные действия:
+  scInApproval : - Просмотр статуса согласования
+  scInApproval : - Ожидание решения согласующих
+  scInApproval :
+  scInApproval : Статус синхронизируется с Пилотом/Внедрением
+
+  scInRatification : Доступные действия:
+  scInRatification : - Просмотр статуса утверждения
+  scInRatification : - Ожидание решения руководства
+  scInRatification :
+  scInRatification : Статус синхронизируется с Пилотом/Внедрением
+
+  scApproved : Доступные действия:
+  scApproved : - Просмотр конфигурации
+  scApproved : - Ожидание активации
+  scApproved :
+  scApproved : Статус синхронизируется с Пилотом/Внедрением
+
+  scActive : Доступные действия:
+  scActive : - Просмотр конфигурации
+  scActive : - Мониторинг использования
+  scActive : - Архивирование
+  scActive :
+  scActive : Используется в активном Пилоте или развернутом Внедрении
+
+  scRejected : Доступные действия:
+  scRejected : - Просмотр причин отклонения
+  scRejected : - Редактирование и повторная отправка
+  scRejected :
+  scRejected : Статус синхронизируется с Пилотом/Внедрением
+
+  scArchived : Доступные действия:
+  scArchived : - Только просмотр
+
+  scDraft --> scRequiresApproval : Пилот/Внедрение отправлено на согласование
+  scRequiresApproval --> scInApproval : Процесс согласования начат
+  scInApproval --> scInRatification : Согласование пройдено
+  scInApproval --> scRejected : Отклонено на согласовании
+  scInRatification --> scApproved : Утверждено руководством
+  scInRatification --> scRejected : Отклонено на утверждении
+  scApproved --> scActive : Пилот активирован / Внедрение развернуто
+  scActive --> scArchived : Архивирование
+  scRejected --> scDraft : Редактирование
+  scDraft --> scArchived : Удаление
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ ПИЛОТА
+' ========================
+
+state "Состояния Пилота" as PilotStates {
+  state "Черновик" as pilotDraft
+  state "Требует активации" as pilotRequiresActivation
+  state "Активен" as pilotActive
+  state "Требует корректировки" as pilotRequiresCorrection
+  state "Завершен" as pilotCompleted
+
+  [*] --> pilotDraft : Создание Пилота
+
+  pilotDraft : Доступные действия:
+  pilotDraft : - Редактирование деталей
+  pilotDraft : - Связь со Скоркартами
+  pilotDraft : - Связь с Внедрением
+  pilotDraft : - Отправка на активацию
+  pilotDraft : - Удаление
+
+  pilotRequiresActivation : Доступные действия:
+  pilotRequiresActivation : - Создание Цепочки
+  pilotRequiresActivation : - Отправка на согласование (в Пакете)
+  pilotRequiresActivation : - Редактирование (возврат в черновик)
+
+  pilotActive : Доступные действия:
+  pilotActive : - Мониторинг метрик
+  pilotActive : - Сбор результатов
+  pilotActive : - Запрос корректировки
+  pilotActive : - Завершение
+
+  pilotRequiresCorrection : Доступные действия:
+  pilotRequiresCorrection : - Редактирование параметров
+  pilotRequiresCorrection : - Создание Цепочки
+  pilotRequiresCorrection : - Отправка на согласование (в Пакете)
+  pilotRequiresCorrection : - Повторная активация
+
+  pilotCompleted : Доступные действия:
+  pilotCompleted : - Просмотр результатов
+  pilotCompleted : - Создание Скоркарты из результатов
+  pilotCompleted : - Переход к Внедрению
+
+  pilotDraft --> pilotRequiresActivation : Отправка на активацию
+  pilotDraft --> [*] : Удаление
+  pilotRequiresActivation --> pilotActive : Согласовано и активировано
+  pilotRequiresActivation --> pilotDraft : Редактирование
+  pilotActive --> pilotRequiresCorrection : Запрос корректировки
+  pilotActive --> pilotCompleted : Завершение
+  pilotRequiresCorrection --> pilotActive : Согласовано и реактивировано
+  pilotRequiresCorrection --> pilotDraft : Редактирование
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ ВНЕДРЕНИЯ
+' ========================
+
+state "Состояния Внедрения" as DeploymentStates {
+  state "Черновик" as deplDraft
+  state "Требует согласования" as deplRequiresApproval
+  state "На согласовании" as deplInApproval
+  state "Согласовано" as deplApproved
+  state "На утверждении" as deplInRatification
+  state "Утверждено" as deplRatified
+  state "Внедрено" as deplDeployed
+  state "Откачено" as deplRolledBack
+
+  [*] --> deplDraft : Создание Внедрения
+
+  deplDraft : Доступные действия:
+  deplDraft : - Редактирование деталей
+  deplDraft : - Связь со Скоркартами
+  deplDraft : - Связь с Пилотом
+  deplDraft : - Отправка на согласование
+  deplDraft : - Удаление
+
+  deplRequiresApproval : Доступные действия:
+  deplRequiresApproval : - Ожидание начала согласования
+  deplRequiresApproval : - Отзыв (возврат в черновик)
+
+  deplInApproval : Доступные действия:
+  deplInApproval : - Просмотр статуса согласования
+  deplInApproval : - Ожидание решения Approvers
+  deplInApproval : - Отзыв (возврат в черновик)
+
+  deplApproved : Доступные действия:
+  deplApproved : - Ожидание отправки на утверждение
+  deplApproved : - Отзыв (возврат в черновик)
+
+  deplInRatification : Доступные действия:
+  deplInRatification : - Просмотр статуса утверждения
+  deplInRatification : - Ожидание решения Ratifier
+  deplInRatification : - Отзыв (возврат в черновик)
+
+  deplRatified : Доступные действия:
+  deplRatified : - Внедрение в продуктив
+  deplRatified : - Просмотр плана внедрения
+
+  deplDeployed : Доступные действия:
+  deplDeployed : - Мониторинг продуктива
+  deplDeployed : - Откат при необходимости
+
+  deplRolledBack : Доступные действия:
+  deplRolledBack : - Просмотр деталей отката
+  deplRolledBack : - Создание нового Внедрения
+
+  deplDraft --> deplRequiresApproval : Отправка на согласование
+  deplDraft --> [*] : Удаление
+  deplRequiresApproval --> deplInApproval : Начало согласования
+  deplRequiresApproval --> deplDraft : Отзыв
+  deplInApproval --> deplApproved : Все этапы Approval пройдены
+  deplInApproval --> deplDraft : Отклонено или отозвано
+  deplApproved --> deplInRatification : Отправка на утверждение
+  deplApproved --> deplDraft : Отзыв
+  deplInRatification --> deplRatified : Утверждено Ratifier
+  deplInRatification --> deplDraft : Отклонено или отозвано
+  deplRatified --> deplDeployed : Внедрение в продуктив
+  deplDeployed --> deplRolledBack : Откат
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ ЦЕПОЧКИ
+' ========================
+
+state "Этапы Цепочки" as ChainStages {
+  state "Этап симуляции" as chainSimulation
+  state "Этап пилота" as chainPilot
+  state "Этап внедрения" as chainDeployment
+
+  [*] --> chainSimulation : Создание Цепочки
+
+  chainSimulation : Доступные действия:
+  chainSimulation : - Добавление Симуляций
+  chainSimulation : - Просмотр результатов Симуляций
+  chainSimulation : - Создание Скоркарт
+  chainSimulation : - Переход к Пилоту
+  chainSimulation : - Переход к Внедрению (пропуск пилота)
+  chainSimulation :
+  chainSimulation : Нельзя отправить на согласование на этом этапе
+
+  chainPilot : Доступные действия:
+  chainPilot : - Связь с Пилотом
+  chainPilot : - Просмотр метрик Пилота
+  chainPilot : - Отправка на согласование (если пилот требует активации/корректировки)
+  chainPilot : - Переход к Внедрению
+
+  chainDeployment : Доступные действия:
+  chainDeployment : - Связь с Внедрением
+  chainDeployment : - Отправка на согласование (если внедрение требует одобрения)
+  chainDeployment : - Раскатка в продакшн
+
+  chainSimulation --> chainPilot : Добавление Пилота
+  chainSimulation --> chainDeployment : Пропуск Пилота
+  chainPilot --> chainDeployment : Пилот завершен
+  chainDeployment --> [*] : Внедрено
+}
+
+' ========================
+' ЖИЗНЕННЫЙ ЦИКЛ ПАКЕТА
+' ========================
+
+state "Состояния Пакета" as PackageStates {
+  state "Черновик пакета" as pkgDraft
+  state "Согласование пакета" as pkgApproval
+  state "Утверждение пакета" as pkgRatification
+  state "Пакет одобрен" as pkgApproved
+  state "Пакет отклонен" as pkgRejected
+  state "Пакет архивирован" as pkgArchived
+
+  [*] --> pkgDraft : Создание Пакета
+
+  pkgDraft : Доступные действия:
+  pkgDraft : - Редактирование
+  pkgDraft : - Добавление/удаление Цепочек
+  pkgDraft : - Проверка совпадения маршрутов согласования
+  pkgDraft : - Отправка на согласование
+  pkgDraft : - Удаление
+
+  pkgApproval : Доступные действия:
+  pkgApproval : - Согласование (согласующими)
+  pkgApproval : - Отклонение (согласующими)
+  pkgApproval : - Просмотр статуса
+  pkgApproval :
+  pkgApproval : Многоэтапный процесс согласования
+
+  pkgRatification : Доступные действия:
+  pkgRatification : - Утверждение (руководством)
+  pkgRatification : - Отклонение (руководством)
+  pkgRatification : - Просмотр статуса
+
+  pkgApproved : Доступные действия:
+  pkgApproved : - Раскатка Внедрений
+  pkgApproved : - Активация Пилотов
+  pkgApproved : - Просмотр деталей
+
+  pkgRejected : Доступные действия:
+  pkgRejected : - Просмотр причин отклонения
+  pkgRejected : - Редактирование и повторная отправка
+  pkgRejected : - Архивирование
+
+  pkgArchived : Доступные действия:
+  pkgArchived : - Только просмотр
+
+  pkgDraft --> pkgApproval : Отправка на согласование
+  pkgDraft --> pkgArchived : Удаление
+  pkgApproval --> pkgRatification : Все согласующие одобрили
+  pkgApproval --> pkgRejected : Кто-то отклонил
+  pkgRatification --> pkgApproved : Утверждено
+  pkgRatification --> pkgRejected : Отклонено
+  pkgApproved --> [*]
+  pkgRejected --> pkgDraft : Редактирование и повторная отправка
+  pkgRejected --> pkgArchived : Архивирование
+}
+
+' ========================
+' СОСТОЯНИЯ ПРОЦЕССА СОГЛАСОВАНИЯ
+' ========================
+
+state "Процесс согласования" as ApprovalProcess {
+  state "Ожидание" as appPending
+  state "В процессе" as appInProgress
+  state "Одобрено" as appApproved
+  state "Отклонено" as appRejected
+
+  [*] --> appPending
+
+  appPending : Ожидание начала
+  appInProgress : Обработка этапов
+  appApproved : Все этапы одобрены
+  appRejected : Хотя бы один этап отклонен
+
+  appPending --> appInProgress : Первый этап начат
+  appInProgress --> appApproved : Все этапы одобрены
+  appInProgress --> appRejected : Какой-то этап отклонен
+}
+
+note right of InitiativeStates
+  **Жизненный цикл Инициативы**
+
+  Верхнеуровневый контейнер для всей связанной работы.
+  Группирует Симуляции, Пилоты и Внедрения.
+
+  Активное состояние позволяет создание и управление
+  дочерними сущностями.
+end note
+
+note right of SimulationStates
+  **Жизненный цикл Симуляции**
+
+  Фаза исследования на исторических данных.
+
+  Завершенные симуляции могут:
+  - Быть источником для Скоркарт
+  - Быть добавлены в Цепочки
+  - Быть связаны с Пилотами
+end note
+
+note right of ScorecardStates
+  **Жизненный цикл Скоркарты**
+
+  Скоркарты проходят полный цикл согласования/утверждения
+  вместе с Пилотами и Внедрениями, к которым они прикреплены.
+
+  Статус Скоркарты синхронизируется со статусами
+  связанных Пилотов/Внедрений:
+  - Когда Пилот/Внедрение отправлено на согласование → requires_approval
+  - Когда начат процесс согласования → in_approval
+  - Когда переход к утверждению → in_ratification
+  - Когда одобрено → approved
+  - Когда Пилот активирован / Внедрение развернуто → active
+  - Когда отклонено → rejected
+
+  Если Скоркарта прикреплена к нескольким Пилотам/Внедрениям
+  на разных этапах, её статус определяется наиболее
+  продвинутым этапом.
+
+  Версионирование: каждое редактирование создает новую версию.
+end note
+
+note right of PilotStates
+  **Жизненный цикл Пилота**
+
+  Фаза эксперимента с реальными клиентами.
+
+  Ключевые состояния:
+  - Требует активации: готов к согласованию
+  - Активен: выполняется эксперимент
+  - Требует корректировки: нужна корректировка
+  - Завершен: можно переходить к Внедрению
+
+  Может быть отправлен на согласование в состояниях
+  "Требует активации" или "Требует корректировки".
+end note
+
+note right of DeploymentStates
+  **Жизненный цикл Внедрения**
+
+  Фаза продуктового внедрения.
+
+  Ключевые состояния:
+  - Требует одобрения: готово к согласованию
+  - Одобрено: можно раскатывать
+  - Внедрено: в продакшне
+  - Откачено: откачено
+
+  Может быть отправлено на согласование в состоянии
+  "Требует одобрения".
+end note
+
+note right of ChainStages
+  **Этапы Цепочки**
+
+  Представляет концепцию цепочки:
+  Симуляции → Пилоты → Внедрение
+
+  Правила:
+  - Нельзя отправить на согласование на этапе симуляции
+  - Можно отправить на этапе пилота, если пилот требует активации/корректировки
+  - Можно отправить на этапе внедрения, если внедрение требует одобрения
+  - Этап пилота опционален (можно пропустить)
+end note
+
+note right of PackageStates
+  **Жизненный цикл Пакета**
+
+  Группирует Цепочки с одинаковым маршрутом согласования.
+
+  Ограничение: Все Цепочки должны иметь
+  совпадающие маршруты согласования.
+
+  Двухэтапное согласование:
+  1. Согласование (approval)
+  2. Утверждение (ratification)
+end note
+
+@enduml

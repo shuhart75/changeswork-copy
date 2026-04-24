@@ -1,0 +1,130 @@
+# TaskJuggler plan: current actualized
+# Mirrors planning/mvp/versions/v6.24/gantt/mvp_gantt_chart_current_actualized.puml
+# Purpose:
+# - keep commander baseline intact
+# - capture factual task progress/assignees from the interactive status snapshot
+# - keep a single current-reality planning layer for further updates
+
+project mvp_current_actualized "Current actualized" 2026-03-27 +20w {
+  timezone "Europe/Moscow"
+  timingresolution 60min
+  dailyworkinghours 9
+  timeformat "%Y-%m-%d"
+  shorttimeformat "%Y-%m-%d"
+  workinghours mon - fri 9:00 - 18:00
+  workinghours sat, sun off
+  now 2026-04-17
+}
+
+vacation "MayDay" 2026-05-01
+vacation "VictoryDay" 2026-05-09
+vacation "VictoryTransfer" 2026-05-11
+vacation "RussiaDay" 2026-06-12
+
+resource A1 "Analyst 1" { efficiency 1.0 }
+resource A2 "Analyst 2" { efficiency 1.0 }
+resource A3 "Analyst 3" { efficiency 1.0 }
+resource TBD_AN "Unassigned Analytics" { efficiency 1.0 }
+
+resource B1 "Backend Dev 1" {
+  efficiency 1.0
+  vacation "BE1 leave" 2026-04-20 - 2026-05-03
+}
+resource B2 "Backend Dev 2" { efficiency 1.0 }
+resource B3 "Backend Dev 3" { efficiency 1.0 }
+resource TBD_BE "Unassigned BE" { efficiency 1.0 }
+
+resource F1 "Frontend Dev 1" {
+  efficiency 1.0
+  vacation "F1 spring leave" 2026-03-30 - 2026-04-05
+  vacation "F1 may leave" 2026-05-01 - 2026-05-09
+}
+resource TBD_FE "Unassigned FE" { efficiency 1.0 }
+resource F2 "Frontend Dev 2" { efficiency 1.0 }
+
+resource Q1 "QA" { efficiency 1.0 }
+
+macro TASK_DEFAULTS [
+  priority 1000
+]
+
+task AN_ROLES "AN новые роли: роли/права/матрица" { ${TASK_DEFAULTS} start 2026-03-30-09:00 duration 1d allocate A2 complete 100 }
+
+task AN_ART_BE "AN артефакты (BE): модель/контракты/права" { ${TASK_DEFAULTS} start 2026-03-31-09:00 duration 1d allocate A2 complete 100 }
+task BE_ART "BE артефакты (ссылки на документы) - БД + API" { ${TASK_DEFAULTS} start 2026-04-01-09:00 duration 3d allocate B2 complete 100 }
+task AN_FE_PILOT_ART "AN блок артефактов (FE): пилоты" { ${TASK_DEFAULTS} start 2026-04-01-09:00 duration 1d allocate A2 complete 100 }
+task FE_PILOT_ART "FE пилоты - блок артефакты + UI под ЖЦ" { ${TASK_DEFAULTS} start 2026-04-06-09:00 duration 4d allocate F1 complete 100 }
+task AN_FE_SIM_ART "AN блок артефактов (FE): симуляции" { ${TASK_DEFAULTS} start 2026-04-02-09:00 duration 1d allocate A2 complete 100 }
+task FE_SIM_ART "FE симуляции - блок артефакты" { ${TASK_DEFAULTS} start 2026-04-10-09:00 duration 1d allocate F1 complete 100 }
+
+task AN_AP_CORE "AN процесс согласования/утверждения (BE core)" { ${TASK_DEFAULTS} start 2026-04-03-09:00 duration 2d allocate A3 complete 80 }
+task BE_AP_CORE "BE процесс согласования и утверждения - БД+логика" { ${TASK_DEFAULTS} start 2026-05-04-09:00 duration 10d allocate B1 }
+task AN_PILOT_LC_AP "AN ЖЦ пилота: согласование/утверждение (BE)" { ${TASK_DEFAULTS} start 2026-04-01-09:00 duration 1d allocate A3 complete 100 }
+task BE_PILOT_LC_AP "BE ЖЦ пилота - согласование/утверждение" { ${TASK_DEFAULTS} start 2026-05-19-09:00 duration 5d allocate B2 }
+task AN_AP_PAGE_BE "AN страница \"Согласования\" (BE): контракты/фильтры/действия" { ${TASK_DEFAULTS} start 2026-04-13-09:00 effort 1d allocate A1 }
+task BE_AP_PAGE "BE страница \"Согласования\" - API, логика" { ${TASK_DEFAULTS} start 2026-05-19-09:00 duration 3d allocate B1 }
+task AN_AP_PAGE_FE "AN страница \"Согласования\" (FE): UX/компоненты/edge-cases" { ${TASK_DEFAULTS} start 2026-04-16-09:00 duration 1d allocate A2 }
+task FE_AP_PAGE "FE страница \"Согласования\"" { ${TASK_DEFAULTS} start 2026-05-22-09:00 duration 10d allocate F2 }
+task AN_PKG_BE "AN страница \"Пакеты\" (BE): контракты/массовые действия" { ${TASK_DEFAULTS} start 2026-04-09-09:00 duration 1d allocate A3 complete 80 }
+task AN_PKG_FE "AN страница \"Пакеты\" (FE): UX/компоненты/edge-cases" { ${TASK_DEFAULTS} start 2026-04-10-09:00 duration 1d allocate A3 complete 80 }
+task FE_PKG_PAGE "FE страница \"Пакеты\"" { ${TASK_DEFAULTS} start 2026-04-22-09:00 duration 10d allocate F2 }
+
+task RSCON_2349 "RSCON-2349 BE внедрений БД + API" { ${TASK_DEFAULTS} start 2026-04-17-09:00 duration 3d allocate B3 complete 15 }
+task RSCON_2445 "RSCON-2445 BE Базовая функциональность для внедрений" { ${TASK_DEFAULTS} start 2026-04-22-09:00 duration 5d allocate B3 }
+task RSCON_2410 "RSCON-2410 BE ЖЦ внедрений" { ${TASK_DEFAULTS} start 2026-04-29-09:00 duration 5d allocate B3 }
+task RSCON_2348 "RSCON-2348 FE форма создания/редактирования внедрений" { ${TASK_DEFAULTS} start 2026-04-20-09:00 duration 5d allocate TBD_FE }
+task RSCON_2347 "RSCON-2347 FE детальная внедрения" { ${TASK_DEFAULTS} start 2026-04-13-09:00 duration 5d allocate TBD_FE }
+task RSCON_2346 "RSCON-2346 FE список внедрений" { ${TASK_DEFAULTS} start 2026-04-06-09:00 effort 5d allocate F1 complete 100 }
+
+task RSCON_2339 "RSCON-2339 FE Удаление блока метрик + новая вкладка для скоркарт" { ${TASK_DEFAULTS} start 2026-04-22-09:00 duration 1d allocate TBD_FE }
+task RSCON_2340 "RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт" { ${TASK_DEFAULTS} start 2026-04-08-09:00 duration 10d allocate F2 complete 85 }
+task RSCON_2341 "RSCON-2341 FE Прикрепление существующей скоркарты" { ${TASK_DEFAULTS} start 2026-04-23-09:00 duration 4d allocate TBD_FE }
+task RSCON_2342 "RSCON-2342 BE Оценка критичности + шаблоны для скоркарт" { ${TASK_DEFAULTS} start 2026-04-07-09:00 duration 4d allocate B3 complete 100 }
+task RSCON_2343 "RSCON-2343 BE Сущность скоркарты" { ${TASK_DEFAULTS} start 2026-04-03-09:00 duration 5d allocate B2 complete 100 }
+task RSCON_2344 "RSCON-2344 BE Привязка скоркарты" { ${TASK_DEFAULTS} start 2026-04-10-09:00 duration 1d allocate B2 complete 100 }
+
+task AN_NOT "AN уведомления: шаблоны/триггеры/получатели" { ${TASK_DEFAULTS} start 2026-04-17-09:00 duration 1d allocate A2 }
+task BE_NOT "BE уведомления" { ${TASK_DEFAULTS} start 2026-04-21-09:00 duration 3d allocate B3 }
+
+task AN_TRACE_BE "AN Trace (BE): модель связей/запросы/производительность" { ${TASK_DEFAULTS} start 2026-04-09-09:00 effort 1d allocate A1 complete 100 }
+task BE_TRACE "BE Trace - БД + логика + API" { ${TASK_DEFAULTS} start 2026-04-29-09:00 duration 2d allocate B2 }
+task AN_TRACE_FE "AN Trace (FE): виджет блока связей" { ${TASK_DEFAULTS} start 2026-04-10-09:00 effort 1d allocate A1 complete 100 }
+task FE_TRACE "FE Trace - пилоты/симуляции/внедрения: блок связи" { ${TASK_DEFAULTS} start 2026-05-12-09:00 duration 3d allocate F1 }
+
+task QA_SETUP "QA подготовка (тест-план, тестовые данные, стенд)" { ${TASK_DEFAULTS} start 2026-06-05-09:00 duration 2d allocate Q1 }
+task QA_ART "QA Артефакты" { ${TASK_DEFAULTS} start 2026-06-09-09:00 duration 2d allocate Q1 }
+task QA_SC "QA Скоркарты (деталка+форма)" { ${TASK_DEFAULTS} start 2026-06-11-09:00 duration 3d allocate Q1 }
+task QA_AP "QA Согласования + Пакеты" { ${TASK_DEFAULTS} start 2026-06-16-09:00 duration 3d allocate Q1 }
+task QA_TRACE "QA Trace (блок связей)" { ${TASK_DEFAULTS} start 2026-06-19-09:00 duration 1d allocate Q1 }
+task QA_REG "QA Регрессия + E2E smoke" { ${TASK_DEFAULTS} start 2026-06-22-09:00 duration 5d allocate Q1 }
+task MVP_DONE "Milestone: MVP завершен" { milestone depends QA_REG }
+
+task BE_STAT_SIM "BE статусной модели симуляции" { ${TASK_DEFAULTS} start 2026-04-24-09:00 duration 10d allocate B3 }
+task FE_STAT_SIM "FE статусной модели симуляции" { ${TASK_DEFAULTS} start 2026-05-15-09:00 duration 3d allocate F1 }
+
+task BE_SIM_SNAP "BE симуляции снепшотов" { ${TASK_DEFAULTS} start 2026-05-22-09:00 duration 10d allocate B1 }
+task FE_SIM_SNAP "FE симуляции снепшотов" { ${TASK_DEFAULTS} start 2026-06-05-09:00 duration 10d allocate F1 }
+
+task BE_AI_CHAT "BE чата AI - интеграция" { ${TASK_DEFAULTS} start 2026-06-05-09:00 duration 5d allocate B1 }
+task FE_AI_CHAT_UI "FE UI для чата с AI агентом" { ${TASK_DEFAULTS} start 2026-06-23-09:00 duration 3d allocate F1 }
+
+task AN_RISK_TABLE_FACT "AN аналитика табличных риск-параметров" { ${TASK_DEFAULTS} start 2026-04-03-09:00 duration 9d allocate A2 complete 80 }
+task BE_RISK_TABLE "BE табличных риск-параметров" { ${TASK_DEFAULTS} start 2026-06-08-09:00 duration 5d allocate B2 }
+task FE_RISK_TABLE "FE табличных риск-параметров" { ${TASK_DEFAULTS} start 2026-06-16-09:00 duration 10d allocate F2 }
+
+task AN_SIM_SNAP_CFG_FACT "AN аналитика симуляции снепшотов конфигурации" { ${TASK_DEFAULTS} start 2026-03-27-09:00 duration 21d allocate TBD_AN complete 40 }
+task QA_STAT_SIM "QA Статусная модель симуляции" { ${TASK_DEFAULTS} start 2026-06-30-09:00 duration 1d allocate Q1 }
+task QA_SIM_SNAP "QA Симуляция снепшотов" { ${TASK_DEFAULTS} start 2026-07-01-09:00 duration 2d allocate Q1 }
+task QA_AI_CHAT "QA AI чат" { ${TASK_DEFAULTS} start 2026-07-03-09:00 duration 1d allocate Q1 }
+task QA_RISK_TABLE "QA Табличные риск-параметры" { ${TASK_DEFAULTS} start 2026-07-06-09:00 duration 2d allocate Q1 }
+task QA_ALL_REG "QA All: smoke/regression" { ${TASK_DEFAULTS} start 2026-07-08-09:00 duration 2d allocate Q1 }
+task ALL_DONE "ALL DONE" { milestone depends QA_ALL_REG }
+
+textreport "CSV Current Actualized" {
+  formats csv
+  timeformat "%Y-%m-%d"
+  taskreport "mvp_current_actualized" {
+    columns id, name, resources, start, end, effort, duration, complete
+  }
+  purge formats
+}

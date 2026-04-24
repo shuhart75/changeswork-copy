@@ -1,0 +1,3 @@
+display_name: Project Consistency Manager
+short_description: Manage consistency across interconnected project documents with versioning and terminology sync
+default_prompt: Check if all documents are consistent with the latest terminology
