@@ -8,12 +8,15 @@ Raw planning-артефакты лежат в `../imported-source/`.
 Нормализованные operational layers лежат в:
 - `../quality-assurance/`
 - `../retrospectives/`
+- `../cross-cutting/`
+- `../task-catalog/`
 
 ## Scope Decisions
 
 - legacy gantt и task docs скопированы без изменения оригинала;
 - planning stories и implementation tasks разнесены по новому формату только частично;
-- QA и retrospective контур вынесен из raw snapshot в отдельные planning-папки, чтобы он не терялся среди feature docs.
+- QA, retrospective и cross-cutting planning-контур вынесен из raw snapshot в отдельные planning-папки, чтобы он не терялся среди feature docs;
+- imported summary tasks получили отдельный нормализованный вход через `task-catalog/`.
 
 ## Comparison Notes
 
@@ -21,4 +24,6 @@ Raw planning-артефакты лежат в `../imported-source/`.
 Отдельно проверяем:
 - `gantt/` — что было запланировано и что фактически двигалось;
 - `quality-assurance/` — что считалось обязательным тестовым охватом;
-- `retrospectives/` — какие управленческие checkpoints были задуманы внутри квартала.
+- `retrospectives/` — какие управленческие checkpoints были задуманы внутри квартала;
+- `cross-cutting/` — какие сквозные потоки не были самостоятельными фичами;
+- `task-catalog/` — краткая нормализованная карта imported planning docs.
