@@ -47,7 +47,7 @@ RSCON-2445 завершена вчера.
 - raw snapshot legacy-репозитория перенесён полностью в `context/source-materials/legacy/changeswork-full/`
 - полнота snapshot перепроверена сравнением с `/home/reutov/Documents/AI/changesWork`
 - current-system requirements / diagrams / prototypes разложены в `context/source-materials/current-system/`
-- основные feature и slice-контейнеры созданы в `features/`
+- основные feature и slice-контейнеры, включая `features/simulations/`, созданы в `features/`
 - legacy planning-артефакты вынесены в `planning/2026-Q2/imported-source/`
 - canonical baseline domain model разложена в `baseline/current/domain/`
 - добавлены обзорные baseline summaries для `requirements`, `ui`, `api`, `data`, `decisions`
