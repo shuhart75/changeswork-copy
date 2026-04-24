@@ -10,6 +10,7 @@
 - Основные requirements/prototypes/diagrams продублированы в `context/source-materials/current-system/`.
 - Нормализованные feature-контейнеры созданы в `features/approvals`, `features/artifacts`, `features/deployments`, `features/packages`, `features/pilots`, `features/roles`, `features/scorecards`, `features/simulations`.
 - Доменный baseline разложен в `baseline/current/domain/`.
+- QA и retrospective planning-контур вынесен в `planning/2026-Q2/quality-assurance/` и `planning/2026-Q2/retrospectives/`.
 
 ## Карта верхнего уровня
 
@@ -20,7 +21,7 @@
 | `docs/` | stakeholder/presentation/use-case материалы | `context/source-materials/current-system/requirements/raw/docs/` |
 | `planning/mvp/current/gantt/` | legacy gantt views | `planning/2026-Q2/imported-source/gantt/` |
 | `planning/mvp/current/tasks/` | legacy task docs и декомпозиция | `planning/2026-Q2/imported-source/tasks/` и raw snapshot |
-| `planning/mvp/current/tasks/legacy/` | старые подробные story/task breakdown, включая simulations | `context/source-materials/legacy/changeswork-full/planning/mvp/current/tasks/legacy/`, `features/simulations/` |
+| `planning/mvp/current/tasks/legacy/` | старые подробные story/task breakdown | `context/source-materials/legacy/changeswork-full/planning/mvp/current/tasks/legacy/`, а нормализованные части — в `features/`, `planning/2026-Q2/quality-assurance/`, `planning/2026-Q2/retrospectives/`, `baseline/current/ui/navigation.md`, `baseline/current/domain/contexts/lineage.md` |
 | `prototypes/` | интерактивные html-макеты и архив вариантов | `context/source-materials/current-system/prototypes/raw/` и raw snapshot |
 | `notes/` | ad-hoc решения, отчёты, эксперименты, служебные записи | `context/source-materials/legacy/changeswork-full/notes/` |
 | `scripts/` | legacy automation и validators | `context/source-materials/legacy/changeswork-full/scripts/` |
@@ -35,7 +36,9 @@
 |---|---|---|
 | Current-state baseline | домен разложен по bounded contexts и aggregates | API/UI/data/requirements summary доведены до обзорного канона, но не до полной постраничной спецификации |
 | Simulations | baseline признаёт `Simulation` как existing coverage и есть dedicated feature `features/simulations/` | simulation contracts всё ещё partly legacy-shaped и могут потребовать отдельной canonical URI/data normalization |
-| Planning stories | часть квартального плана переведена в feature lanes | legacy planning still contains richer historical alternatives and simulation-related lanes only in raw/imported layers |
+| Navigation + lineage auxiliary scope | sidebar baseline и lineage boundary вынесены в `baseline/current/ui/navigation.md` и `baseline/current/domain/contexts/lineage.md` | route-catalog и source-preview contracts можно ещё точнее свести при необходимости |
+| QA / retrospectives | квартальный operational слой вынесен из raw legacy в отдельные planning-папки | если понадобится поминутный ход квартала, придётся идти в raw docs и gantt |
+| Notifications | legacy story и упоминания в feature requirements сохранены | отдельного канонического контейнера для notification scope пока нет; он размазан по approval/package/pilot/deployment материалам |
 | Release fixation | есть каркас release package | финальные delivered baseline-promotions нужно собирать по фактическим релизам |
 
 ## Практическое правило
@@ -43,5 +46,6 @@
 Если не уверен, где искать правду:
 1. для текущего deployed состояния — `baseline/current/`;
 2. для рабочей дельты — `features/`;
-3. для исходных доказательств — `context/source-materials/current-system/`;
-4. для полного исторического хвоста — `context/source-materials/legacy/changeswork-full/`.
+3. для квартального planning/ops слоя — `planning/2026-Q2/`;
+4. для исходных доказательств — `context/source-materials/current-system/`;
+5. для полного исторического хвоста — `context/source-materials/legacy/changeswork-full/`.

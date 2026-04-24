@@ -51,9 +51,11 @@ RSCON-2445 завершена вчера.
 - legacy planning-артефакты вынесены в `planning/2026-Q2/imported-source/`
 - canonical baseline domain model разложена в `baseline/current/domain/`
 - добавлены обзорные baseline summaries для `requirements`, `ui`, `api`, `data`, `decisions`
+- нормализованы отдельные planning-слои `planning/2026-Q2/quality-assurance/` и `planning/2026-Q2/retrospectives/`
 - release package skeleton добавлен для `releases/2026-Q2/rscon-2438/`
 
 ## Что ещё требует доработки
 - дальнейшая детализация baseline/current на уровне full post-page contracts при необходимости
 - promotion итоговых delivered требований из feature-level living docs в canonical baseline
 - заполнение release package по фактическим delivered изменениям
+- явное выравнивание legacy notifications scope: сейчас он частично размазан по approval/package/pilot материалам и ещё не вынесен в отдельный канонический контейнер

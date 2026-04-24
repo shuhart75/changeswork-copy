@@ -13,6 +13,34 @@
 | Pilots | business page `Pilots` (exact route not re-normalized yet) | список, деталка, создание, lifecycle actions | `context/source-materials/current-system/requirements/raw/final-spec/REQ_pilots_frontend.md` |
 | Simulations | business pages `Simulations list` and `Simulation detail` (exact route not re-normalized yet) | список симуляций, детальная страница, status/read-only host screen, артефакты и связанные сущности | `context/source-materials/legacy/changeswork-full/planning/mvp/current/tasks/legacy/mvp_tasks_simulations_page.md`, `context/source-materials/legacy/changeswork-full/planning/mvp/current/tasks/legacy/mvp_tasks_simulation_detail_page.md`, `baseline/current/ui/simulations.md` |
 
+## Sidebar baseline
+
+Legacy navigation-menu scope подтверждает, что текущий baseline исходит из левого sidebar как главной точки входа.
+
+### Разделы меню
+- `Deployments`
+- `Simulations`
+- `Pilots`
+- `Changes`
+- `Packages` — если пакетный контур включён в поставку
+- `Approvals` — для approval / ratification workflow
+
+### Поведение
+- активный пункт визуально выделяется;
+- меню умеет сворачиваться до иконок;
+- в свёрнутом состоянии названия раскрываются через tooltip;
+- состояние сворачивания может храниться локально в браузере;
+- на tablet/mobile меню переходит в overlay / drawer-паттерн.
+
+### Ролевой срез
+- `PRM`, `Methodologist`, `Admin` видят основной рабочий набор разделов;
+- `Approver` может быть ограничен страницей `Approvals`;
+- продуктовые ограничения применяются поверх общей видимости пункта меню.
+
+### Что не нормализовано до конца
+- точные route names для части legacy screens ещё не выровнены в единый current-state каталог;
+- counters в меню и profile dropdown зафиксированы как UX-детали legacy-плана, но не как самостоятельные baseline contracts.
+
 ## Host-screen notes
 
 ### Simulation detail
