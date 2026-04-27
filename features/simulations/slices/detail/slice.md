@@ -2,6 +2,7 @@
 
 Статус: **импортировано как existing baseline coverage**  
 Feature: `features/simulations/feature.md`  
+Порядок в feature requirements: `02`  
 Дата обновления: `2026-04-24`
 
 ## Назначение
@@ -16,6 +17,7 @@ Feature: `features/simulations/feature.md`
 - `baseline/current/ui/simulations.md`
 
 ## Пакеты требований
+- `../../requirements.md`
 - `requirements/frontend.md`
 - `requirements/backend.md`
 

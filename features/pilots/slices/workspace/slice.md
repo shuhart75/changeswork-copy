@@ -1,21 +1,25 @@
-# Slice — <Название смыслового среза>
+# Slice — Workspace пилотов
 
-Статус: **в работе**  
-Feature: `features/<feature-slug>/feature.md`  
-Дата обновления: `<YYYY-MM-DD>`
+Статус: **импортировано из legacy-проекта**  
+Feature: `features/pilots/feature.md`  
+Порядок в feature requirements: `01`  
+Дата обновления: `2026-04-27`
 
 ## Назначение
+Собрать list/detail/form/lifecycle контур пилотов как единый workspace slice.
 
 ## Связанные planning stories
-- `STORY-XXX-001`
+- `STORY-PILOTS-001`
 
 ## Источники
 - `../../references.md`
+- `../../requirements.md`
 - `context/source-materials/current-system/requirements/`
 - `context/source-materials/current-system/screenshots/`
 - `context/source-materials/change-requests/`
 
 ## Пакеты требований
+- `../../requirements.md`
 - `requirements/frontend.md`
 - `requirements/backend.md`
 

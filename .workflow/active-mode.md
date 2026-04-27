@@ -1,6 +1,6 @@
 # Active Mode
 
-mode: planning
+mode: scope-prototype
 
 ## Mode File
-.workflow/modes/planning.md
+.workflow/modes/scope-prototype.md

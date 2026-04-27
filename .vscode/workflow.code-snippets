@@ -47,8 +47,8 @@
       "",
       "Нужно:",
       "- проверить baseline/current и доменную модель;",
-      "- разложить требования по feature/slice;",
-      "- оформить бизнес- и системные требования по шаблону;",
+      "- собрать или обновить `features/${3:feature-slug}/requirements.md` по шаблону;",
+      "- только потом разложить root requirements по slices и detail packs;",
       "- выявить влияние на соседние требования, baseline и прототипы;",
       "- обновить domain-impact.md и consistency-backlog.md при необходимости."
     ]
@@ -60,14 +60,16 @@
       "делаем презентационный прототип",
       "",
       "Feature: ${1:feature-slug}",
-      "Цель демо: ${2:согласование scope/MVP с заказчиком}",
-      "Материалы: ${3:путь к требованиям/скринам/заметкам}",
+      "Материалы: ${2:путь к требованиям/скринам/заметкам}",
+      "Базовый референс: ${3:какой текущий прототип/скрин/страница берется за основу}",
       "",
-      "Нужно сделать single-file prototype.html на React + MUI без сборки:",
-      "- кликабельные переходы;",
-      "- fake data;",
-      "- демонстрация ideal и MVP;",
-      "- заметные ограничения и вопросы по scope."
+      "Нужно:",
+      "- сначала проверить существующие прототипы и скриншоты этой feature;",
+      "- выбрать и зафиксировать визуальную базу;",
+      "- сделать или обновить только общий `features/${1:feature-slug}/prototype.html` без slice-макетов;",
+      "- root prototype должен быть кликабельным пользовательским макетом всей feature, без комментариев для фронта внутри HTML;",
+      "- показать ideal и MVP, добавить fake data и кликабельные переходы;",
+      "- продолжать работу только с общим prototype, пока я не подтвержу, что он согласован."
     ]
   },
   "Workflow: Delivery Prototype Prompt": {
@@ -78,13 +80,17 @@
       "",
       "Feature: ${1:feature-slug}",
       "Slice: ${2:slice-slug}",
-      "Requirement pack: ${3:features/.../requirements/...md}",
+      "Root prototype: ${3:features/.../prototype.html}",
       "",
-      "Нужно актуализировать single-file prototype.html на React + MUI без сборки:",
+      "Перед началом проверь `features/${1:feature-slug}/prototype-notes.md`.",
+      "Если там нет явных строк `Пользователь подтвердил, что общий prototype завершён: да` и `Можно переходить к slice delivery prototypes: да`,",
+      "ничего в `slices/*/delivery-prototype/*` не меняй и сообщи, что сначала нужно окнуть общий root prototype.",
+      "",
+      "Если подтверждение есть, тогда:",
+      "- взять root prototype и `features/${1:feature-slug}/requirements.md` как основу;",
+      "- сделать schematic handoff prototype для slice `features/${1:feature-slug}/slices/${2:slice-slug}/delivery-prototype/prototype.html`;",
       "- использовать только MUI-компоненты;",
-      "- отразить текущие требования и состояния;",
-      "- сделать структуру понятной для frontend handoff;",
-      "- зафиксировать расхождения/допущения в notes."
+      "- вынести frontend-пояснения и допущения в slice-level notes."
     ]
   },
   "Workflow: Execution Update Prompt": {

@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulation-bt-agent / agent-entrypoint / delivery prototype</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js"></script>
+    <script src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background-color: #f5f7fa;
+        font-family: "Roboto", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const {
+        Alert,
+        AppBar,
+        Avatar,
+        Box,
+        Button,
+        Card,
+        CardContent,
+        Chip,
+        CssBaseline,
+        Drawer,
+        Grid,
+        LinearProgress,
+        Paper,
+        Stack,
+        Table,
+        TableBody,
+        TableCell,
+        TableHead,
+        TableRow,
+        TextField,
+        Toolbar,
+        Typography,
+        createTheme,
+        ThemeProvider,
+      } = MaterialUI;
+
+      const drawerWidth = 430;
+      const sessionId = "3ccabaf4-7d41-4b91-a020-a6f7547f11d2";
+      const dialogStartedAt = "2026-04-27 10:14:06";
+
+      const contexts = [
+        {
+          id: "list",
+          label: "Список симуляций",
+          route: "/simulations",
+          tabLabel: "Кредитные карты",
+          previewKind: "list",
+          pageTitle: "Симуляции",
+          simulationId: "",
+          eligible: false,
+          btState: "Недоступно",
+          stateReason: "Нет конкретной симуляции",
+        },
+        {
+          id: "detail",
+          label: "Деталка завершённой симуляции",
+          route: "/simulations/SIM-CC-148",
+          tabLabel: "Основная информация",
+          previewKind: "detail",
+          pageTitle: "SIM-CC-148",
+          simulationId: "SIM-CC-148",
+          eligible: true,
+          btState: "Доступно",
+          stateReason: "Симуляция завершена и выведена в ПРОМ",
+        },
+        {
+          id: "results",
+          label: "Вкладка итогов симуляции",
+          route: "/simulations/SIM-CC-148/results",
+          tabLabel: "Итоги симуляции",
+          previewKind: "results",
+          pageTitle: "Итоги симуляции SIM-CC-148",
+          simulationId: "SIM-CC-148",
+          eligible: true,
+          btState: "Доступно",
+          stateReason: "Пользователь на итоговой вкладке той же симуляции",
+        },
+        {
+          id: "edit",
+          label: "Форма редактирования",
+          route: "/simulations/SIM-CC-148/edit",
+          tabLabel: "Редактирование",
+          previewKind: "edit",
+          pageTitle: "Редактирование SIM-CC-148",
+          simulationId: "SIM-CC-148",
+          eligible: true,
+          btState: "Доступно",
+          stateReason: "Окно не меняет маршрут и сохраняет контекст страницы",
+        },
+        {
+          id: "failed",
+          label: "Неподходящая симуляция",
+          route: "/simulations/SIM-CC-147",
+          tabLabel: "Основная информация",
+          previewKind: "failed",
+          pageTitle: "SIM-CC-147",
+          simulationId: "SIM-CC-147",
+          eligible: false,
+          btState: "Недоступно",
+          stateReason: "Симуляция ещё не завершена",
+        },
+      ];
+
+      const simulationRows = [
+        {
+          id: "SIM-CC-148",
+          name: "157-1",
+          mode: "Изменение риск-параметров",
+          status: "Завершена",
+          stage: "Формирование отчета",
+          author: "Меринович К.О.",
+          createdAt: "11:04 24.04.2026",
+          updatedAt: "11:14 24.04.2026",
+        },
+        {
+          id: "SIM-CC-147",
+          name: "dfgsdg",
+          mode: "Изменение риск-параметров",
+          status: "Новая",
+          stage: "Подготовка",
+          author: "Матаков М.П.",
+          createdAt: "16:57 23.04.2026",
+          updatedAt: "16:57 23.04.2026",
+        },
+        {
+          id: "SIM-CC-146",
+          name: "test23.04-4",
+          mode: "Изменение риск-параметров",
+          status: "Выведена в ПРОМ",
+          stage: "Установка риск-параметров",
+          author: "Меринович К.О.",
+          createdAt: "13:31 23.04.2026",
+          updatedAt: "14:06 23.04.2026",
+        },
+        {
+          id: "SIM-CC-145",
+          name: "test23.04-3",
+          mode: "Изменение риск-параметров",
+          status: "Установка на ПРОМ",
+          stage: "Формирование отчета",
+          author: "Вегерина Н.Х.",
+          createdAt: "12:39 23.04.2026",
+          updatedAt: "12:51 23.04.2026",
+        },
+        {
+          id: "SIM-CC-138",
+          name: "Test expiration time",
+          mode: "Изменение риск-параметров",
+          status: "Ошибка",
+          stage: "Прогон стратегии",
+          author: "Матаков М.П.",
+          createdAt: "13:46 22.04.2026",
+          updatedAt: "13:48 22.04.2026",
+        },
+      ];
+
+      const steps = [
+        "Подготовка данных",
+        "Прогон стратегии на исходных параметрах",
+        "Прогон стратегии на изменённых параметрах",
+        "Постобработка данных стратегии",
+        "Агрегация данных для кредитных карт",
+        "Формирование отчета",
+      ];
+
+      const theme = createTheme({
+        palette: {
+          primary: {
+            main: "#2c4f7c",
+            dark: "#1e3a5f",
+          },
+          secondary: {
+            main: "#4caf50",
+          },
+          success: {
+            main: "#63a27a",
+          },
+          warning: {
+            main: "#f0a93e",
+          },
+          error: {
+            main: "#cc5b5b",
+          },
+          background: {
+            default: "#f5f7fa",
+            paper: "#ffffff",
+          },
+          text: {
+            primary: "#1a1d23",
+            secondary: "#6c757d",
+          },
+        },
+        shape: {
+          borderRadius: 10,
+        },
+        typography: {
+          fontFamily: '"Roboto", sans-serif',
+          h4: { fontWeight: 700 },
+          h5: { fontWeight: 700 },
+          h6: { fontWeight: 700 },
+          button: {
+            textTransform: "none",
+            fontWeight: 600,
+          },
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 6,
+                boxShadow: "none",
+              },
+              contained: {
+                "&:hover": {
+                  boxShadow: "none",
+                },
+              },
+            },
+          },
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                boxShadow: "0 1px 3px rgba(26, 29, 35, 0.08)",
+              },
+            },
+          },
+          MuiChip: {
+            styleOverrides: {
+              root: {
+                borderRadius: 6,
+                fontWeight: 500,
+              },
+            },
+          },
+          MuiTextField: {
+            defaultProps: {
+              size: "small",
+              variant: "outlined",
+            },
+          },
+        },
+      });
+
+      function statusStyles(status) {
+        const map = {
+          Завершена: { bgcolor: "#cfe7c9", color: "#4c8f57" },
+          "Новая": { bgcolor: "#cce0f5", color: "#3f78b8" },
+          "Выведена в ПРОМ": { bgcolor: "#d8bce7", color: "#7a46a8" },
+          "Установка на ПРОМ": { bgcolor: "#fff2b8", color: "#f09a1a" },
+          Ошибка: { bgcolor: "#e9a3a3", color: "#b03f3f" },
+          Отменена: { bgcolor: "#e0e0e0", color: "#666666" },
+        };
+        return map[status] || { bgcolor: "#e9edf3", color: "#637089" };
+      }
+
+      function StatusChip({ status }) {
+        const styles = statusStyles(status);
+        return (
+          <Chip
+            label={status}
+            size="small"
+            sx={{
+              minWidth: 164,
+              justifyContent: "center",
+              bgcolor: styles.bgcolor,
+              color: styles.color,
+              fontWeight: 600,
+            }}
+          />
+        );
+      }
+
+      function MetricCard({ label, value, tone = "default" }) {
+        const tones = {
+          default: { bgcolor: "#ffffff", borderColor: "#d7dce5" },
+          success: { bgcolor: "#eff7ef", borderColor: "#cfe3d1" },
+          warning: { bgcolor: "#fff8ea", borderColor: "#f1dcaa" },
+        };
+
+        return (
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.5,
+              borderRadius: 2,
+              minHeight: 82,
+              bgcolor: tones[tone].bgcolor,
+              borderColor: tones[tone].borderColor,
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              {label}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.75, fontWeight: 700, wordBreak: "break-word" }}>
+              {value}
+            </Typography>
+          </Paper>
+        );
+      }
+
+      function SidebarItem({ label, active = false }) {
+        return (
+          <Box
+            sx={{
+              px: 2.5,
+              py: 1.4,
+              mx: 1,
+              borderRadius: 1,
+              color: active ? "#5bd0a8" : "rgba(255,255,255,0.72)",
+              bgcolor: active ? "rgba(255,255,255,0.06)" : "transparent",
+              borderLeft: active ? "3px solid #5bd0a8" : "3px solid transparent",
+              fontWeight: active ? 600 : 500,
+              cursor: "default",
+            }}
+          >
+            {label}
+          </Box>
+        );
+      }
+
+      function ShellSection({ title, children }) {
+        return (
+          <Paper
+            sx={{
+              p: { xs: 2, md: 2.5 },
+              borderRadius: 3,
+              bgcolor: "#edf1fb",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ mb: 2, color: "primary.main", display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <span className="material-icons" style={{ fontSize: 20 }}>
+                expand_less
+              </span>
+              {title}
+            </Typography>
+            {children}
+          </Paper>
+        );
+      }
+
+      function FieldGrid({ items }) {
+        return (
+          <Grid container spacing={2}>
+            {items.map((item) => (
+              <Grid key={item.label} item xs={12} md={item.full ? 12 : 6}>
+                <TextField
+                  fullWidth
+                  label={item.label}
+                  value={item.value}
+                  InputProps={{ readOnly: true }}
+                  sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#ffffff" } }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        );
+      }
+
+      function HostActionBar({ context, compact = false }) {
+        return (
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={1.25}
+            alignItems={{ xs: "stretch", md: "center" }}
+            justifyContent="space-between"
+            sx={{ mb: compact ? 2 : 3 }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Button variant="contained" color="primary" sx={{ minWidth: 154 }}>
+                Окно агента
+              </Button>
+              {context.previewKind === "detail" || context.previewKind === "failed" ? (
+                <>
+                  <Button variant="contained" color="secondary">
+                    Применить изменения
+                  </Button>
+                  <Button variant="contained" color="primary">
+                    Получить отчёт
+                  </Button>
+                </>
+              ) : null}
+              {context.previewKind === "edit" ? (
+                <>
+                  <Button variant="contained" color="error">
+                    Удалить
+                  </Button>
+                  <Button variant="contained" color="primary">
+                    Редактировать
+                  </Button>
+                  <Button variant="contained" color="secondary">
+                    Запустить симуляцию
+                  </Button>
+                </>
+              ) : null}
+            </Stack>
+            <Chip
+              label={context.eligible ? "БТ доступно в панели" : "БТ недоступно в панели"}
+              sx={{
+                bgcolor: context.eligible ? "#e8f3ea" : "#f3f4f6",
+                color: context.eligible ? "#4c8f57" : "#6f7785",
+                fontWeight: 600,
+              }}
+            />
+          </Stack>
+        );
+      }
+
+      function SimulationListPreview({ context }) {
+        return (
+          <Stack spacing={3}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
+              spacing={2}
+            >
+              <Box>
+                <Typography variant="h4" sx={{ color: "text.primary", mb: 1 }}>
+                  Симуляции
+                </Typography>
+                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                  <Typography sx={{ color: "primary.main", fontWeight: 700, borderBottom: "3px solid #2c4f7c", pb: 1 }}>
+                    Кредитные карты
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ pb: 1 }}>
+                    Потребительские кредиты
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ pb: 1 }}>
+                    POS кредиты
+                  </Typography>
+                </Stack>
+              </Box>
+              <Button variant="contained" color="primary">
+                Окно агента
+              </Button>
+            </Stack>
+
+            <Paper sx={{ overflow: "hidden", borderRadius: 3 }}>
+              <Stack direction="row" justifyContent="flex-end" spacing={3} sx={{ px: 3, py: 2, color: "primary.main", fontWeight: 700 }}>
+                <Typography variant="body2">СТОЛБЦЫ</Typography>
+                <Typography variant="body2">ФИЛЬТРЫ</Typography>
+                <Typography variant="body2">ВЫСОТА СТРОКИ</Typography>
+              </Stack>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: "#edf1fb" }}>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Название</TableCell>
+                    <TableCell>Режим</TableCell>
+                    <TableCell>Статус</TableCell>
+                    <TableCell>Этап</TableCell>
+                    <TableCell>Дата обновления</TableCell>
+                    <TableCell>Автор</TableCell>
+                    <TableCell>Создана</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {simulationRows.map((row) => (
+                    <TableRow key={row.id} hover selected={context.simulationId === row.id}>
+                      <TableCell sx={{ color: "primary.main", fontWeight: 700 }}>{row.id}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.mode}</TableCell>
+                      <TableCell>
+                        <StatusChip status={row.status} />
+                      </TableCell>
+                      <TableCell>{row.stage}</TableCell>
+                      <TableCell>{row.updatedAt}</TableCell>
+                      <TableCell>{row.author}</TableCell>
+                      <TableCell>{row.createdAt}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          </Stack>
+        );
+      }
+
+      function SimulationDetailPreview({ context, failed = false }) {
+        return (
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              <Button variant="contained" color="primary" sx={{ bgcolor: "#ffffff", color: "primary.main", border: "1px solid #d7dce5" }}>
+                Основная информация
+              </Button>
+              <Button variant="contained" color="inherit" sx={{ bgcolor: "#ffffff", color: "#8b9098", border: "1px solid #d7dce5" }}>
+                Итоги симуляции
+              </Button>
+            </Stack>
+
+            <HostActionBar context={context} />
+
+            {failed ? (
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                Окно агента остаётся доступным, но действие «Сформировать БТ» в панели скрыто до завершения симуляции.
+              </Alert>
+            ) : null}
+
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems={{ xs: "flex-start", md: "center" }}>
+              <Typography variant="h4">{context.pageTitle}</Typography>
+              <StatusChip status={failed ? "Новая" : "Завершена"} />
+            </Stack>
+
+            <Grid container spacing={1.5}>
+              {steps.map((step, index) => (
+                <Grid key={step} item xs={12} md={6} lg={2}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      height: "100%",
+                      borderRadius: 2.5,
+                      borderColor: failed && index > 1 ? "#e4e7ed" : "#d3dfd0",
+                      bgcolor: failed && index > 1 ? "#fbfbfc" : "#ffffff",
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                      <Avatar
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          bgcolor: failed && index > 1 ? "#d9dee8" : "#4d8f57",
+                          fontSize: 14,
+                        }}
+                      >
+                        {failed && index > 1 ? "…" : "✓"}
+                      </Avatar>
+                      <Typography variant="body2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+                        {step}
+                      </Typography>
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      {failed && index > 1 ? "этап ещё не достигнут" : "с: 11:04 24.04.2026"}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <ShellSection title="Основная информация">
+              <FieldGrid
+                items={[
+                  { label: "Пространство симуляции *", value: "Кредитные карты" },
+                  { label: "Название симуляции *", value: failed ? "dfgsdg" : "157-1" },
+                  { label: "Режим симуляции *", value: "Изменение риск-параметров" },
+                  { label: "Описание симуляции", value: failed ? "" : "Проверка обновлённых порогов PD_LIMIT" },
+                  { label: "Версия сборки стратегии *", value: "actual" },
+                  { label: "ID ФП Симуляции", value: failed ? "f8b627b2-7dd0-42ce-81e1-34e008f9e957" : "e19d4781-ae1f-4358-a920-8719bca501f1" },
+                ]}
+              />
+            </ShellSection>
+
+            <ShellSection title="Фильтрация выборки">
+              <FieldGrid
+                items={[
+                  { label: "Дата начала *", value: "19.03.2026" },
+                  { label: "Дата завершения *", value: "23.04.2026" },
+                  { label: "Количество отбираемых записей", value: "10", full: true },
+                ]}
+              />
+            </ShellSection>
+          </Stack>
+        );
+      }
+
+      function SimulationResultsPreview({ context }) {
+        return (
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              <Button variant="contained" color="inherit" sx={{ bgcolor: "#ffffff", color: "#8b9098", border: "1px solid #d7dce5" }}>
+                Основная информация
+              </Button>
+              <Button variant="contained" color="primary" sx={{ bgcolor: "#ffffff", color: "primary.main", border: "1px solid #d7dce5" }}>
+                Итоги симуляции
+              </Button>
+            </Stack>
+
+            <HostActionBar context={context} compact />
+
+            <Typography variant="h4">{context.pageTitle}</Typography>
+
+            <ShellSection title="Результаты симуляции">
+              <FieldGrid
+                items={[
+                  { label: "Ссылка на БТ *", value: "" },
+                  { label: "Дата и время начала релиза", value: "" },
+                  { label: "Описание релиза *", value: "", full: true },
+                  { label: "Эффекты релиза *", value: "", full: true },
+                  { label: "Описание итогов", value: "", full: true },
+                ]}
+              />
+              <Alert severity="success" sx={{ mt: 2, borderRadius: 2 }}>
+                В этом контексте точка входа в окно агента остаётся на той же странице, а готовая ссылка `btUrl` позже появится в форме итогов.
+              </Alert>
+            </ShellSection>
+          </Stack>
+        );
+      }
+
+      function SimulationEditPreview({ context }) {
+        return (
+          <Stack spacing={3}>
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              <Button variant="contained" color="primary" sx={{ bgcolor: "#ffffff", color: "primary.main", border: "1px solid #d7dce5" }}>
+                Основная информация
+              </Button>
+            </Stack>
+
+            <HostActionBar context={context} />
+
+            <ShellSection title="Основная информация">
+              <FieldGrid
+                items={[
+                  { label: "Пространство симуляции *", value: "Кредитные карты" },
+                  { label: "Название симуляции *", value: "157-1" },
+                  { label: "Режим симуляции *", value: "Изменение риск-параметров" },
+                  { label: "Описание симуляции", value: "Проверка обновлённых порогов PD_LIMIT" },
+                  { label: "Версия сборки стратегии *", value: "actual" },
+                ]}
+              />
+            </ShellSection>
+
+            <ShellSection title="Категория клиента">
+              <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap>
+                {[
+                  "Сотрудник Банка",
+                  "Сотрудники аккредитованных организаций",
+                  "КСП",
+                  "Пенсионные клиенты",
+                  "Категория не определена",
+                ].map((item) => (
+                  <Chip key={item} label={item} sx={{ bgcolor: "#ffffff", border: "1px solid #dae0ea" }} />
+                ))}
+              </Stack>
+            </ShellSection>
+          </Stack>
+        );
+      }
+
+      function PagePreview({ context }) {
+        if (context.previewKind === "list") {
+          return <SimulationListPreview context={context} />;
+        }
+
+        if (context.previewKind === "detail") {
+          return <SimulationDetailPreview context={context} />;
+        }
+
+        if (context.previewKind === "results") {
+          return <SimulationResultsPreview context={context} />;
+        }
+
+        if (context.previewKind === "edit") {
+          return <SimulationEditPreview context={context} />;
+        }
+
+        return <SimulationDetailPreview context={context} failed />;
+      }
+
+      function AgentDrawer({ context, open, onClose }) {
+        return (
+          <Drawer
+            anchor="right"
+            open={open}
+            variant="persistent"
+            sx={{
+              flexShrink: 0,
+              "& .MuiDrawer-paper": {
+                width: { xs: "100%", lg: drawerWidth },
+                p: 2.5,
+                borderLeft: "1px solid #dfe4eb",
+                bgcolor: "#f8fafc",
+                backgroundImage: "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(244,247,251,0.96) 100%)",
+              },
+            }}
+          >
+            <Stack spacing={2.5} sx={{ height: "100%" }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Box>
+                  <Typography variant="overline" sx={{ color: "primary.main", letterSpacing: 0.8, fontWeight: 700 }}>
+                    Неблокирующая правая панель
+                  </Typography>
+                  <Typography variant="h6">Окно агента</Typography>
+                </Box>
+                <Button variant="text" color="inherit" onClick={onClose}>
+                  Свернуть
+                </Button>
+              </Stack>
+
+              <Alert severity={context.eligible ? "success" : "info"} sx={{ borderRadius: 2 }}>
+                {context.eligible
+                  ? "Пользователь может открыть окно прямо из этого состояния страницы и увидеть доступное действие «Сформировать БТ»."
+                  : "Окно агента открывается и в этом состоянии, но кнопка «Сформировать БТ» внутри панели скрыта."}
+              </Alert>
+
+              <Grid container spacing={1.5}>
+                <Grid item xs={12}>
+                  <MetricCard label="Контекст страницы" value={context.label} tone={context.eligible ? "success" : "warning"} />
+                </Grid>
+                <Grid item xs={12}>
+                  <MetricCard label="Текущий маршрут" value={context.route} />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={12}>
+                  <MetricCard label="session_id" value={sessionId} />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={12}>
+                  <MetricCard label="Старт диалога" value={dialogStartedAt} />
+                </Grid>
+              </Grid>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2.5 }}>
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Что уходит в REST при открытии
+                  </Typography>
+                  <Paper
+                    sx={{
+                      p: 1.75,
+                      bgcolor: "#1a1d23",
+                      color: "#f3f5f8",
+                      borderRadius: 2,
+                      fontFamily: '"Cascadia Code", monospace',
+                      fontSize: 13,
+                      overflowX: "auto",
+                    }}
+                  >
+                    POST /dialog/session
+                    {"\n"}
+                    {`{`}
+                    {"\n"}
+                    {`  "session_id": "${sessionId}"`}
+                    {"\n"}
+                    {`}`}
+                  </Paper>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Chip label="Только session_id" color="primary" variant="outlined" />
+                    <Chip label="Без contextPrompt" variant="outlined" />
+                    <Chip label="Без клиентской истории" variant="outlined" />
+                  </Stack>
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2.5 }}>
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Поведение панели при навигации
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2">Маршрут страницы</Typography>
+                      <Chip size="small" label="Не меняется" sx={{ bgcolor: "#edf3fb", color: "#2c4f7c" }} />
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2">История диалога</Typography>
+                      <Chip size="small" label="Восстанавливается по session_id" sx={{ bgcolor: "#edf3fb", color: "#2c4f7c" }} />
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Typography variant="body2">Сформировать БТ</Typography>
+                      <Chip
+                        size="small"
+                        label={context.btState}
+                        sx={{
+                          bgcolor: context.eligible ? "#e8f3ea" : "#f2f3f5",
+                          color: context.eligible ? "#4c8f57" : "#6f7785",
+                        }}
+                      />
+                    </Stack>
+                  </Stack>
+                  {!context.eligible ? <LinearProgress variant="determinate" value={46} sx={{ borderRadius: 99 }} /> : null}
+                  <Typography variant="body2" color="text.secondary">
+                    {context.stateReason}
+                  </Typography>
+                </Stack>
+              </Paper>
+
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2.5, bgcolor: "#ffffff" }}>
+                <Stack spacing={1}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Что важно для handoff
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Точка входа визуально живёт в существующем разделе симуляций и не уводит пользователя на отдельный экран.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Открытая панель не накрывает интерфейс модальной подложкой, поэтому список, деталка и форма редактирования остаются интерактивными.
+                  </Typography>
+                </Stack>
+              </Paper>
+
+              <Box sx={{ flexGrow: 1 }} />
+
+              <Button variant="contained" color="primary" fullWidth>
+                {context.eligible ? "Сформировать БТ доступно в этом контексте" : "В этом контексте доступен только вход в диалог"}
+              </Button>
+            </Stack>
+          </Drawer>
+        );
+      }
+
+      function App() {
+        const [contextId, setContextId] = React.useState("detail");
+        const [drawerOpen, setDrawerOpen] = React.useState(true);
+        const context = contexts.find((item) => item.id === contextId);
+
+        return (
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Box sx={{ display: "flex", minHeight: "100%" }}>
+              <Box
+                sx={{
+                  width: 240,
+                  bgcolor: "#1a1d23",
+                  color: "#ffffff",
+                  display: { xs: "none", md: "flex" },
+                  flexDirection: "column",
+                  borderRight: "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <Box sx={{ p: 2.5, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <Typography variant="h6">Система внедрений</Typography>
+                </Box>
+                <Box sx={{ py: 1.5 }}>
+                  <SidebarItem label="Пилоты" />
+                  <SidebarItem label="Пересечения" />
+                  <SidebarItem label="История изменений" />
+                  <SidebarItem label="Симуляции" active />
+                  <SidebarItem label="Метрики" />
+                </Box>
+                <Box sx={{ mt: "auto", pb: 2 }}>
+                  <SidebarItem label="База знаний" />
+                  <SidebarItem label="Поддержка" />
+                </Box>
+              </Box>
+
+              <Box
+                sx={{
+                  flexGrow: 1,
+                  minWidth: 0,
+                  pr: { xs: 0, lg: drawerOpen ? `${drawerWidth}px` : 0 },
+                  transition: "padding-right 0.25s ease",
+                }}
+              >
+                <AppBar position="sticky" elevation={0} color="inherit" sx={{ borderBottom: "1px solid #e3e7ee", bgcolor: "rgba(255,255,255,0.98)" }}>
+                  <Toolbar sx={{ minHeight: 78, gap: 2 }}>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        delivery prototype / simulation-bt-agent / agent-entrypoint
+                      </Typography>
+                      <Typography variant="h4" sx={{ mt: 0.5 }}>
+                        Прототип точки входа в окно агента
+                      </Typography>
+                    </Box>
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        px: 2,
+                        py: 1.25,
+                        borderRadius: 1.5,
+                        display: { xs: "none", sm: "flex" },
+                        alignItems: "center",
+                        gap: 1.25,
+                      }}
+                    >
+                      <span className="material-icons" style={{ fontSize: 18, color: "#6c757d" }}>
+                        apartment
+                      </span>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        ДРРБ
+                      </Typography>
+                    </Paper>
+                    <Stack direction="row" spacing={1.25} alignItems="center">
+                      <Avatar sx={{ bgcolor: "#e8edf4", color: "#2c4f7c" }}>М</Avatar>
+                      <Typography variant="body2" sx={{ fontWeight: 600, display: { xs: "none", md: "block" } }}>
+                        Матаков Мирослав Полад Оглы
+                      </Typography>
+                    </Stack>
+                  </Toolbar>
+                </AppBar>
+
+                <Box sx={{ p: { xs: 2, md: 3 } }}>
+                  <Stack spacing={3}>
+                    <Card sx={{ borderRadius: 3 }}>
+                      <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+                        <Stack spacing={2}>
+                          <Stack
+                            direction={{ xs: "column", md: "row" }}
+                            justifyContent="space-between"
+                            alignItems={{ xs: "flex-start", md: "center" }}
+                            spacing={2}
+                          >
+                            <Box>
+                              <Typography variant="h6">Контекст запуска</Typography>
+                              <Typography color="text.secondary">
+                                Один и тот же `session_id` сопровождает окно агента между списком, деталкой, вкладкой итогов и редактированием.
+                              </Typography>
+                            </Box>
+                            <Button variant={drawerOpen ? "outlined" : "contained"} onClick={() => setDrawerOpen((value) => !value)}>
+                              {drawerOpen ? "Свернуть панель агента" : "Открыть панель агента"}
+                            </Button>
+                          </Stack>
+                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            {contexts.map((item) => (
+                              <Button
+                                key={item.id}
+                                variant={item.id === contextId ? "contained" : "outlined"}
+                                color={item.eligible ? "primary" : "inherit"}
+                                onClick={() => setContextId(item.id)}
+                              >
+                                {item.label}
+                              </Button>
+                            ))}
+                          </Stack>
+                          <Alert severity={context.eligible ? "success" : "info"} sx={{ borderRadius: 2 }}>
+                            {context.eligible
+                              ? `Текущий контекст: ${context.label}. В панели можно показать действие «Сформировать БТ», но маршрут страницы не меняется.`
+                              : `Текущий контекст: ${context.label}. Панель агента открывается, но действие «Сформировать БТ» скрыто.`}
+                          </Alert>
+                          <Grid container spacing={1.5}>
+                            <Grid item xs={12} md={4}>
+                              <MetricCard label="Маршрут" value={context.route} />
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                              <MetricCard label="Точка запуска" value={context.tabLabel} />
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                              <MetricCard label="Состояние БТ в панели" value={context.btState} tone={context.eligible ? "success" : "warning"} />
+                            </Grid>
+                          </Grid>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+
+                    <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, minHeight: 720 }}>
+                      <PagePreview context={context} />
+                    </Paper>
+                  </Stack>
+                </Box>
+              </Box>
+
+              <AgentDrawer context={context} open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+            </Box>
+          </ThemeProvider>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

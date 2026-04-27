@@ -2,6 +2,7 @@
 
 Статус: **импортировано как existing baseline coverage**  
 Feature: `features/simulations/feature.md`  
+Порядок в feature requirements: `03`  
 Дата обновления: `2026-04-24`
 
 ## Назначение
@@ -15,6 +16,7 @@ Feature: `features/simulations/feature.md`
 - `context/source-materials/legacy/changeswork-full/planning/mvp/current/tasks/legacy/mvp_tasks_simulation_form.md`
 
 ## Пакеты требований
+- `../../requirements.md`
 - `requirements/frontend.md`
 - `requirements/backend.md`
 

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulation-bt-agent / bt-publication / delivery prototype</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js"></script>
+    <script src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at left bottom, rgba(193, 123, 20, 0.1), transparent 28%),
+          linear-gradient(180deg, #fcfaf5 0%, #f3efe7 100%);
+        font-family: "Segoe UI", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const {
+        Alert,
+        AppBar,
+        Box,
+        Button,
+        Card,
+        CardContent,
+        Chip,
+        Container,
+        CssBaseline,
+        Divider,
+        Drawer,
+        Grid,
+        Link,
+        Paper,
+        Stack,
+        TextField,
+        Toolbar,
+        Typography,
+        createTheme,
+        ThemeProvider,
+      } = MaterialUI;
+
+      const contexts = [
+        {
+          id: "eligible",
+          label: "Подходящая завершённая симуляция",
+          simulationNumber: "SIM-2026-0416",
+          eligible: true,
+          status: "Завершена",
+          promote: "Доступен",
+          businessGoal: "Рост одобрения по кредитным картам без выхода за лимит потерь",
+          btLink: "",
+          riskParameters: [
+            { name: "PD_LIMIT", toBe: "0.42" },
+            { name: "UTIL_SEGMENT_CAP", toBe: "125000" },
+            { name: "TURNOVER_GATE", toBe: "1" },
+          ],
+        },
+        {
+          id: "list",
+          label: "Список симуляций",
+          simulationNumber: "Нет конкретной симуляции",
+          eligible: false,
+          status: "Не применимо",
+          promote: "Недоступен",
+          businessGoal: "",
+          btLink: "",
+          riskParameters: [],
+        },
+        {
+          id: "failed",
+          label: "Незавершённая симуляция",
+          simulationNumber: "SIM-2026-0392",
+          eligible: false,
+          status: "Выполняется",
+          promote: "Недоступен",
+          businessGoal: "Уточняется",
+          btLink: "https://confluence.example.local/pages/viewpage.action?pageId=1000182",
+          riskParameters: [
+            { name: "PD_LIMIT", toBe: "0.38" },
+            { name: "UTIL_SEGMENT_CAP", toBe: "98000" },
+          ],
+        },
+      ];
+
+      const currentUser = "Реутов Иван Николаевич";
+
+      const theme = createTheme({
+        palette: {
+          primary: {
+            main: "#9a5d12",
+          },
+          success: {
+            main: "#2f8f60",
+          },
+          background: {
+            default: "#f3efe7",
+            paper: "#ffffff",
+          },
+          text: {
+            primary: "#203047",
+            secondary: "#67768c",
+          },
+        },
+        shape: {
+          borderRadius: 16,
+        },
+        typography: {
+          fontFamily: '"Segoe UI", "Inter", sans-serif',
+          button: {
+            textTransform: "none",
+            fontWeight: 700,
+          },
+        },
+      });
+
+      function buildPrompt(context) {
+        if (!context.eligible) {
+          return "";
+        }
+        const params = context.riskParameters
+          .map((item) => `${item.name} на ${item.toBe}`)
+          .join(" и ");
+        return (
+          `Меня зовут ${currentUser}. Поменяй значение риск-параметра ${params}.\n` +
+          `Бизнес-цель -- ${context.businessGoal || ""}`
+        );
+      }
+
+      function App() {
+        const [contextId, setContextId] = React.useState("eligible");
+        const [draft, setDraft] = React.useState("");
+        const [draftInserted, setDraftInserted] = React.useState(false);
+        const [publishedLink, setPublishedLink] = React.useState("");
+        const context = contexts.find((item) => item.id === contextId);
+
+        React.useEffect(() => {
+          setDraft("");
+          setDraftInserted(false);
+          setPublishedLink(context.btLink);
+        }, [contextId]);
+
+        function handleInsertDraft() {
+          setDraft(buildPrompt(context));
+          setDraftInserted(true);
+        }
+
+        function handlePublishMock() {
+          setPublishedLink("https://confluence.example.local/pages/viewpage.action?pageId=1002451");
+        }
+
+        return (
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Box sx={{ minHeight: "100%" }}>
+              <AppBar position="sticky" elevation={0} color="transparent" sx={{ backdropFilter: "blur(12px)" }}>
+                <Toolbar sx={{ py: 1.5, gap: 2 }}>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="overline" sx={{ letterSpacing: 1.4, color: "primary.main", fontWeight: 800 }}>
+                      Simulation BT Agent
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 800 }}>
+                      Прототип сценария «Сформировать БТ»
+                    </Typography>
+                  </Box>
+                  <Chip label="Редактируемый черновик" color="primary" variant="outlined" />
+                  <Chip label="Без автоотправки" color="warning" variant="outlined" />
+                </Toolbar>
+              </AppBar>
+
+              <Container maxWidth={false} sx={{ px: { xs: 2, md: 4 }, py: 2 }}>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} lg={8}>
+                    <Stack spacing={3}>
+                      <Card>
+                        <CardContent sx={{ p: 3 }}>
+                          <Stack spacing={2}>
+                            <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
+                              <Box>
+                                <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                                  Контекст страницы симуляции
+                                </Typography>
+                                <Typography color="text.secondary">
+                                  Кнопка БТ доступна только для конкретной успешно завершённой симуляции с опцией вывода в ПРОМ.
+                                </Typography>
+                              </Box>
+                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {contexts.map((item) => (
+                                  <Button
+                                    key={item.id}
+                                    variant={item.id === contextId ? "contained" : "outlined"}
+                                    onClick={() => setContextId(item.id)}
+                                  >
+                                    {item.label}
+                                  </Button>
+                                ))}
+                              </Stack>
+                            </Stack>
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} md={4}>
+                                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Симуляция
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
+                                    {context.simulationNumber}
+                                  </Typography>
+                                </Paper>
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Статус
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
+                                    {context.status}
+                                  </Typography>
+                                </Paper>
+                              </Grid>
+                              <Grid item xs={12} md={4}>
+                                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Вывод в ПРОМ
+                                  </Typography>
+                                  <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
+                                    {context.promote}
+                                  </Typography>
+                                </Paper>
+                              </Grid>
+                            </Grid>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardContent sx={{ p: 3 }}>
+                          <Stack spacing={2}>
+                            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                              Данные страницы для черновика запроса
+                            </Typography>
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} md={7}>
+                                <Paper
+                                  variant="outlined"
+                                  sx={{
+                                    p: 2,
+                                    borderRadius: 4,
+                                    minHeight: 250,
+                                    background: "linear-gradient(180deg, #fcfcfd 0%, #f8f6f1 100%)",
+                                  }}
+                                >
+                                  <Stack spacing={1.25}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                                      Риск-параметры
+                                    </Typography>
+                                    {context.riskParameters.length === 0 ? (
+                                      <Alert severity="info" sx={{ borderRadius: 3 }}>
+                                        Для текущего контекста данные черновика не используются.
+                                      </Alert>
+                                    ) : (
+                                      context.riskParameters.map((item) => (
+                                        <Paper
+                                          key={item.name}
+                                          variant="outlined"
+                                          sx={{
+                                            px: 1.5,
+                                            py: 1.25,
+                                            borderRadius: 3,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                              {item.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                              TO BE
+                                            </Typography>
+                                          </Box>
+                                          <Chip label={item.toBe} color="primary" variant="outlined" />
+                                        </Paper>
+                                      ))
+                                    )}
+                                  </Stack>
+                                </Paper>
+                              </Grid>
+                              <Grid item xs={12} md={5}>
+                                <Paper
+                                  variant="outlined"
+                                  sx={{
+                                    p: 2,
+                                    borderRadius: 4,
+                                    minHeight: 250,
+                                    background: "linear-gradient(180deg, #fffefb 0%, #fff8ea 100%)",
+                                  }}
+                                >
+                                  <Stack spacing={1.5}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                                      Бизнес-цель и результат
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {context.businessGoal || "Бизнес-цель не указана в текущем контексте"}
+                                    </Typography>
+                                    <Divider />
+                                    <Typography variant="caption" color="text.secondary">
+                                      Ссылка на БТ в симуляции
+                                    </Typography>
+                                    {publishedLink ? (
+                                      <Link href={publishedLink} underline="hover" target="_blank" rel="noreferrer">
+                                        {publishedLink}
+                                      </Link>
+                                    ) : (
+                                      <Typography variant="body2" color="text.secondary">
+                                        Пока не заполнена
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                </Paper>
+                              </Grid>
+                            </Grid>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </Container>
+
+              <Drawer
+                anchor="right"
+                open
+                variant="persistent"
+                sx={{
+                  width: 450,
+                  flexShrink: 0,
+                  "& .MuiDrawer-paper": {
+                    width: 450,
+                    p: 2.5,
+                    borderLeft: "1px solid rgba(154, 93, 18, 0.12)",
+                    background: "linear-gradient(180deg, #ffffff 0%, #fdfaf3 100%)",
+                  },
+                }}
+              >
+                <Stack spacing={2} sx={{ height: "100%" }}>
+                  <Box>
+                    <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
+                      Правая боковая панель
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                      Действия по БТ
+                    </Typography>
+                  </Box>
+
+                  <Alert severity={context.eligible ? "success" : "warning"} sx={{ borderRadius: 4 }}>
+                    {context.eligible
+                      ? "Для текущей страницы кнопка «Сформировать БТ» доступна."
+                      : "Для текущей страницы BT-сценарий недоступен, но окно агента остаётся открытым."}
+                  </Alert>
+
+                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4 }}>
+                    <Stack spacing={1.25}>
+                      <Button variant="contained" disabled={!context.eligible} onClick={handleInsertDraft}>
+                        Сформировать БТ
+                      </Button>
+                      <Typography variant="caption" color="text.secondary">
+                        Кнопка только вставляет черновик в поле ввода. Отправка агенту выполняется отдельно, вручную.
+                      </Typography>
+                    </Stack>
+                  </Paper>
+
+                  {draftInserted && (
+                    <Alert severity="info" sx={{ borderRadius: 4 }}>
+                      Черновик подготовлен локально на фронте. Он ещё не отправлен агенту и может быть изменён как угодно.
+                    </Alert>
+                  )}
+
+                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4 }}>
+                    <Stack spacing={1.25}>
+                      <TextField
+                        label="Редактируемый черновик запроса"
+                        multiline
+                        minRows={8}
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                        placeholder="Нажмите «Сформировать БТ», чтобы вставить черновик запроса"
+                        helperText="Пользователь может править текст без ограничений или вообще не отправлять его."
+                      />
+                      <Stack direction="row" spacing={1}>
+                        <Button variant="contained" disabled={!draft}>
+                          Отправить агенту
+                        </Button>
+                        <Button variant="outlined" onClick={() => setDraft("")}>
+                          Очистить
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </Paper>
+
+                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4, bgcolor: "#fffaf0" }}>
+                    <Stack spacing={1.25}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                        Успешная публикация
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        После ответа агента с `btUrl` ссылка сохраняется в симуляции и отображается в окне.
+                      </Typography>
+                      <Button variant="outlined" onClick={handlePublishMock} disabled={!context.eligible}>
+                        Имитировать успешный ответ с btUrl
+                      </Button>
+                      {publishedLink && (
+                        <Paper variant="outlined" sx={{ p: 1.25, borderRadius: 3 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            btUrl
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Link href={publishedLink} underline="hover" target="_blank" rel="noreferrer">
+                              {publishedLink}
+                            </Link>
+                          </Box>
+                        </Paper>
+                      )}
+                    </Stack>
+                  </Paper>
+                </Stack>
+              </Drawer>
+            </Box>
+          </ThemeProvider>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

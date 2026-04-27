@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulation-bt-agent / feature prototype</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js"></script>
+    <script src="https://unpkg.com/@emotion/react@11/dist/emotion-react.umd.min.js"></script>
+    <script src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Roboto", sans-serif;
+        background-color: #f5f7fa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const {
+        Alert,
+        AppBar,
+        Avatar,
+        Box,
+        Button,
+        Chip,
+        CssBaseline,
+        Divider,
+        Drawer,
+        IconButton,
+        LinearProgress,
+        Paper,
+        Stack,
+        Tab,
+        Tabs,
+        Table,
+        TableBody,
+        TableCell,
+        TableContainer,
+        TableHead,
+        TableRow,
+        TextField,
+        Toolbar,
+        Tooltip,
+        Typography,
+        createTheme,
+        ThemeProvider,
+      } = MaterialUI;
+
+      const DRAWER_WIDTH = 400;
+      const AGENT_BUTTON_LABEL = "AI-агент RAIN";
+      const USER_NAME = "Матаков Мираслав Полад Оглы";
+      const USER_SHORT = "ММ";
+
+      const baseSimulations = [
+        {
+          id: "SIM-CC-148",
+          name: "157-1",
+          statusKey: "completed",
+          statusLabel: "Завершена",
+          stage: "Формирование отчета",
+          author: "Меринович К.Ю.",
+          createdAt: "11:04 24.04.2026",
+          updatedAt: "11:14 24.04.2026",
+          simulationMode: "Изменение риск-параметров",
+          promotable: true,
+          releaseStartedAt: "24.04.2026 11:16",
+          btLink: "",
+          description: "Рост одобрения по кредитным картам без выхода за лимит потерь",
+          samplePeriodStart: "19.03.2026",
+          samplePeriodEnd: "23.04.2026",
+          sampleSize: "10",
+          channels: ["DSA", "ВСП", "Веб Сбол", "Телемаркетинг", "Офлайн POS", "МП POS"],
+          categories: [
+            "Сотрудник Банка",
+            "Сотрудник дочерней организации Банка",
+            "Клиенты, получающие пенсию в Сбербанке России",
+          ],
+          riskParameters: [
+            { name: "PD_LIMIT", value: "0.42" },
+            { name: "UTIL_SEGMENT_CAP", value: "125000" },
+            { name: "TURNOVER_GATE", value: "1" },
+          ],
+          steps: [
+            { title: "Подготовка данных", from: "11:04 24.04.2026", to: "11:06 24.04.2026" },
+            { title: "Прогон стратегии на исходных параметрах", from: "11:06 24.04.2026", to: "11:07 24.04.2026" },
+            { title: "Прогон стратегии на изменённых параметрах", from: "11:07 24.04.2026", to: "11:09 24.04.2026" },
+            { title: "Постобработка данных стратегии", from: "11:09 24.04.2026", to: "11:11 24.04.2026" },
+            { title: "Агрегация данных для кредитных карт", from: "11:11 24.04.2026", to: "11:13 24.04.2026" },
+            { title: "Скачивание агрегатов кредитных карт", from: "11:13 24.04.2026", to: "11:14 24.04.2026" },
+            { title: "Формирование отчета", from: "11:14 24.04.2026", to: "11:14 24.04.2026" },
+          ],
+          resultsDescription:
+            "Симуляция завершена. Можно сформировать бизнес-требование на основании итоговых риск-параметров и целей релиза.",
+        },
+        {
+          id: "SIM-CC-147",
+          name: "dfgsdg",
+          statusKey: "draft",
+          statusLabel: "Новая",
+          stage: "Подготовка",
+          author: "Матаков М.П.",
+          createdAt: "16:57 23.04.2026",
+          updatedAt: "16:57 23.04.2026",
+          simulationMode: "Изменение риск-параметров",
+          promotable: false,
+          releaseStartedAt: "",
+          btLink: "",
+          description: "Черновая настройка параметров для новой гипотезы",
+          samplePeriodStart: "01.04.2026",
+          samplePeriodEnd: "22.04.2026",
+          sampleSize: "10",
+          channels: ["Веб Сбол", "Офлайн POS", "ЕРКЦ"],
+          categories: ["Категория не определена"],
+          riskParameters: [
+            { name: "PD_LIMIT", value: "0.38" },
+            { name: "UTIL_SEGMENT_CAP", value: "98000" },
+          ],
+          steps: [],
+          resultsDescription: "Итоги симуляции станут доступны после завершения расчётов и формирования отчета.",
+        },
+        {
+          id: "SIM-CC-146",
+          name: "test23.04-4",
+          statusKey: "promoted",
+          statusLabel: "Выведена в ПРОМ",
+          stage: "Установка риск-параметров",
+          author: "Меринович К.Ю.",
+          createdAt: "13:31 23.04.2026",
+          updatedAt: "14:06 23.04.2026",
+          simulationMode: "Изменение риск-параметров",
+          promotable: false,
+          releaseStartedAt: "23.04.2026 14:06",
+          btLink: "https://confluence.example.local/pages/viewpage.action?pageId=1000182",
+          description: "Параметры уже внедрены в ПРОМ",
+          samplePeriodStart: "15.03.2026",
+          samplePeriodEnd: "23.04.2026",
+          sampleSize: "12",
+          channels: ["DSA", "ВСП"],
+          categories: ["Сотрудник Банка"],
+          riskParameters: [
+            { name: "PD_LIMIT", value: "0.41" },
+            { name: "UTIL_SEGMENT_CAP", value: "120000" },
+          ],
+          steps: [],
+          resultsDescription: "Релиз уже опубликован и ссылка на БТ сохранена в системе.",
+        },
+      ];
+
+      const statusStyles = {
+        completed: { backgroundColor: "#c8e6c9", color: "#2e7d32" },
+        draft: { backgroundColor: "#bbdefb", color: "#1565c0" },
+        promoted: { backgroundColor: "#e1bee7", color: "#6a1b9a" },
+        deploying: { backgroundColor: "#fff3bf", color: "#ef6c00" },
+        error: { backgroundColor: "#ffcdd2", color: "#c62828" },
+      };
+
+      const shellTheme = createTheme({
+        palette: {
+          primary: {
+            main: "#2c4f7c",
+            dark: "#1e3a5f",
+          },
+          secondary: {
+            main: "#4caf50",
+          },
+          background: {
+            default: "#f5f7fa",
+            paper: "#ffffff",
+          },
+          text: {
+            primary: "#1a1d23",
+            secondary: "#6c757d",
+          },
+          success: {
+            main: "#4f8c63",
+          },
+          warning: {
+            main: "#ef9b2d",
+          },
+          error: {
+            main: "#c95a5a",
+          },
+        },
+        shape: {
+          borderRadius: 10,
+        },
+        typography: {
+          fontFamily: '"Roboto", sans-serif',
+          fontSize: 13,
+          h3: { fontWeight: 700, fontSize: "2rem", lineHeight: 1.2 },
+          h4: { fontWeight: 700, fontSize: "1.8rem", lineHeight: 1.2 },
+          h5: { fontWeight: 700, fontSize: "1.45rem", lineHeight: 1.25 },
+          h6: { fontWeight: 600, fontSize: "1rem", lineHeight: 1.3 },
+          button: {
+            textTransform: "none",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+          },
+        },
+        components: {
+          MuiPaper: {
+            styleOverrides: {
+              root: {
+                boxShadow: "0 2px 8px rgba(17, 24, 39, 0.08)",
+              },
+            },
+          },
+          MuiButton: {
+            styleOverrides: {
+              root: {
+                borderRadius: 8,
+                boxShadow: "none",
+                paddingTop: 8,
+                paddingBottom: 8,
+              },
+              contained: {
+                boxShadow: "none",
+                "&:hover": {
+                  boxShadow: "none",
+                },
+              },
+            },
+          },
+          MuiChip: {
+            styleOverrides: {
+              root: {
+                borderRadius: 8,
+                height: 28,
+                fontSize: 12.5,
+              },
+            },
+          },
+          MuiInputBase: {
+            styleOverrides: {
+              root: {
+                fontSize: 14,
+              },
+            },
+          },
+          MuiInputLabel: {
+            styleOverrides: {
+              root: {
+                fontSize: 14,
+              },
+            },
+          },
+        },
+      });
+
+      function formatIcon(name, sx) {
+        return (
+          <Box component="span" className="material-icons" sx={sx}>
+            {name}
+          </Box>
+        );
+      }
+
+      function makeInitialSession() {
+        return {
+          id: "3ccabaf4-7d41-4b91-a020-a6f7547f11d2",
+          startedAt: "27.04.2026 12:06:14",
+          open: false,
+          loading: false,
+          error: "",
+          draft: "",
+          messages: [
+            {
+              id: "sys-1",
+              role: "assistant",
+              text:
+                "Здравствуйте. Я RAIN и могу продолжить текущую сессию по `session_id`, подсказать по симуляции и помочь подготовить БТ, если контекст страницы подходит.",
+            },
+          ],
+        };
+      }
+
+      function App() {
+        const [page, setPage] = React.useState("list");
+        const [selectedId, setSelectedId] = React.useState("SIM-CC-148");
+        const [spaceTab, setSpaceTab] = React.useState("cards");
+        const [detailTab, setDetailTab] = React.useState("info");
+        const [simulations, setSimulations] = React.useState(baseSimulations);
+        const [agent, setAgent] = React.useState(makeInitialSession());
+        const [sessionCounter, setSessionCounter] = React.useState(1);
+        const [statusDetailsOpen, setStatusDetailsOpen] = React.useState(false);
+
+        const selectedSimulation = simulations.find((item) => item.id === selectedId) || simulations[0];
+        const currentContext = getContext(page, selectedSimulation, detailTab);
+
+        const pageTitle =
+          page === "list"
+            ? "Симуляции"
+            : detailTab === "results"
+              ? `Итоги симуляции ${selectedSimulation.id}`
+              : selectedSimulation.id;
+
+        function getContext(pageName, simulation, activeTab) {
+          if (pageName === "list") {
+            return {
+              route: "/simulations",
+              label: "Список симуляций",
+              eligible: false,
+              reason: "Нет конкретной симуляции",
+            };
+          }
+          if (pageName === "edit") {
+            return {
+              route: `/simulations/${simulation.id}/edit`,
+              label: "Форма редактирования",
+              eligible: simulation.promotable,
+              reason: simulation.promotable
+                ? "Редактирование завершённой симуляции сохраняет контекст для БТ"
+                : "Симуляция ещё не завершена",
+            };
+          }
+          return {
+            route:
+              activeTab === "results"
+                ? `/simulations/${simulation.id}/results`
+                : `/simulations/${simulation.id}`,
+            label: activeTab === "results" ? "Вкладка итогов симуляции" : "Деталка симуляции",
+            eligible: simulation.promotable,
+            reason: simulation.promotable
+              ? "Симуляция завершена и доступна к выводу в ПРОМ"
+              : "Сформировать БТ можно только для завершённой симуляции",
+          };
+        }
+
+        function openList() {
+          setPage("list");
+          setDetailTab("info");
+        }
+
+        function openSimulation(simulationId, nextTab = "info") {
+          setSelectedId(simulationId);
+          setPage("detail");
+          setDetailTab(nextTab);
+        }
+
+        function openEdit(simulationId) {
+          setSelectedId(simulationId);
+          setPage("edit");
+          setDetailTab("info");
+        }
+
+        function openAgent() {
+          setAgent((current) => ({
+            ...current,
+            open: true,
+            error: "",
+          }));
+        }
+
+        function closeAgent() {
+          setAgent((current) => ({
+            ...current,
+            open: false,
+          }));
+        }
+
+        function buildDraft(simulation) {
+          const params = simulation.riskParameters
+            .map((item, index) =>
+              `${index === 0 ? "" : "и "}${item.name} на ${item.value}`
+            )
+            .join(" ");
+          return `Меня зовут ${USER_NAME}. Поменяй значение риск-параметра ${params}.\nБизнес-цель -- ${simulation.description}`;
+        }
+
+        function handleInsertDraft() {
+          if (!currentContext.eligible) {
+            setAgent((current) => ({
+              ...current,
+              error: "Сформировать БТ можно только для завершённой симуляции, доступной к выводу в ПРОМ.",
+            }));
+            return;
+          }
+          setAgent((current) => ({
+            ...current,
+            error: "",
+            draft: buildDraft(selectedSimulation),
+          }));
+        }
+
+        function handleDraftChange(event) {
+          const nextValue = event.target.value;
+          setAgent((current) => ({
+            ...current,
+            draft: nextValue,
+          }));
+        }
+
+        function handleSend() {
+          const text = agent.draft.trim();
+          if (!text || agent.loading) {
+            return;
+          }
+
+          const userMessage = {
+            id: `msg-${Date.now()}`,
+            role: "user",
+            text,
+          };
+
+          setAgent((current) => ({
+            ...current,
+            loading: true,
+            error: "",
+            draft: "",
+            messages: current.messages.concat(userMessage),
+          }));
+
+          window.setTimeout(() => {
+            if (!currentContext.eligible) {
+              setAgent((current) => ({
+                ...current,
+                loading: false,
+                messages: current.messages.concat({
+                  id: `msg-${Date.now()}-assistant`,
+                  role: "assistant",
+                  text:
+                    "Для текущей страницы я могу только продолжить диалог. Чтобы сформировать БТ, откройте завершённую симуляцию с доступным выводом в ПРОМ.",
+                }),
+              }));
+              return;
+            }
+
+            const nextLink =
+              selectedSimulation.btLink || "https://confluence.example.local/pages/viewpage.action?pageId=1002451";
+
+            setSimulations((current) =>
+              current.map((item) =>
+                item.id === selectedSimulation.id
+                  ? {
+                      ...item,
+                      btLink: nextLink,
+                      releaseStartedAt: item.releaseStartedAt || "27.04.2026 12:18",
+                    }
+                  : item
+              )
+            );
+
+            setAgent((current) => ({
+              ...current,
+              loading: false,
+              messages: current.messages.concat({
+                id: `msg-${Date.now()}-assistant`,
+                role: "assistant",
+                text:
+                  `Черновик запроса принят.\n\n- Собраны итоговые риск-параметры из симуляции\n- Использована бизнес-цель текущего релиза\n- БТ опубликовано: ${nextLink}\n- Ссылка сохранена на вкладке итогов симуляции`,
+              }),
+            }));
+          }, 700);
+        }
+
+        function handleRestartSession() {
+          const nextCounter = sessionCounter + 1;
+          setSessionCounter(nextCounter);
+          setAgent({
+            id: `3ccabaf4-7d41-4b91-a020-a6f7547f11d${nextCounter}`,
+            startedAt: "27.04.2026 12:24:50",
+            open: true,
+            loading: false,
+            error: "",
+            draft: "",
+            messages: [
+              {
+                id: `restart-${nextCounter}`,
+                role: "assistant",
+                text:
+                  "Создана новая сессия. История предыдущего диалога закрыта, можно продолжить работу с актуальным контекстом страницы.",
+              },
+            ],
+          });
+        }
+
+        function handleToggleAgentStatus() {
+          setAgent((current) => ({
+            ...current,
+            error: current.error
+              ? ""
+              : "Во время работы агента произошла ошибка.",
+          }));
+          setStatusDetailsOpen(true);
+        }
+
+        function renderListPage() {
+          return (
+            <Stack spacing={3}>
+              <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
+                <Box>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Typography variant="h3" sx={{ fontSize: 33 }}>
+                      Симуляции
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{ minWidth: 40, width: 40, height: 40, px: 0 }}
+                    >
+                      +
+                    </Button>
+                  </Stack>
+                </Box>
+                <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Button
+                    variant="outlined"
+                    startIcon={formatIcon("smart_toy", { fontSize: 20 })}
+                    onClick={openAgent}
+                  >
+                    {AGENT_BUTTON_LABEL}
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Tabs
+                value={spaceTab}
+                onChange={(event, value) => setSpaceTab(value)}
+                textColor="primary"
+                    indicatorColor="primary"
+                    sx={{
+                      "& .MuiTab-root": {
+                        alignItems: "flex-start",
+                        fontSize: 16,
+                        fontWeight: 600,
+                        minHeight: 34,
+                        px: 2.5,
+                      },
+                    }}
+                  >
+                <Tab value="cards" label="Кредитные карты" />
+                <Tab value="loans" label="Потребительские кредиты" />
+                <Tab value="pos" label="POS кредиты" />
+              </Tabs>
+
+              <Stack direction="row" justifyContent="flex-end" spacing={2.5} sx={{ color: "primary.main" }}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {formatIcon("view_column", { fontSize: 22 })}
+                  <Typography sx={{ fontWeight: 600, fontSize: 14 }}>Столбцы</Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {formatIcon("filter_alt", { fontSize: 22 })}
+                  <Typography sx={{ fontWeight: 600, fontSize: 14 }}>Фильтры</Typography>
+                </Stack>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {formatIcon("view_stream", { fontSize: 22 })}
+                  <Typography sx={{ fontWeight: 600, fontSize: 14 }}>Высота строки</Typography>
+                </Stack>
+              </Stack>
+
+              <TableContainer component={Paper} sx={{ borderRadius: 0, boxShadow: "none", border: "1px solid #d7dce5" }}>
+                <Table sx={{ minWidth: 980 }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: "#eef1ff" }}>
+                      {["ID", "Название", "Режим", "Статус", "Этап", "Дата обновления этапа", "Автор", "Дата и время создания"].map(
+                        (cell) => (
+                          <TableCell
+                            key={cell}
+                            sx={{ py: 1.8, fontWeight: 600, fontSize: 15, color: "text.primary" }}
+                          >
+                            {cell}
+                          </TableCell>
+                        )
+                      )}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {simulations.map((item) => (
+                      <TableRow
+                        hover
+                        key={item.id}
+                        sx={{ cursor: "pointer" }}
+                        onClick={() => openSimulation(item.id, "info")}
+                      >
+                        <TableCell sx={{ color: "primary.main", fontWeight: 700 }}>{item.id}</TableCell>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{item.simulationMode}</TableCell>
+                        <TableCell>
+                          <Box
+                            sx={{
+                              width: 164,
+                              borderRadius: 1.5,
+                              py: 0.65,
+                              px: 2,
+                              textAlign: "center",
+                              ...statusStyles[item.statusKey],
+                            }}
+                          >
+                            {item.statusLabel}
+                          </Box>
+                        </TableCell>
+                        <TableCell>{item.stage}</TableCell>
+                        <TableCell>{item.updatedAt}</TableCell>
+                        <TableCell>{item.author}</TableCell>
+                        <TableCell>{item.createdAt}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Stack>
+          );
+        }
+
+        function renderProgress(simulation) {
+          if (!simulation.steps.length) {
+            return null;
+          }
+
+          return (
+            <Paper sx={{ p: 2.25, borderRadius: 4 }}>
+              <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} alignItems={{ md: "center" }}>
+                <Typography variant="h4" sx={{ fontSize: 22 }}>{simulation.id}</Typography>
+                <Box
+                  sx={{
+                    px: 1.8,
+                    py: 0.55,
+                    borderRadius: 2,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    width: "fit-content",
+                    ...statusStyles[simulation.statusKey],
+                  }}
+                >
+                  {simulation.statusLabel}
+                </Box>
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={1.25}
+                sx={{ mt: 2.5, alignItems: "flex-start" }}
+              >
+                {simulation.steps.map((step, index) => (
+                  <Stack key={step.title} spacing={0.8} sx={{ minWidth: 0, flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ width: "100%" }}>
+                      <Avatar sx={{ width: 28, height: 28, backgroundColor: "#2e7d32", fontWeight: 700 }}>
+                        {formatIcon("done", { fontSize: 18, color: "#fff" })}
+                      </Avatar>
+                      {index < simulation.steps.length - 1 ? (
+                        <Box sx={{ height: 1, flex: 1, backgroundColor: "#c7ccd4" }} />
+                      ) : null}
+                    </Stack>
+                    <Typography sx={{ fontWeight: 700, fontSize: 13.5, lineHeight: 1.3 }}>{step.title}</Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: 12.5, lineHeight: 1.25 }}>с: {step.from}</Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: 12.5, lineHeight: 1.25 }}>по: {step.to}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </Paper>
+          );
+        }
+
+        function InfoSection({ title, children }) {
+          return (
+            <Paper
+              sx={{
+                p: { xs: 2, md: 2.5 },
+                borderRadius: 4,
+                backgroundColor: "#eef1ff",
+              }}
+            >
+              <Stack spacing={2}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  {formatIcon("expand_less", { color: "#2c4f7c", fontSize: 22 })}
+                  <Typography variant="h5" sx={{ color: "primary.main", fontSize: 19 }}>
+                    {title}
+                  </Typography>
+                </Stack>
+                {children}
+              </Stack>
+            </Paper>
+          );
+        }
+
+        function ReadField({ label, value, multiline = false, minRows = 1 }) {
+          return (
+            <TextField
+              size="small"
+              label={label}
+              value={value}
+              multiline={multiline}
+              minRows={minRows}
+              fullWidth
+              InputProps={{ readOnly: true }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "#fff",
+                },
+              }}
+            />
+          );
+        }
+
+        function renderDetailToolbar(simulation) {
+          const canOpenReport = simulation.statusKey === "completed" || simulation.statusKey === "promoted";
+          return (
+            <Stack spacing={2.5}>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant={detailTab === "info" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setDetailTab("info")}
+                  startIcon={formatIcon("menu", { fontSize: 24 })}
+                  sx={{ minWidth: 228, justifyContent: "flex-start", py: 1.25 }}
+                >
+                  Основная информация
+                </Button>
+                <Button
+                  variant={detailTab === "results" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setDetailTab("results")}
+                  startIcon={formatIcon("fact_check", { fontSize: 24 })}
+                  sx={{ minWidth: 228, justifyContent: "flex-start", py: 1.25 }}
+                >
+                  Итоги симуляции
+                </Button>
+              </Stack>
+
+              <Stack
+                direction={{ xs: "column", lg: "row" }}
+                spacing={2}
+                alignItems={{ lg: "center" }}
+                justifyContent="space-between"
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <IconButton size="small" onClick={openList}>
+                    {formatIcon("arrow_back_ios_new", { color: "#4b5563", fontSize: 20 })}
+                  </IconButton>
+                  {simulation.statusKey === "draft" ? (
+                    <React.Fragment>
+                      <Button variant="contained" color="error" startIcon={formatIcon("delete", { fontSize: 20 })}>
+                        Удалить
+                      </Button>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={formatIcon("edit", { fontSize: 20 })}
+                        onClick={() => openEdit(simulation.id)}
+                      >
+                        Редактировать
+                      </Button>
+                      <Button variant="contained" color="success" startIcon={formatIcon("play_arrow", { fontSize: 20 })}>
+                        Запустить симуляцию
+                      </Button>
+                    </React.Fragment>
+                  ) : (
+                    <React.Fragment>
+                      <Button variant="contained" color="success">
+                        Применить изменения
+                      </Button>
+                      <Button variant="contained" color="primary" disabled={!canOpenReport}>
+                        Получить отчет
+                      </Button>
+                    </React.Fragment>
+                  )}
+                </Stack>
+
+                <Stack direction="row" spacing={1.5}>
+                  <Button
+                    variant="outlined"
+                    startIcon={formatIcon("smart_toy", { fontSize: 20 })}
+                    onClick={openAgent}
+                  >
+                    {AGENT_BUTTON_LABEL}
+                  </Button>
+                </Stack>
+              </Stack>
+            </Stack>
+          );
+        }
+
+        function renderInfoPage(simulation) {
+          return (
+            <Stack spacing={2.5}>
+              {renderProgress(simulation)}
+              <InfoSection title="Основная информация">
+                <Stack spacing={1.75}>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.75}>
+                    <ReadField label="Пространство симуляции *" value="Кредитные карты" />
+                    <ReadField label="Название симуляции *" value={simulation.name} />
+                  </Stack>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.75}>
+                    <ReadField label="Режим симуляции *" value={simulation.simulationMode} />
+                    <ReadField label="Описание симуляции" value={simulation.description} />
+                  </Stack>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.75}>
+                    <ReadField label="Версия сборки стратегии *" value="actual" />
+                    <ReadField label="ID ФП Симуляции" value="f8b627b2-7dd0-42ce-81e1-34e008f9e957" />
+                  </Stack>
+                </Stack>
+              </InfoSection>
+
+              <InfoSection title="Фильтрация выборки">
+                <Stack spacing={1.75}>
+                  <Typography variant="h6" sx={{ fontSize: 14.5 }}>Период данных</Typography>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.75}>
+                    <ReadField label="Дата начала *" value={simulation.samplePeriodStart} />
+                    <ReadField label="Дата завершения *" value={simulation.samplePeriodEnd} />
+                    <ReadField label="Количество отбираемых записей" value={simulation.sampleSize} />
+                  </Stack>
+                </Stack>
+              </InfoSection>
+
+              <InfoSection title="Канал продажи">
+                <Stack direction="row" spacing={1.25} useFlexGap flexWrap="wrap">
+                  {simulation.channels.map((item) => (
+                    <Chip
+                      key={item}
+                      label={item}
+                      sx={{
+                        py: 1.8,
+                        px: 0.4,
+                        fontSize: 14.5,
+                        backgroundColor: item === "DSA" || item === "Веб Сбол" ? "#8aa7cf" : "#fff",
+                        color: item === "DSA" || item === "Веб Сбол" ? "#fff" : "#7590b8",
+                        border: "1px solid #d5dbe6",
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </InfoSection>
+
+              <InfoSection title="Категория клиента">
+                <Stack direction="row" spacing={1.25} useFlexGap flexWrap="wrap">
+                  {simulation.categories.map((item) => (
+                    <Chip
+                      key={item}
+                      label={item}
+                      sx={{
+                        py: 1.8,
+                        px: 0.4,
+                        fontSize: 14.5,
+                        backgroundColor: "#fff",
+                        color: "#7590b8",
+                        border: "1px solid #d5dbe6",
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </InfoSection>
+            </Stack>
+          );
+        }
+
+        function renderResultsPage(simulation) {
+          return (
+            <Stack spacing={2.5}>
+              <Typography variant="h3" sx={{ fontSize: 24 }}>
+                Итоги симуляции {simulation.id}
+              </Typography>
+              <InfoSection title="Результаты релиза">
+                <Stack spacing={1.75}>
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.75}>
+                    <ReadField label="Ссылка на БТ *" value={simulation.btLink} />
+                    <ReadField label="Дата и время начала релиза" value={simulation.releaseStartedAt} />
+                  </Stack>
+                  <ReadField label="Описание релиза *" value={simulation.description} />
+                  <ReadField
+                    label="Эффекты релиза *"
+                    value={
+                      simulation.statusKey === "draft"
+                        ? ""
+                        : "Рост одобрения на 1,8 п.п. без превышения лимита потерь по кредитным картам."
+                    }
+                  />
+                  <ReadField label="Описание итогов" value={simulation.resultsDescription} multiline minRows={3} />
+                </Stack>
+              </InfoSection>
+
+              <Paper sx={{ p: 2.5, borderRadius: 4 }}>
+                <Stack spacing={1.75}>
+                  <Typography variant="h6" sx={{ fontSize: 14.5 }}>Риск-параметры для черновика запроса</Typography>
+                  {simulation.riskParameters.map((item) => (
+                    <Stack
+                      key={item.name}
+                      direction={{ xs: "column", md: "row" }}
+                      spacing={1.5}
+                      alignItems={{ md: "center" }}
+                    >
+                      <Chip label={item.name} sx={{ width: 176, backgroundColor: "#eef1ff", color: "#2c4f7c" }} />
+                      <Typography sx={{ fontSize: 15 }}>to-be: {item.value}</Typography>
+                    </Stack>
+                  ))}
+                  {simulation.btLink ? (
+                    <Alert severity="success">Ссылка на БТ уже сохранена в текущей симуляции.</Alert>
+                  ) : (
+                    <Alert severity="info">
+                      Ссылка появится после успешной публикации БТ из правой панели AI-агента.
+                    </Alert>
+                  )}
+                </Stack>
+              </Paper>
+            </Stack>
+          );
+        }
+
+        function renderContent() {
+          if (page === "list") {
+            return renderListPage();
+          }
+
+          return (
+            <Stack spacing={3}>
+              {renderDetailToolbar(selectedSimulation)}
+              {detailTab === "results" ? renderResultsPage(selectedSimulation) : renderInfoPage(selectedSimulation)}
+            </Stack>
+          );
+        }
+
+        function renderSidebarItem(icon, label, active) {
+          return (
+            <Box
+              sx={{
+                px: 2.2,
+                py: 1.35,
+                mx: 1.5,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.75,
+                color: active ? "#2ce6b1" : "rgba(255,255,255,0.62)",
+                backgroundColor: active ? "rgba(255,255,255,0.08)" : "transparent",
+                fontWeight: active ? 700 : 600,
+                fontSize: 15,
+              }}
+            >
+              {formatIcon(icon, { fontSize: 24 })}
+              <span>{label}</span>
+            </Box>
+          );
+        }
+
+        function renderMessage(message) {
+          const isUser = message.role === "user";
+          return (
+            <Stack key={message.id} alignItems={isUser ? "flex-end" : "flex-start"} spacing={0.75}>
+              <Paper
+                sx={{
+                  maxWidth: "95%",
+                  px: 2,
+                  py: 1.5,
+                  borderRadius: 2.5,
+                  backgroundColor: isUser ? "#2c4f7c" : "#f6f8fb",
+                  color: isUser ? "#fff" : "#1a1d23",
+                  border: isUser ? "none" : "1px solid #e1e6ee",
+                }}
+              >
+                <Typography
+                  sx={{
+                    whiteSpace: "pre-line",
+                    fontSize: 14,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {message.text.replaceAll("`", "")}
+                </Typography>
+              </Paper>
+            </Stack>
+          );
+        }
+
+        return (
+          <ThemeProvider theme={shellTheme}>
+            <CssBaseline />
+            <Box sx={{ display: "flex", minHeight: "100%" }}>
+              <Box
+                sx={{
+                  width: 240,
+                  backgroundColor: "#17191d",
+                  color: "#fff",
+                  display: { xs: "none", lg: "flex" },
+                  flexDirection: "column",
+                  py: 1.5,
+                }}
+              >
+                <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid rgba(255,255,255,0.08)" }} />
+                <Stack spacing={1.2} sx={{ mt: 3 }}>
+                  {renderSidebarItem("track_changes", "Пилоты", false)}
+                  {renderSidebarItem("query_stats", "Пересечения", false)}
+                  {renderSidebarItem("history", "История изменений", false)}
+                  {renderSidebarItem("monitor_heart", "Симуляции", true)}
+                  {renderSidebarItem("bar_chart", "Метрики", false)}
+                </Stack>
+                <Box sx={{ flexGrow: 1 }} />
+                <Stack spacing={1.2} sx={{ mb: 2 }}>
+                  {renderSidebarItem("library_books", "База знаний", false)}
+                  {renderSidebarItem("help_outline", "Поддержка", false)}
+                </Stack>
+                <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mx: 3 }} />
+                <Box sx={{ px: 4, py: 2.25, color: "rgba(255,255,255,0.82)", fontWeight: 600 }}>
+                  {formatIcon("keyboard_double_arrow_left", { verticalAlign: "middle", mr: 1 })}
+                  Свернуть панель
+                </Box>
+              </Box>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  mr: agent.open ? `${DRAWER_WIDTH}px` : 0,
+                  transition: "margin-right 240ms ease",
+                }}
+              >
+                <AppBar position="sticky" elevation={0} color="transparent" sx={{ borderBottom: "1px solid #e5e7eb" }}>
+                  <Toolbar sx={{ justifyContent: "flex-end", gap: 2, backgroundColor: "#fff", minHeight: 60 }}>
+                    <Stack spacing={0.2}>
+                      <Typography variant="caption" color="text.secondary">
+                        Подразделение
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        startIcon={formatIcon("corporate_fare", { fontSize: 22 })}
+                        endIcon={formatIcon("expand_more", { fontSize: 20 })}
+                        sx={{ minWidth: 156, justifyContent: "space-between", px: 1.75 }}
+                      >
+                        ДРРБ
+                      </Button>
+                    </Stack>
+                    <Divider orientation="vertical" flexItem />
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Avatar sx={{ backgroundColor: "#d1d5db", color: "#374151" }}>{USER_SHORT}</Avatar>
+                      <Typography sx={{ fontWeight: 600, fontSize: 14.5 }}>{USER_NAME}</Typography>
+                    </Stack>
+                    <IconButton>{formatIcon("logout", { fontSize: 24, color: "#4b5563" })}</IconButton>
+                  </Toolbar>
+                </AppBar>
+
+                <Box sx={{ px: { xs: 2, md: 3.5 }, py: 2.5 }}>{renderContent()}</Box>
+              </Box>
+
+              <Drawer
+                anchor="right"
+                open={agent.open}
+                variant="persistent"
+                PaperProps={{
+                  sx: {
+                    width: DRAWER_WIDTH,
+                    borderLeft: "1px solid #dfe3eb",
+                    backgroundColor: "#ffffff",
+                  },
+                }}
+              >
+                <Stack sx={{ height: "100%" }}>
+                  <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #e5e7eb" }}>
+                    <Stack direction="row" justifyContent="space-between" spacing={2} alignItems="flex-start">
+                      <Box>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {formatIcon("smart_toy", { fontSize: 24, color: "#2c4f7c" })}
+                          <Typography
+                            variant="h6"
+                            sx={{ fontSize: 15.5, cursor: "pointer" }}
+                            onClick={handleToggleAgentStatus}
+                          >
+                            AI-агент RAIN
+                          </Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 0.9 }}>
+                          <Chip
+                            clickable
+                            onClick={() => setStatusDetailsOpen((value) => !value)}
+                            label={agent.error ? "Ошибка" : "Онлайн"}
+                            color={agent.error ? "error" : "success"}
+                            size="small"
+                          />
+                          <Chip
+                            clickable
+                            onClick={handleRestartSession}
+                            label="Перезапустить сессию"
+                            variant="outlined"
+                            size="small"
+                          />
+                        </Stack>
+                      </Box>
+                      <IconButton onClick={closeAgent}>{formatIcon("close", { color: "#6b7280" })}</IconButton>
+                    </Stack>
+                    {statusDetailsOpen ? (
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          mt: 1.25,
+                          p: 1.25,
+                          borderRadius: 2.5,
+                          backgroundColor: agent.error ? "#fff4f4" : "#f6fbf8",
+                          borderColor: agent.error ? "#f0b7b7" : "#b9dfc7",
+                        }}
+                      >
+                        <Stack spacing={0.6}>
+                          <Typography sx={{ fontWeight: 700, fontSize: 13.5 }}>
+                            {agent.error ? "Ошибка подключения к агенту" : "Агент доступен"}
+                          </Typography>
+                          <Typography color="text.secondary" sx={{ fontSize: 12.5, lineHeight: 1.35 }}>
+                            {agent.error
+                              ? `${agent.error} Рекомендация: перезапустите сессию и повторите отправку.`
+                              : "Сессия активна, история чата восстанавливается по session_id, можно продолжать диалог."}
+                          </Typography>
+                        </Stack>
+                      </Paper>
+                    ) : null}
+                  </Box>
+
+                  {agent.loading ? <LinearProgress /> : null}
+
+                  <Stack spacing={1} sx={{ px: 2, py: 1.5, flex: 1, overflowY: "auto" }}>
+                    {agent.messages.map((message) => renderMessage(message))}
+                  </Stack>
+
+                  <Divider />
+                  <Box sx={{ p: 2 }}>
+                    <Stack spacing={1.25}>
+                      <TextField
+                        multiline
+                        rows={5}
+                        value={agent.draft}
+                        onChange={handleDraftChange}
+                        placeholder="Введите сообщение агенту."
+                        fullWidth
+                        inputProps={{
+                          style: {
+                            overflowY: "auto",
+                          },
+                        }}
+                      />
+                      <Stack direction="row" spacing={1.25}>
+                        <Tooltip
+                          title={
+                            currentContext.eligible
+                              ? "Подставит в поле ввода черновик запроса по текущей завершённой симуляции. После этого текст можно отредактировать и отправить."
+                              : "Кнопка доступна только на завершённых деталках симуляций с возможностью вывода в ПРОМ."
+                          }
+                        >
+                          <span>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={handleInsertDraft}
+                              disabled={!currentContext.eligible}
+                            >
+                              Сформировать БТ
+                            </Button>
+                          </span>
+                        </Tooltip>
+                        <Button variant="contained" onClick={handleSend} disabled={agent.loading || !agent.draft.trim()}>
+                          Отправить
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Drawer>
+            </Box>
+          </ThemeProvider>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
