@@ -21,13 +21,25 @@ Feature: `features/scorecards/feature.md`
 - соблюдение ограничений по mandatory lineage-scorecard.
 
 ## Analyst anchor estimate
-- 17 человеко-дней
+- AN: 2 человеко-дней
+- FE: 14 человеко-дней
+- BE: 1 человеко-дней
+- QA: 0 человеко-дней
+- Total: 17 человеко-дней
 
 ## Team estimate
-- 17 человеко-дней
+- AN: 2 человеко-дней
+- FE: 14 человеко-дней
+- BE: 1 человеко-дней
+- QA: 0 человеко-дней
+- Total: 17 человеко-дней
 
 ## Agreed estimate
-- 17 человеко-дней
+- AN: 2 человеко-дней
+- FE: 14 человеко-дней
+- BE: 1 человеко-дней
+- QA: 0 человеко-дней
+- Total: 17 человеко-дней
 
 ## Actualization state
 - `materialized`

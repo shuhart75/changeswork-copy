@@ -21,13 +21,25 @@ Feature: `features/deployments/feature.md`
 - lifecycle actions.
 
 ## Analyst anchor estimate
-- 15 человеко-дней
+- AN: 5 человеко-дней
+- FE: 5 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 15 человеко-дней
 
 ## Team estimate
-- 15 человеко-дней
+- AN: 5 человеко-дней
+- FE: 5 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 15 человеко-дней
 
 ## Agreed estimate
-- 15 человеко-дней
+- AN: 5 человеко-дней
+- FE: 5 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 15 человеко-дней
 
 ## Actualization state
 - `mixed`

@@ -11,6 +11,7 @@
 - `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/openapi.yaml`
 
 ## Existing-system evidence used as context
+- `context/change-requests/simulation-bt-agent/simulations_api.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/Вкладка Основная информация.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/examples.json`
 

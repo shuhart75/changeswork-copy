@@ -1,6 +1,6 @@
 # Active Mode
 
-mode: scope-prototype
+mode: requirements
 
 ## Mode File
-.workflow/modes/scope-prototype.md
+.workflow/modes/requirements.md

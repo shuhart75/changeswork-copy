@@ -22,13 +22,25 @@ Feature: `features/simulation-bt-agent/feature.md`
 - учёт HTTPS/mTLS/OTT ограничений и Q2-допущений для ИФТ.
 
 ## Analyst anchor estimate
-- 8 человеко-дней
+- AN: 1 человеко-дней
+- FE: 3 человеко-дней
+- BE: 4 человеко-дней
+- QA: 0 человеко-дней
+- Total: 8 человеко-дней
 
 ## Team estimate
-- 8 человеко-дней
+- AN: 1 человеко-дней
+- FE: 3 человеко-дней
+- BE: 4 человеко-дней
+- QA: 0 человеко-дней
+- Total: 8 человеко-дней
 
 ## Agreed estimate
-- 8 человеко-дней
+- AN: 1 человеко-дней
+- FE: 3 человеко-дней
+- BE: 4 человеко-дней
+- QA: 0 человеко-дней
+- Total: 8 человеко-дней
 
 ## Actualization state
 - `virtual`

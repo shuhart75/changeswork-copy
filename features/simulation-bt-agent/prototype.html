@@ -44,6 +44,7 @@
         Divider,
         Drawer,
         IconButton,
+        Link,
         LinearProgress,
         Paper,
         Stack,
@@ -159,7 +160,7 @@
             { name: "UTIL_SEGMENT_CAP", value: "120000" },
           ],
           steps: [],
-          resultsDescription: "Релиз уже опубликован и ссылка на БТ сохранена в системе.",
+          resultsDescription: "Релиз уже опубликован, а ссылка на БТ была ранее сохранена пользователем вручную.",
         },
       ];
 
@@ -280,6 +281,8 @@
           loading: false,
           error: "",
           draft: "",
+          latestBtUrl: "",
+          copiedBtUrl: false,
           messages: [
             {
               id: "sys-1",
@@ -424,6 +427,8 @@
             loading: true,
             error: "",
             draft: "",
+            latestBtUrl: "",
+            copiedBtUrl: false,
             messages: current.messages.concat(userMessage),
           }));
 
@@ -445,29 +450,39 @@
             const nextLink =
               selectedSimulation.btLink || "https://confluence.example.local/pages/viewpage.action?pageId=1002451";
 
-            setSimulations((current) =>
-              current.map((item) =>
-                item.id === selectedSimulation.id
-                  ? {
-                      ...item,
-                      btLink: nextLink,
-                      releaseStartedAt: item.releaseStartedAt || "27.04.2026 12:18",
-                    }
-                  : item
-              )
-            );
-
             setAgent((current) => ({
               ...current,
               loading: false,
+              latestBtUrl: nextLink,
+              copiedBtUrl: false,
               messages: current.messages.concat({
                 id: `msg-${Date.now()}-assistant`,
                 role: "assistant",
                 text:
-                  `Черновик запроса принят.\n\n- Собраны итоговые риск-параметры из симуляции\n- Использована бизнес-цель текущего релиза\n- БТ опубликовано: ${nextLink}\n- Ссылка сохранена на вкладке итогов симуляции`,
+                  `Черновик запроса принят.\n\n- Собраны итоговые риск-параметры из симуляции\n- Использована бизнес-цель текущего релиза\n- БТ опубликовано: ${nextLink}\n- Скопируйте ссылку из окна агента и при желании сохраните её в итогах симуляции вручную`,
               }),
             }));
           }, 700);
+        }
+
+        function handleCopyBtUrl() {
+          if (!agent.latestBtUrl) {
+            return;
+          }
+
+          const markCopied = () => {
+            setAgent((current) => ({
+              ...current,
+              copiedBtUrl: true,
+            }));
+          };
+
+          if (window.navigator && window.navigator.clipboard && window.navigator.clipboard.writeText) {
+            window.navigator.clipboard.writeText(agent.latestBtUrl).then(markCopied).catch(markCopied);
+            return;
+          }
+
+          markCopied();
         }
 
         function handleRestartSession() {
@@ -480,6 +495,8 @@
             loading: false,
             error: "",
             draft: "",
+            latestBtUrl: "",
+            copiedBtUrl: false,
             messages: [
               {
                 id: `restart-${nextCounter}`,
@@ -898,10 +915,10 @@
                     </Stack>
                   ))}
                   {simulation.btLink ? (
-                    <Alert severity="success">Ссылка на БТ уже сохранена в текущей симуляции.</Alert>
+                    <Alert severity="success">Ссылка на БТ уже была сохранена вручную в текущей симуляции.</Alert>
                   ) : (
                     <Alert severity="info">
-                      Ссылка появится после успешной публикации БТ из правой панели AI-агента.
+                      После успешной публикации ссылка появится в окне агента. При желании скопируйте её и сохраните здесь вручную.
                     </Alert>
                   )}
                 </Stack>
@@ -1118,6 +1135,34 @@
 
                   <Stack spacing={1} sx={{ px: 2, py: 1.5, flex: 1, overflowY: "auto" }}>
                     {agent.messages.map((message) => renderMessage(message))}
+                    {agent.latestBtUrl ? (
+                      <Paper
+                        sx={{
+                          px: 1.75,
+                          py: 1.4,
+                          borderRadius: 2.5,
+                          border: "1px solid #cfe0d5",
+                          backgroundColor: "#f6fbf8",
+                        }}
+                      >
+                        <Stack spacing={1}>
+                          <Typography sx={{ fontWeight: 700, fontSize: 13.5 }}>
+                            Ссылка на опубликованный БТ
+                          </Typography>
+                          <Link href={agent.latestBtUrl} underline="hover" sx={{ fontSize: 13.5, wordBreak: "break-all" }}>
+                            {agent.latestBtUrl}
+                          </Link>
+                          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                            <Typography color="text.secondary" sx={{ fontSize: 12.5, lineHeight: 1.35, flex: 1 }}>
+                              В MVP ссылка не сохраняется автоматически в симуляцию. При необходимости сохраните её вручную.
+                            </Typography>
+                            <Button variant="outlined" size="small" onClick={handleCopyBtUrl}>
+                              {agent.copiedBtUrl ? "Скопировано" : "Копировать ссылку"}
+                            </Button>
+                          </Stack>
+                        </Stack>
+                      </Paper>
+                    ) : null}
                   </Stack>
 
                   <Divider />

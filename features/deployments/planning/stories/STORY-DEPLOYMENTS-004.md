@@ -21,13 +21,25 @@ Feature: `features/deployments/feature.md`
 - подготовка к approval и дальнейшему lifecycle.
 
 ## Analyst anchor estimate
-- 11 человеко-дней
+- AN: 1 человеко-дней
+- FE: 10 человеко-дней
+- BE: 0 человеко-дней
+- QA: 0 человеко-дней
+- Total: 11 человеко-дней
 
 ## Team estimate
-- 11 человеко-дней
+- AN: 1 человеко-дней
+- FE: 10 человеко-дней
+- BE: 0 человеко-дней
+- QA: 0 человеко-дней
+- Total: 11 человеко-дней
 
 ## Agreed estimate
-- 11 человеко-дней
+- AN: 1 человеко-дней
+- FE: 10 человеко-дней
+- BE: 0 человеко-дней
+- QA: 0 человеко-дней
+- Total: 11 человеко-дней
 
 ## Actualization state
 - `materialized`

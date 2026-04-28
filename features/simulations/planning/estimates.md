@@ -5,6 +5,8 @@ Feature: `features/simulations/feature.md`
 
 Эта feature отражает already existing baseline coverage.
 
+Формат ролевых оценок для будущих planning stories: `AN / FE / BE / QA`.
+
 ## Notes
 - Отдельные planning stories на текущий квартал не заводились.
 - Legacy оценки сохранены в task docs внутри `references.md` и raw snapshot.

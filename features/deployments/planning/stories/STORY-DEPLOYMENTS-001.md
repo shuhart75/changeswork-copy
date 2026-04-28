@@ -19,13 +19,25 @@ Backend foundation для внедрений
 - foundation для последующих lifecycle и frontend задач.
 
 ## Analyst anchor estimate
-- 6 человеко-дней
+- AN: 1 человеко-дней
+- FE: 0 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 6 человеко-дней
 
 ## Team estimate
-- 6 человеко-дней
+- AN: 1 человеко-дней
+- FE: 0 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 6 человеко-дней
 
 ## Agreed estimate
-- 6 человеко-дней
+- AN: 1 человеко-дней
+- FE: 0 человеко-дней
+- BE: 5 человеко-дней
+- QA: 0 человеко-дней
+- Total: 6 человеко-дней
 
 ## Actualization state
 - `materialized`

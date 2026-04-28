@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>simulation-bt-agent / dialog-session / delivery prototype</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@mui/material@5.15.20/umd/material-ui.development.js"></script>
@@ -11,24 +13,9 @@
     <script src="https://unpkg.com/@emotion/styled@11/dist/emotion-styled.umd.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-      html,
-      body,
-      #root {
-        height: 100%;
-      }
-
-      body {
-        margin: 0;
-        background:
-          radial-gradient(circle at top right, rgba(15, 107, 82, 0.1), transparent 28%),
-          linear-gradient(180deg, #f6faf9 0%, #eef4f6 100%);
-        font-family: "Segoe UI", sans-serif;
-      }
-
-      pre {
-        margin: 0;
-        white-space: pre-wrap;
-      }
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; }
+      body { margin: 0; font-family: "Roboto", sans-serif; background: #f5f7fa; }
     </style>
   </head>
   <body>
@@ -37,511 +24,343 @@
       const {
         Alert,
         AppBar,
+        Avatar,
         Box,
         Button,
-        Card,
-        CardContent,
         Chip,
-        Container,
         CssBaseline,
         Divider,
         Drawer,
         Grid,
+        IconButton,
         LinearProgress,
         Paper,
         Stack,
         TextField,
         Toolbar,
-        Tooltip,
         Typography,
-        IconButton,
         createTheme,
         ThemeProvider,
       } = MaterialUI;
 
-      const sessionId = "3ccabaf4-7d41-4b91-a020-a6f7547f11d2";
-      const userFullName = "Реутов Иван Николаевич";
-      const dialogStartedAt = "2026-04-27 10:14:06";
+      const DRAWER_WIDTH = 392;
 
-      const pageVariants = [
-        { id: "list", label: "Список", title: "Список симуляций" },
-        { id: "detail", label: "Деталка", title: "Деталка симуляции SIM-2026-0416" },
-        { id: "edit", label: "Редактирование", title: "Редактирование SIM-2026-0416" },
-      ];
+      const variants = {
+        restored: {
+          label: "Восстановленная сессия",
+          status: "online",
+          showDetails: false,
+          loading: false,
+          inputDisabled: false,
+          messages: [
+            { role: "assistant", text: "Здравствуйте. Сессия восстановлена по `session_id`, можно продолжать диалог." },
+            { role: "user", text: "Покажи итоговые параметры последней завершённой симуляции." },
+            { role: "assistant", text: "- PD_LIMIT: 0.42\n- UTIL_SEGMENT_CAP: 125000\n- TURNOVER_GATE: 1" },
+          ],
+        },
+        loading: {
+          label: "Отправка сообщения",
+          status: "online",
+          showDetails: false,
+          loading: true,
+          inputDisabled: true,
+          messages: [
+            { role: "assistant", text: "Сообщение принято, ожидаем ответ агента." },
+          ],
+        },
+        error: {
+          label: "Ошибка агента",
+          status: "error",
+          showDetails: true,
+          loading: false,
+          inputDisabled: false,
+          messages: [
+            { role: "assistant", text: "Не удалось получить ответ от агента. Проверьте статус и перезапустите сессию." },
+          ],
+        },
+      };
 
       const theme = createTheme({
         palette: {
-          primary: {
-            main: "#0f6b52",
-          },
-          secondary: {
-            main: "#2e6fd1",
-          },
-          background: {
-            default: "#eef4f6",
-            paper: "#ffffff",
-          },
-          text: {
-            primary: "#203047",
-            secondary: "#61728b",
-          },
-        },
-        shape: {
-          borderRadius: 16,
+          primary: { main: "#2c4f7c" },
+          success: { main: "#4f8c63" },
+          error: { main: "#c95a5a" },
+          background: { default: "#f5f7fa", paper: "#ffffff" },
+          text: { primary: "#1a1d23", secondary: "#6c757d" },
         },
         typography: {
-          fontFamily: '"Segoe UI", "Inter", sans-serif',
-          button: {
-            textTransform: "none",
-            fontWeight: 700,
+          fontFamily: '"Roboto", sans-serif',
+          fontSize: 13,
+          h5: { fontWeight: 700, fontSize: "1.35rem" },
+          h6: { fontWeight: 700, fontSize: "1rem" },
+          button: { textTransform: "none", fontWeight: 600, fontSize: "0.9rem" },
+        },
+        components: {
+          MuiButton: {
+            styleOverrides: {
+              root: { borderRadius: 8, boxShadow: "none" },
+              contained: { boxShadow: "none", "&:hover": { boxShadow: "none" } },
+            },
+          },
+          MuiChip: {
+            styleOverrides: {
+              root: { borderRadius: 8, height: 28, fontSize: 12.5 },
+            },
+          },
+          MuiInputBase: {
+            styleOverrides: {
+              root: { fontSize: 14 },
+            },
           },
         },
       });
 
-      function escapeHtml(value) {
-        return value
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+      function icon(name, sx) {
+        return <Box component="span" className="material-icons" sx={sx}>{name}</Box>;
       }
 
-      function markdownToHtml(source) {
-        const blocks = source.split("\n");
-        let inList = false;
-        let inCode = false;
-        let html = "";
-
-        function closeList() {
-          if (inList) {
-            html += "</ul>";
-            inList = false;
-          }
-        }
-
-        blocks.forEach((line) => {
-          if (line.startsWith("```")) {
-            closeList();
-            html += inCode ? "</code></pre>" : "<pre><code>";
-            inCode = !inCode;
-            return;
-          }
-
-          if (inCode) {
-            html += escapeHtml(line) + "\n";
-            return;
-          }
-
-          if (!line.trim()) {
-            closeList();
-            return;
-          }
-
-          if (line.startsWith("### ")) {
-            closeList();
-            html += `<h3>${escapeInline(line.slice(4))}</h3>`;
-            return;
-          }
-
-          if (line.startsWith("## ")) {
-            closeList();
-            html += `<h2>${escapeInline(line.slice(3))}</h2>`;
-            return;
-          }
-
-          if (line.startsWith("- ")) {
-            if (!inList) {
-              html += "<ul>";
-              inList = true;
-            }
-            html += `<li>${escapeInline(line.slice(2))}</li>`;
-            return;
-          }
-
-          closeList();
-          html += `<p>${escapeInline(line)}</p>`;
-        });
-
-        closeList();
-        if (inCode) {
-          html += "</code></pre>";
-        }
-        return html;
-      }
-
-      function escapeInline(value) {
-        return escapeHtml(value)
-          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-          .replace(/`(.+?)`/g, "<code>$1</code>");
-      }
-
-      function CopyButton({ text }) {
-        const [done, setDone] = React.useState(false);
-
-        async function handleCopy() {
-          try {
-            await navigator.clipboard.writeText(text);
-            setDone(true);
-            window.setTimeout(() => setDone(false), 1200);
-          } catch (error) {
-            window.prompt("Скопируйте текст вручную:", text);
-          }
-        }
-
+      function Message({ role, text }) {
+        const user = role === "user";
         return (
-          <Button size="small" variant="text" onClick={handleCopy}>
-            {done ? "Скопировано" : "Копировать"}
-          </Button>
-        );
-      }
-
-      function MessageBubble({ item }) {
-        const align = item.role === "user" ? "flex-end" : "flex-start";
-        const background =
-          item.role === "user" ? "#1f5aa8" : item.role === "error" ? "#fff1f1" : "#f7faf9";
-        const color = item.role === "user" ? "#ffffff" : "#203047";
-
-        return (
-          <Stack alignItems={align} spacing={0.75}>
+          <Stack alignItems={user ? "flex-end" : "flex-start"}>
             <Paper
-              elevation={0}
               sx={{
-                maxWidth: "92%",
-                px: 1.75,
-                py: 1.4,
-                borderRadius: 3,
-                background,
-                color,
-                border: item.role === "error" ? "1px solid #f2b7b7" : "1px solid rgba(32, 48, 71, 0.08)",
+                maxWidth: "94%",
+                px: 1.6,
+                py: 1.25,
+                borderRadius: 2.5,
+                backgroundColor: user ? "#2c4f7c" : "#f6f8fb",
+                color: user ? "#fff" : "#1a1d23",
+                border: user ? "none" : "1px solid #e1e6ee",
               }}
             >
-              {item.markdown ? (
-                <Box
-                  sx={{
-                    "& h2, & h3": { m: 0, mb: 1, fontWeight: 800, fontSize: 16 },
-                    "& p": { m: 0, mb: 1, lineHeight: 1.55, fontSize: 14 },
-                    "& ul": { m: 0, pl: 2.5, mb: 1 },
-                    "& li": { mb: 0.5, fontSize: 14, lineHeight: 1.5 },
-                    "& code": {
-                      fontFamily: '"Cascadia Code", monospace',
-                      bgcolor: item.role === "user" ? "rgba(255,255,255,0.16)" : "#e9f0fb",
-                      px: 0.5,
-                      borderRadius: 1,
-                    },
-                    "& pre": {
-                      m: 0,
-                      mt: 1,
-                      p: 1.25,
-                      borderRadius: 2,
-                      overflowX: "auto",
-                      bgcolor: item.role === "user" ? "rgba(255,255,255,0.12)" : "#1d2a3f",
-                      color: item.role === "user" ? "#ffffff" : "#dce7fb",
-                    },
-                  }}
-                  dangerouslySetInnerHTML={{ __html: markdownToHtml(item.text) }}
-                />
-              ) : (
-                <Typography sx={{ whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{item.text}</Typography>
-              )}
+              <Typography sx={{ whiteSpace: "pre-line", fontSize: 13.5, lineHeight: 1.45 }}>
+                {text.replaceAll("`", "")}
+              </Typography>
             </Paper>
-            <CopyButton text={item.text} />
           </Stack>
         );
       }
 
-      function App() {
-        const [panelState, setPanelState] = React.useState("normal");
-        const [pageId, setPageId] = React.useState("detail");
-        const [draft, setDraft] = React.useState(
-          "Меня зовут Реутов Иван Николаевич. Подскажи, как лучше объяснить результат симуляции бизнес-заказчику."
+      function Shell({ drawer, children }) {
+        return (
+          <Box sx={{ display: "flex", minHeight: "100%" }}>
+            <Box
+              sx={{
+                width: 232,
+                backgroundColor: "#17191d",
+                color: "#fff",
+                display: { xs: "none", lg: "flex" },
+                flexDirection: "column",
+                py: 1.5,
+              }}
+            >
+              <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid rgba(255,255,255,0.08)" }} />
+              <Stack spacing={1.2} sx={{ mt: 3 }}>
+                {[
+                  ["track_changes", "Пилоты"],
+                  ["query_stats", "Пересечения"],
+                  ["history", "История изменений"],
+                  ["monitor_heart", "Симуляции"],
+                ].map(([i, label]) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      px: 2.2, py: 1.35, mx: 1.5, borderRadius: 2,
+                      display: "flex", alignItems: "center", gap: 1.5,
+                      color: label === "Симуляции" ? "#2ce6b1" : "rgba(255,255,255,0.62)",
+                      backgroundColor: label === "Симуляции" ? "rgba(255,255,255,0.08)" : "transparent",
+                      fontWeight: label === "Симуляции" ? 700 : 600, fontSize: 15,
+                    }}
+                  >
+                    {icon(i, { fontSize: 24 })}
+                    <span>{label}</span>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+
+            <Box sx={{ flex: 1, minWidth: 0, mr: `${DRAWER_WIDTH}px` }}>
+              <AppBar position="sticky" elevation={0} color="transparent" sx={{ borderBottom: "1px solid #e5e7eb" }}>
+                <Toolbar sx={{ justifyContent: "flex-end", gap: 2, backgroundColor: "#fff", minHeight: 60 }}>
+                  <Button variant="outlined" startIcon={icon("smart_toy", { fontSize: 20 })}>AI-агент RAIN</Button>
+                  <Divider orientation="vertical" flexItem />
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Avatar sx={{ backgroundColor: "#d1d5db", color: "#374151", width: 34, height: 34 }}>ММ</Avatar>
+                    <Typography sx={{ fontWeight: 600, fontSize: 14.5 }}>Матаков Мираслав Полад Оглы</Typography>
+                  </Stack>
+                </Toolbar>
+              </AppBar>
+              <Box sx={{ px: { xs: 2, md: 3.5 }, py: 2.5 }}>{children}</Box>
+            </Box>
+
+            <Drawer
+              anchor="right"
+              open
+              variant="persistent"
+              PaperProps={{
+                sx: {
+                  width: DRAWER_WIDTH,
+                  borderLeft: "1px solid #dfe3eb",
+                  backgroundColor: "#ffffff",
+                },
+              }}
+            >
+              {drawer}
+            </Drawer>
+          </Box>
         );
-        const page = pageVariants.find((item) => item.id === pageId);
+      }
 
-        const messages = [
-          {
-            id: 1,
-            role: "agent",
-            markdown: true,
-            text:
-              "## Восстановленный контекст\n" +
-              "- Сессия уже существует и восстановлена по `session_id`\n" +
-              "- История и контекст живут на стороне агента\n" +
-              "- Основной интерфейс продолжает работать\n\n" +
-              "### Что можно сделать дальше\n" +
-              "- задать уточняющий вопрос\n" +
-              "- вставить текст из интерфейса АС КОДА\n" +
-              "- перезапустить сессию при ошибке\n\n" +
-              "```json\n" +
-              '{ "session_id": "3ccabaf4-7d41-4b91-a020-a6f7547f11d2" }\n' +
-              "```",
-          },
-          {
-            id: 2,
-            role: "user",
-            markdown: false,
-            text: "Нужна короткая формулировка для бизнес-заказчика и список ключевых риск-параметров.",
-          },
-          {
-            id: 3,
-            role: panelState === "error" ? "error" : "agent",
-            markdown: panelState !== "error",
-            text:
-              panelState === "error"
-                ? "Не удалось получить ответ агента. Проверьте состояние интеграции или перезапустите сессию."
-                : "### Короткий ответ\n- фокус на бизнес-цели\n- перечислить изменённые параметры\n- сослаться на ожидаемый эффект",
-          },
-        ];
-
-        const controlsDisabled = panelState === "loading" || panelState === "error";
+      function App() {
+        const [variantId, setVariantId] = React.useState("restored");
+        const variant = variants[variantId];
 
         return (
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Box sx={{ minHeight: "100%" }}>
-              <AppBar position="sticky" elevation={0} color="transparent" sx={{ backdropFilter: "blur(12px)" }}>
-                <Toolbar sx={{ py: 1.5, gap: 2 }}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="overline" sx={{ letterSpacing: 1.4, color: "primary.main", fontWeight: 800 }}>
-                      Simulation BT Agent
-                    </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                      Прототип сессии диалога
+            <Shell
+              drawer={
+                <Stack sx={{ height: "100%" }}>
+                  <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #e5e7eb" }}>
+                    <Stack direction="row" justifyContent="space-between" spacing={2}>
+                      <Box>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {icon("smart_toy", { fontSize: 24, color: "#2c4f7c" })}
+                          <Typography variant="h6">AI-агент RAIN</Typography>
+                        </Stack>
+                        <Stack direction="row" spacing={0.8} sx={{ mt: 0.9 }}>
+                          <Chip
+                            label={variant.status === "error" ? "Ошибка" : "Онлайн"}
+                            color={variant.status === "error" ? "error" : "success"}
+                            size="small"
+                          />
+                          <Chip label="Перезапустить сессию" variant="outlined" size="small" />
+                        </Stack>
+                      </Box>
+                      <IconButton>{icon("close", { color: "#6b7280" })}</IconButton>
+                    </Stack>
+                    {variant.showDetails ? (
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          mt: 1.25, p: 1.25, borderRadius: 2.5,
+                          backgroundColor: "#fff4f4", borderColor: "#f0b7b7",
+                        }}
+                      >
+                        <Typography sx={{ fontWeight: 700, fontSize: 13.5 }}>Ошибка подключения к агенту</Typography>
+                        <Typography color="text.secondary" sx={{ mt: 0.6, fontSize: 12.5, lineHeight: 1.35 }}>
+                          Во время работы агента произошла ошибка. Рекомендация: перезапустите сессию и повторите отправку.
+                        </Typography>
+                      </Paper>
+                    ) : null}
+                  </Box>
+
+                  {variant.loading ? <LinearProgress /> : null}
+
+                  <Box sx={{ px: 2, py: 1.5, flex: 1, overflowY: "auto" }}>
+                    <Stack spacing={1}>
+                      {variant.messages.map((message, index) => <Message key={index} {...message} />)}
+                    </Stack>
+                  </Box>
+
+                  <Divider />
+                  <Box sx={{ p: 2 }}>
+                    <Stack spacing={1.25}>
+                      <TextField
+                        size="small"
+                        multiline
+                        rows={5}
+                        fullWidth
+                        disabled={variant.inputDisabled}
+                        defaultValue={variantId === "restored" ? "Покажи текст последнего ответа в виде Markdown." : ""}
+                        inputProps={{ style: { overflowY: "auto" } }}
+                        placeholder="Введите сообщение агенту."
+                      />
+                      <Stack direction="row" spacing={1.25}>
+                        <Button variant="contained" color="primary" disabled>Сформировать БТ</Button>
+                        <Button variant="contained" disabled={variant.inputDisabled}>Отправить</Button>
+                      </Stack>
+                    </Stack>
+                  </Box>
+                </Stack>
+              }
+            >
+              <Stack spacing={2.5}>
+                <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={2}>
+                  <Box>
+                    <Typography variant="h5">Dialog Session Delivery Prototype</Typography>
+                    <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                      Схема для фронтенда: восстановление истории, локальная блокировка controls и status chip в шапке панели.
                     </Typography>
                   </Box>
-                  <Chip label="Markdown" color="primary" variant="outlined" />
-                  <Chip label="Неблокирующая панель" color="secondary" variant="outlined" />
-                </Toolbar>
-              </AppBar>
+                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    {Object.entries(variants).map(([id, item]) => (
+                      <Button
+                        key={id}
+                        variant={id === variantId ? "contained" : "outlined"}
+                        onClick={() => setVariantId(id)}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Stack>
 
-              <Container maxWidth={false} sx={{ px: { xs: 2, md: 4 }, py: 2 }}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} lg={8}>
-                    <Stack spacing={3}>
-                      <Card>
-                        <CardContent sx={{ p: 3 }}>
-                          <Stack spacing={2}>
-                            <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
-                              <Box>
-                                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                                  Основной экран остаётся интерактивным
-                                </Typography>
-                                <Typography color="text.secondary">
-                                  Даже при загрузке или ошибке блокируются только поле ввода и кнопки внутри окна агента.
-                                </Typography>
-                              </Box>
-                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                {pageVariants.map((item) => (
-                                  <Button
-                                    key={item.id}
-                                    variant={item.id === pageId ? "contained" : "outlined"}
-                                    onClick={() => setPageId(item.id)}
-                                  >
-                                    {item.label}
-                                  </Button>
-                                ))}
-                              </Stack>
-                            </Stack>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                              {[
-                                { id: "normal", label: "Нормальная работа" },
-                                { id: "loading", label: "Идёт запрос" },
-                                { id: "error", label: "Ошибка агента" },
-                              ].map((state) => (
-                                <Button
-                                  key={state.id}
-                                  variant={state.id === panelState ? "contained" : "outlined"}
-                                  color={state.id === "error" ? "error" : "primary"}
-                                  onClick={() => setPanelState(state.id)}
-                                >
-                                  {state.label}
-                                </Button>
-                              ))}
-                            </Stack>
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12} xl={8}>
+                    <Paper sx={{ p: 2.25, borderRadius: 4 }}>
+                      <Typography sx={{ fontWeight: 700, fontSize: 15 }}>Что важно для реализации панели</Typography>
+                      <Stack spacing={1} sx={{ mt: 1.3 }}>
+                        <Typography sx={{ fontSize: 13.5 }}>
+                          1. После open / restore чат рендерится сразу под шапкой. Между ними нет информационных карточек.
+                        </Typography>
+                        <Typography sx={{ fontSize: 13.5 }}>
+                          2. Поле ввода фиксировано на 5 строк и получает внутренний вертикальный scroll при переполнении.
+                        </Typography>
+                        <Typography sx={{ fontSize: 13.5 }}>
+                          3. Во время <code>POST /dialog/{"{session_id}"}/message</code> блокируются только textarea и кнопка `Отправить`.
+                        </Typography>
+                        <Typography sx={{ fontSize: 13.5 }}>
+                          4. Ошибка отображается через status chip и раскладывающийся details block, а не отдельной модалкой.
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
 
-                      <Card>
-                        <CardContent sx={{ p: 3 }}>
-                          <Stack spacing={2}>
-                            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                              {page.title}
-                            </Typography>
-                            <Grid container spacing={2}>
-                              <Grid item xs={12} md={6}>
-                                <Paper
-                                  variant="outlined"
-                                  sx={{
-                                    p: 2,
-                                    borderRadius: 4,
-                                    minHeight: 250,
-                                    background: "linear-gradient(180deg, #fbfdfd 0%, #f4f8f8 100%)",
-                                  }}
-                                >
-                                  <Stack spacing={1.25}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                                      Редактируемые данные на странице
-                                    </Typography>
-                                    {["Бизнес-цель", "Сегмент", "Комментарий аналитика"].map((label) => (
-                                      <TextField key={label} label={label} defaultValue={label === "Бизнес-цель" ? "Рост одобрения при контроле риска" : ""} />
-                                    ))}
-                                    <Button variant="outlined" onClick={() => setDraft("Скопированный фрагмент из интерфейса АС КОДА:\n- Риск-параметр: PD_LIMIT\n- TO BE: 0.42")}>
-                                      Вставить текст из интерфейса в окно агента
-                                    </Button>
-                                  </Stack>
-                                </Paper>
-                              </Grid>
-                              <Grid item xs={12} md={6}>
-                                <Paper
-                                  variant="outlined"
-                                  sx={{
-                                    p: 2,
-                                    borderRadius: 4,
-                                    minHeight: 250,
-                                    background: "linear-gradient(180deg, #fcfbff 0%, #f7f4ff 100%)",
-                                  }}
-                                >
-                                  <Stack spacing={1.25}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-                                      Что уходит при отправке сообщения
-                                    </Typography>
-                                    <Paper
-                                      sx={{
-                                        p: 2,
-                                        borderRadius: 3,
-                                        bgcolor: "#1d2a3f",
-                                        color: "#dce7fb",
-                                        fontFamily: '"Cascadia Code", monospace',
-                                        fontSize: 13,
-                                      }}
-                                    >
-                                      POST /dialog/{sessionId}/message
-                                      {"\n"}
-                                      {`{`}
-                                      {"\n"}
-                                      {`  "user_prompt": "...",`}
-                                      {"\n"}
-                                      {`  "user_full_name": "${userFullName}",`}
-                                      {"\n"}
-                                      {`  "dialog_started_at": "${dialogStartedAt}"`}
-                                      {"\n"}
-                                      {`}`}
-                                    </Paper>
-                                    <Alert severity="info" sx={{ borderRadius: 3 }}>
-                                      АС КОДА передаёт только текст пользователя и служебные поля вызова, но не валидирует и не интерпретирует содержимое запроса.
-                                    </Alert>
-                                  </Stack>
-                                </Paper>
-                              </Grid>
-                            </Grid>
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                  <Grid item xs={12} xl={4}>
+                    <Stack spacing={2}>
+                      <Paper sx={{ p: 2, borderRadius: 4, backgroundColor: "#eef6ff" }}>
+                        <Typography sx={{ fontWeight: 700 }}>Payload отправки сообщения</Typography>
+                        <Box
+                          component="pre"
+                          sx={{
+                            mt: 1,
+                            mb: 0,
+                            p: 1.25,
+                            fontSize: 12,
+                            borderRadius: 2,
+                            backgroundColor: "#0f172a",
+                            color: "#e2e8f0",
+                            overflowX: "auto",
+                          }}
+                        >
+{`POST /dialog/{session_id}/message
+{
+  "user_prompt": "...",
+  "user_full_name": "Матаков Мираслав Полад Оглы",
+  "dialog_started_at": "27.04.2026 12:06:14"
+}`}
+                        </Box>
+                      </Paper>
+                      <Alert severity="info">
+                        Основной экран симуляций в этом slice остаётся интерактивным во всех состояниях панели.
+                      </Alert>
                     </Stack>
                   </Grid>
                 </Grid>
-              </Container>
-
-              <Drawer
-                anchor="right"
-                open
-                variant="persistent"
-                sx={{
-                  width: 440,
-                  flexShrink: 0,
-                  "& .MuiDrawer-paper": {
-                    width: 440,
-                    p: 2.5,
-                    borderLeft: "1px solid rgba(15, 107, 82, 0.12)",
-                    background: "linear-gradient(180deg, #ffffff 0%, #f7fbfa 100%)",
-                  },
-                }}
-              >
-                <Stack spacing={2} sx={{ height: "100%" }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
-                        Правая боковая панель
-                      </Typography>
-                      <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                        Диалог с агентом
-                      </Typography>
-                    </Box>
-                    <Tooltip title="Панель можно закрыть, не сбрасывая страницу">
-                      <IconButton>
-                        <span aria-hidden="true">×</span>
-                      </IconButton>
-                    </Tooltip>
-                  </Stack>
-
-                  <Paper variant="outlined" sx={{ p: 1.75, borderRadius: 4 }}>
-                    <Stack spacing={1}>
-                      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                        <Chip size="small" label={`session_id: ${sessionId.slice(0, 8)}...`} color="primary" variant="outlined" />
-                        <Chip size="small" label={page.title} color="secondary" variant="outlined" />
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary">
-                        История и контекст восстановлены на стороне агента по `session_id`.
-                      </Typography>
-                    </Stack>
-                  </Paper>
-
-                  {panelState === "loading" && <LinearProgress sx={{ borderRadius: 999 }} />}
-
-                  {panelState === "error" && (
-                    <Alert severity="error" sx={{ borderRadius: 4 }}>
-                      Ошибка на стороне агента. Пользователь видит понятное сообщение и может перезапустить сессию.
-                    </Alert>
-                  )}
-
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 4,
-                      height: 0,
-                      minHeight: 360,
-                      overflow: "auto",
-                      flexGrow: 1,
-                      background: "#fbfcfe",
-                    }}
-                  >
-                    <Stack spacing={1.5}>
-                      {messages.map((item) => (
-                        <MessageBubble key={item.id} item={item} />
-                      ))}
-                    </Stack>
-                  </Paper>
-
-                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4 }}>
-                    <Stack spacing={1.25}>
-                      <TextField
-                        label="Сообщение пользователю агенту"
-                        multiline
-                        minRows={4}
-                        value={draft}
-                        disabled={controlsDisabled}
-                        onChange={(event) => setDraft(event.target.value)}
-                        helperText={
-                          panelState === "loading"
-                            ? "Во время запроса блокируются только элементы управления окна."
-                            : panelState === "error"
-                              ? "После ошибки поле остаётся доступным только после перезапуска сессии."
-                              : "Текст можно вставлять из интерфейса АС КОДА и редактировать как угодно."
-                        }
-                      />
-                      <Stack direction="row" spacing={1}>
-                        <Button variant="contained" disabled={controlsDisabled}>
-                          Отправить
-                        </Button>
-                        <Button variant="outlined" disabled={panelState === "loading"}>
-                          Перезапустить сессию
-                        </Button>
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                </Stack>
-              </Drawer>
-            </Box>
+              </Stack>
+            </Shell>
           </ThemeProvider>
         );
       }

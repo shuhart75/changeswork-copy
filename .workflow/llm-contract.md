@@ -75,7 +75,7 @@ If the user asks for work outside the active mode, either switch mode explicitly
 ## Canonical entities
 
 - `baseline/current` is the canonical deployed-system description.
-- `planning story` is a planning/HLE unit. It has Summary, Description, estimates and may not match implementation tasks 1:1.
+- `planning story` is a planning/HLE unit. It has Summary, Description, estimates split by `AN / FE / BE / QA`, and may not match implementation tasks 1:1.
 - `implementation task` is an execution tracking unit. It should match Jira naming where possible and includes estimate, dates, executor, status and progress.
 - `requirement pack` is grouped by feature/slice and then FE/BE.
 - `features/<feature>/requirements.md` is the primary control page and authored source for requirements; each slice must have its own ordered section there.
@@ -87,6 +87,7 @@ If the user asks for work outside the active mode, either switch mode explicitly
 ## Gantt rules
 
 - `quarter-plan` and `commander-plan` are built from planning stories.
+- Planning story estimates must be stored in `features/<feature>/planning/estimates.md` with explicit `AN / FE / BE / QA` role splits and an agreed total.
 - `commander-plan` is the quarter plan with management buffer, normally 20-30%.
 - `actual-progress` must show two useful layers:
   - `PLAN <TYPE> <summary>` bars from commander-plan planning stories;

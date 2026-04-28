@@ -43,7 +43,7 @@ Examples:
 ```text
 занимаемся планированием
 В папке `context/source-materials/change-requests/mobile-scorecards` лежат скрины и описание.
-Нужно разложить доработку на planning stories, дать HLE в человеко-днях и обновить quarter-plan/commander-plan.
+Нужно разложить доработку на planning stories, дать HLE в человеко-днях с разрезом `AN / FE / BE / QA` и обновить quarter-plan/commander-plan.
 ```
 
 ```text
@@ -143,8 +143,8 @@ Treat these as equivalent user phrasings.
 |---|---|---|
 | `новая фича` | Run feature intake/preflight and separate baseline coverage from the new delta before scaffolding. | `planning/intake/*.md`, `baseline/current/*`, `features/*`, source folders |
 | `спланируй квартал` | Build or update quarter planning structure and gantt. | `planning/<quarter>/gantt/*`, `features/*/planning/*` |
-| `разложи фичу на planning stories` | Create/update planning stories with Summary, Description and estimates. | `features/<feature>/planning/stories/*.md`, `estimates.md` |
-| `подготовь HLE` | Prepare story-level decomposition and person-day estimates for team discussion. | planning stories, `estimates.md`, scope prototype notes |
+| `разложи фичу на planning stories` | Create/update planning stories with Summary, Description and role-split estimates. | `features/<feature>/planning/stories/*.md`, `estimates.md` |
+| `подготовь HLE` | Prepare story-level decomposition and person-day estimates split by `AN / FE / BE / QA` for team discussion. | planning stories, `estimates.md`, scope prototype notes |
 | `собери командирский план` | Produce buffered management plan from quarter plan. | `commander-plan.puml`, includes |
 | `сравни план и факт` | Compare quarter/commander baseline with actual-progress. | gantt files, execution tasks |
 
