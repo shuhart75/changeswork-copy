@@ -1,0 +1,54 @@
+@startuml
+title Интеграция АС КОДА Frontend - Backend - RAIN через SSE
+
+actor User as U
+participant "Frontend АС КОДА\nReact UI" as FE
+participant "Backend АС КОДА\nAgent Integration Boundary" as BE
+participant "RAIN Agent API" as RAIN
+participant "Confluence" as CONF
+
+== Открытие окна агента ==
+
+U -> FE: Открывает окно RAIN
+FE -> FE: Генерирует/берёт session_id
+FE -> BE: POST /dialog/session\n{ session_id }
+BE -> RAIN: Открыть/восстановить сессию\nserver-to-server auth / OTT / mTLS
+RAIN --> BE: history, state
+BE --> FE: history, state
+
+== Отправка сообщения ==
+
+U -> FE: Нажимает "Отправить"
+FE -> BE: POST /dialog/{session_id}/message\n{ user_prompt,\n  user_full_name,\n  dialog_started_at }
+BE -> BE: Проверить пользователя,\nправа, session_id
+BE -> RAIN: Передать сообщение агенту\nserver-to-server auth / OTT / mTLS
+RAIN --> BE: run_id / message_id accepted
+BE --> FE: 202 Accepted\n{ run_id }
+
+== SSE поток событий ==
+
+FE -> BE: GET /dialog/{session_id}/events?run_id=...\nAccept: text/event-stream
+BE -> RAIN: Подписка/stream ответа агента\nserver-to-server auth / OTT / mTLS
+
+RAIN --> BE: agent event: started
+BE --> FE: event: message_started
+
+RAIN --> BE: agent event: text delta
+BE --> FE: event: assistant_delta\n{ text: "..." }
+
+RAIN --> BE: agent event: tool/status
+BE --> FE: event: status\n{ state: "creating_bt" }
+
+RAIN -> CONF: Создать страницу БТ
+CONF --> RAIN: btUrl
+
+RAIN --> BE: agent event: bt_created\n{ btUrl }
+BE -> BE: Аудит публикации БТ
+BE --> FE: event: bt_created\n{ btUrl }
+
+RAIN --> BE: agent event: done
+BE --> FE: event: message_done
+
+FE -> FE: Закрывает SSE stream,\nобновляет чат и показывает btUrl
+
+@enduml

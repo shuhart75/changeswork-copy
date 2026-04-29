@@ -4,6 +4,8 @@
 - `/home/reutov/Documents/AI/simulations_AI_agent`
 
 ## Requirements and analysis sources
+- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/requirements-v1.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/system-requirements-v1.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/Системные требования для интеграции АС КОДА и AI-Агента RAIN.md`

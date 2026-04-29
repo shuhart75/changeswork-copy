@@ -1,0 +1,163 @@
+openapi: 3.0.3
+info:
+  title: Health and Chat API
+  description: API для проверки работоспособности и взаимодействия с агентом
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Локальный сервер
+paths:
+  /health/liveness:
+    get:
+      summary: Проверка, что сервис жив
+      operationId: liveness
+      responses:
+        '200':
+          description: Сервис жив
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LivenessResponse'
+  /health/readiness:
+    get:
+      summary: Проверка готовности
+      operationId: readiness
+      responses:
+        '200':
+          description: Сервис готов к работе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessReadyResponse'
+        '503':
+          description: Сервис не готов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessNotReadyResponse'
+  /chat:
+    post:
+      summary: Отправить сообщение агенту
+      operationId: chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Успешный ответ агента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Некорректный запрос (отсутствует поле message или невалидный JSON)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          description: Неподдерживаемый Content-Type (должен быть application/json)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    LivenessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: alive
+      required:
+        - status
+    ReadinessReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ready
+      required:
+        - status
+    ReadinessNotReadyResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: not ready
+      required:
+        - status
+    ChatRequest:
+      type: object
+      properties:
+        session_id:
+          type: string
+          description: Идентификатор сессии
+          example: "abc-123"
+        message:
+          type: string
+          description: Сообщение для агента
+          example: "Привет, как дела?"
+        risk_params:
+          type: object
+          description: Параметры риска (старые и новые значения)
+          properties:
+            as_is:
+              type: object
+              description: Текущие значения риск-параметров
+              additionalProperties:
+                type: string
+              example:
+                rp_name1: "old_value1"
+                rp_name2: "old_value2"
+            to_be:
+              type: object
+              description: Новые значения риск-параметров
+              additionalProperties:
+                type: string
+              example:
+                rp_name1: "new_value1"
+                rp_name2: "new_value2"
+        simulation_id:
+          type: string
+          description: Идентификатор симуляции
+          example: "sim-456"
+        start_datetime:
+          type: string
+          format: date-time
+          description: Дата и время начала в формате ISO 8601 (с миллисекундами)
+          example: "2026-04-28T14:30:00.123Z"
+        fio:
+          type: string
+          description: Фамилия, имя, отчество аналитика
+          example: "Кузнецова Анна Сергеевна"
+      required:
+        - session_id
+        - message
+        - start_datetime
+        - fio
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+          description: Ответ агента
+      required:
+        - response
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Сообщение об ошибке
+      required:
+        - error

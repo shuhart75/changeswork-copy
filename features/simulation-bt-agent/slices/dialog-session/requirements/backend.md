@@ -1,18 +1,23 @@
-# Сессия диалога и работа окна агента (Бэкенд)
+# Асинхронная отправка сообщения, polling и история (Backend)
 
-Статус: **draft**  
-Feature: `simulation-bt-agent`  
-Slice: `dialog-session`  
-Область: `MVP`  
-Дата обновления: `2026-04-28`  
+Статус: **draft**
+Feature: `simulation-bt-agent`
+Slice: `dialog-session`
+Область: `MVP`
+Дата обновления: `2026-04-29`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
+
+## Связь с feature-level документом
+
+- Главный контрольный документ: `../../requirements.md`
+- Этот файл детализирует раздел `Реализация BACKEND` для текущего slice.
 
 ## Назначение пакета
 
-- Зафиксировать серверную модель истории и контекста на стороне агента, восстанавливаемых по `session_id`.
-- Описать единый REST открытия или восстановления окна и отдельный вызов отправки пользовательских сообщений.
-- Убрать из контракта открытия окна клиентскую передачу `contextPrompt` и истории.
-- Зафиксировать, что при отправке текста клиент дополнительно передаёт ФИО пользователя из СУДИР и дату-время старта диалога.
+- Зафиксировать backend async facade над синхронным RAIN `POST /chat`.
+- Описать хранение UI-сессии, истории сообщений и статусов run на стороне АС КОДА.
+- Описать polling endpoint для frontend.
+- Зафиксировать ограничения длины, таймауты, terminal statuses и запрет параллельных runs.
 
 ## Источники и трассировка
 
@@ -21,10 +26,10 @@ Slice: `dialog-session`
 - `../slice.md`
 - `../../feature.md`
 - `../../references.md`
-- `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/requirements-v1.md`
-- `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/system-requirements-v1.md`
-- `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/openapi.yaml`
-- `/home/reutov/Documents/AI/simulations_AI_agent/materials/source/API_Examples.md`
+- `../../requirements.md`
+- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
+- `context/change-requests/simulation-bt-agent/simulations_api.md`
 
 ### Связанные planning stories
 
@@ -34,11 +39,12 @@ Slice: `dialog-session`
 
 - `DEC-2026-04-24-SIMULATION-BT-AGENT-001`
 - `DEC-2026-04-27-SIMULATION-BT-AGENT-002`
-- `DEC-2026-04-28-SIMULATION-BT-AGENT-005`
+- `DEC-2026-04-29-SIMULATION-BT-AGENT-007`
 
 ### Связанные артефакты
 
-- Требования фронтенда: `frontend.md`
+- Feature requirements: `../../requirements.md`
+- Frontend requirements: `frontend.md`
 - Domain impact: `../../domain-impact.md`
 - Implementation tasks: `../execution/tasks.md`
 
@@ -46,158 +52,219 @@ Slice: `dialog-session`
 
 ### Цель
 
-Сделать агента владельцем истории и диалогового контекста, чтобы пользователь мог открывать окно из разных страниц симуляций и продолжать один и тот же разговор по `session_id`.
+Скрыть от frontend долгий синхронный вызов RAIN `/chat`, сохранив для пользователя управляемый диалог и не блокируя браузерный request до полного ответа агента.
 
 ### Источник правды
 
-Источником правды для истории, накопленного контекста и текущего состояния диалога является хранилище сессий на стороне агента.
+Источником правды для UI-истории, активного run и terminal status является backend АС КОДА. RAIN является источником текста ответа `response`, но по текущему контракту не предоставляет историю, статус run или streaming.
 
 ### Затронутые bounded contexts / aggregates
 
-- прикладное состояние сессии вне базовой модели `Simulation`
+- прикладное состояние UI-сессии агента вне базовой модели `Simulation`
 - `Research and Execution`
+- `Identity and Access`
 
 ### Термины и определения
 
-- `Открытие и восстановление сессии` — вызов окна агента по `session_id`.
-- `Отправка сообщения` — отправка пользовательского текста после того, как окно уже открыто.
-- `Контекст на стороне агента` — история и накопленные данные, которыми владеет агент, а не фронтенд.
-- `dialog_started_at` — дата и время первого открытия окна агента в рамках текущей пользовательской сессии АС КОДА.
-- `client-generated session_id` — UUID, который фронт локально создаёт при первом открытии окна и затем использует как внешний ключ серверной диалоговой сессии.
+- `agent_ui_session` — UI-сессия окна агента в АС КОДА, связанная с `session_id` и пользовательской СУДИР-сессией.
+- `agent_dialog_run` — асинхронная операция отправки одного сообщения в RAIN.
+- `agent_dialog_message` — сохранённое сообщение пользователя или агента для порционной истории.
+- `RAIN /chat` — синхронный server-to-server метод агента из `agent_openapi.yaml`.
+- `terminal status` — конечное состояние run: `succeeded`, `failed`, `timeout`, `cancelled`.
 
 ## Бизнес-правила и системные ограничения
 
-### BR-1. Агент восстанавливает диалог по `session_id`
-- история и контекст не передаются фронтом при открытии окна;
-- один и тот же `session_id` должен возвращать тот же разговор, пока сессия активна;
-- новый `session_id` создаёт новый разговор.
+### BR-1. RAIN вызывается только backend АС КОДА
+- frontend не вызывает RAIN напрямую;
+- OTT, mTLS и внутренние endpoints RAIN не передаются в браузер;
+- backend АС КОДА маппит данные frontend/АС КОДА в контракт RAIN `/chat`.
 
-### BR-1a. `session_id` имеет клиентское происхождение и строгий формат
-- `session_id` генерируется на фронте локально в формате UUID при первом открытии окна;
-- backend не создаёт `session_id` отдельным служебным вызовом;
-- первый unseen `session_id` должен атомарно создавать новую серверную сессию;
-- повторный вызов с тем же `session_id` должен восстанавливать ту же серверную сессию;
-- malformed `session_id` отклоняется с ошибкой валидации;
-- коллизия уже существующего `session_id` трактуется как восстановление существующей сессии, а не как создание новой.
+### BR-2. Долгий вызов RAIN оборачивается в async run
+- `POST /dialog/{session_id}/message` не ждёт полного ответа RAIN;
+- backend создаёт `run_id` и возвращает `202 Accepted`;
+- фоновый worker или async task вызывает RAIN `POST /chat`;
+- frontend читает статус через polling.
 
-### BR-2. Открытие окна и отправка сообщения — разные технические действия
-- REST открытия и восстановления принимает только `session_id`;
-- отправка пользовательского текста выполняется отдельно;
-- ни открытие и восстановление, ни отправка сообщения не должны принимать клиентскую копию истории.
+### BR-3. В рамках одного `session_id` допускается один active run
+- если для `session_id` уже есть run в статусе `queued` или `running`, новый `POST /message` отклоняется;
+- это защищает от смешивания контекста и повторной публикации БТ;
+- повторная отправка после terminal status считается новым пользовательским действием.
 
-### BR-3. Отправка текста сопровождается данными пользователя и моментом старта диалога
-- при каждом вызове отправки текста фронт передаёт ФИО пользователя из СУДИР;
-- при каждом вызове отправки текста фронт передаёт дату-время старта диалога, зафиксированные в момент первого открытия окна;
-- для всех сообщений в рамках одной пользовательской сессии значение `dialog_started_at` остаётся неизменным;
-- агент может использовать эти данные как часть собственного контекста, но АС КОДА не интерпретирует их содержимое.
+### BR-4. История хранится в АС КОДА и отдаётся страницами
+- backend сохраняет user message до вызова RAIN и agent response после успеха;
+- frontend не должен загружать всю историю сразу;
+- backend обязан поддержать cursor/limit для истории;
+- если история длинная, backend отдаёт последние сообщения и признак наличия более ранних.
 
-### BR-4. Ошибка должна позволять начать новую сессию
-- если сессия повреждена, истекла или завершилась с ошибкой, сервер должен вернуть признак необходимости перезапуска;
-- перезапуск создаёт новый `session_id`;
-- сессия, завершённая перезапуском, не считается текущей.
+### BR-5. Ограничения длины обязательны на backend
+- backend валидирует длину `message` независимо от frontend;
+- backend ограничивает размер сохраняемого `response` или переводит run в ошибку, если ответ превышает допустимый предел;
+- числовые лимиты должны быть конфигурируемыми.
+
+### BR-6. SLA RAIN учитывается через timeout policy
+- SLA системных требований: стандартный запрос около `24.9 + 13.9` секунд, диалоговое взаимодействие около `91.6 + 69.2` секунд;
+- backend не должен держать браузерный запрос открытым на это время;
+- server-to-server вызов RAIN может быть долгим, но должен иметь hard timeout;
+- создание БТ от подтверждения до ссылки не имеет подтверждённого SLA, поэтому timeout и retry policy должны быть явно согласованы.
 
 ## Границы MVP
 
 ### Входит в MVP
 
-- хранилище сессий на стороне агента;
-- `POST /dialog/session` для открытия и восстановления;
-- `POST /dialog/{session_id}/message` для отправки сообщения;
-- восстановление истории и контекста по `session_id`;
-- защита от порчи истории при повторных вызовах;
-- детерминированная обработка ошибок и перезапуска сессии.
+- `POST /dialog/{session_id}/message` с быстрым ответом `202 { run_id }`;
+- фоновый вызов RAIN `POST /chat`;
+- `GET /dialog/{session_id}/runs/{run_id}` для polling;
+- `GET /dialog/{session_id}/messages` с cursor/limit;
+- сохранение истории в АС КОДА;
+- active run lock;
+- server-side validation prompt length;
+- обработка `succeeded`, `failed`, `timeout`, `cancelled`;
+- логирование и метрики run.
 
 ### Не входит в MVP
 
-- клиентский `contextPrompt`;
-- требование к серверу получать структурированный контекст симуляции при каждом открытии;
-- мультирегиональная репликация диалоговых сессий.
+- frontend SSE/WebSocket;
+- streaming partial responses;
+- polling самого RAIN, потому что в контракте нет run/status endpoint;
+- параллельные runs в одной сессии;
+- автоматический retry создания БТ без идемпотентности;
+- хранение истории в RAIN как источник правды.
 
 ### Отложено после MVP
 
-- многоуровневые правила хранения сессий;
-- общие сессии для нескольких пользователей;
-- унификация с окнами агентов в других разделах системы.
+- переход на SSE при появлении streaming/status API у RAIN;
+- отмена run с propagation cancel в RAIN;
+- идемпотентный ключ публикации БТ;
+- архивирование длинной истории.
 
 ## Пользовательские и системные сценарии
 
-### Сценарий BE-1. Открытие и восстановление окна
-1. Клиент вызывает `POST /dialog/session` c `session_id`.
-2. Backend валидирует `session_id` как UUID, а затем находит или создаёт состояние сессии.
-3. Backend возвращает текущее состояние окна и историю.
+### Сценарий BE-1. Создание async run
+1. Frontend вызывает `POST /dialog/{session_id}/message`.
+2. Backend проверяет пользователя, `session_id`, readiness агента, лимит длины и отсутствие active run.
+3. Backend сохраняет user message, создаёт `agent_dialog_run` в статусе `queued` или `running`.
+4. Backend возвращает `202 Accepted` с `run_id`.
+5. Backend в фоне вызывает RAIN `POST /chat`.
 
-### Сценарий BE-2. Отправка сообщения после открытия окна
-1. Клиент отправляет текст отдельным вызовом отправки сообщения.
-2. Вместе с текстом клиент передаёт ФИО пользователя из СУДИР и дату-время старта диалога.
-3. Backend использует уже восстановленный контекст на стороне агента.
-4. Backend возвращает новый ответ и обновлённую историю.
+### Сценарий BE-2. Завершение run успехом
+1. RAIN возвращает `200 { response }`.
+2. Backend валидирует размер `response`, сохраняет agent message.
+3. Run переводится в `succeeded`.
+4. Polling endpoint возвращает terminal status и ссылку на сохранённое сообщение/результат.
 
-### Сценарий BE-3. Ошибка и перезапуск сессии
-1. Во время восстановления или отправки сообщения возникает ошибка.
-2. Backend возвращает понятный код ошибки и признак необходимости перезапуска, если это требуется.
-3. Клиент создаёт новую сессию и повторно открывает окно.
+### Сценарий BE-3. Timeout или ошибка RAIN
+1. RAIN возвращает ошибку или не отвечает до hard timeout.
+2. Backend переводит run в `failed` или `timeout`.
+3. Backend сохраняет техническую ошибку и возвращает frontend нормализованный код.
+4. Active run lock снимается по terminal status.
+
+### Сценарий BE-4. Порционная история
+1. Frontend запрашивает историю с `limit`.
+2. Backend возвращает последние сообщения и `next_cursor`, если есть более ранние.
+3. При запросе с `before` backend возвращает предыдущую страницу.
 
 ## Функциональные требования
 
-### BE-FR-1. Единый REST открытия и восстановления
+### BE-FR-1. Отправка сообщения создаёт async run
 
-**Описание:**  
-Backend должен иметь единый REST открытия или восстановления окна, который принимает только `session_id`.
-
-**Правила и ограничения:**
-- request body содержит только `session_id`;
-- `session_id` должен быть валидным UUID, сгенерированным фронтом;
-- REST открытия и восстановления не принимает `contextPrompt`, `riskParam`, `businessGoal`, историю сообщений или данные текущей страницы;
-- при известном `session_id` сервер возвращает существующую историю;
-- при новом `session_id` сервер создаёт стартовую сессию.
-
-**Зависимости:**
-- slice `agent-entrypoint`;
-- хранилище сессий агента.
-
-### BE-FR-2. История и контекст хранятся на стороне агента
-
-**Описание:**  
-Сервер должен хранить историю и накопленный контекст на стороне агента и использовать их при каждом последующем сообщении.
+**Описание:**
+Backend должен принимать пользовательское сообщение и возвращать `run_id` без ожидания полного ответа RAIN.
 
 **Правила и ограничения:**
-- история не запрашивается у клиента как источник правды;
-- накопленные данные предыдущих шагов сохраняются в хранилище сессий;
-- при повторном открытии или восстановлении возвращается актуальное состояние того же разговора;
-- завершённая или истёкшая сессия обрабатывается по согласованным правилам времени жизни.
+- `session_id` обязателен и должен принадлежать текущей пользовательской СУДИР-сессии;
+- `message` обязателен и не может быть пустым;
+- `start_datetime` обязателен, формат ISO 8601 с миллисекундами;
+- `fio` берётся из профиля СУДИР на backend или принимается от frontend только если это уже канонический frontend context; итоговое значение должно соответствовать профилю пользователя;
+- при active run возвращается `409 run_in_progress`;
+- при неготовом агенте возвращается `503 agent_not_ready`;
+- успешный ответ `POST /message` имеет статус `202`, а не `200` с полным ответом агента.
 
 **Зависимости:**
-- хранилище сессий;
-- сценарий публикации из slice `bt-publication`.
+- UI session store;
+- status API агента;
+- worker/async execution infrastructure.
 
-### BE-FR-3. Отправка сообщения не смешивается с открытием и восстановлением
+### BE-FR-2. Backend вызывает RAIN `POST /chat`
 
-**Описание:**  
-Сервер должен принимать пользовательский текст отдельным техническим действием после того, как сессия уже восстановлена.
+**Описание:**
+Backend должен вызывать RAIN строго по предоставленному OpenAPI-контракту.
 
 **Правила и ограничения:**
-- запрос отправки текста содержит идентификатор сессии и текст пользователя;
-- запрос отправки текста содержит также ФИО пользователя и дату-время старта диалога;
-- сервер использует контекст из хранилища сессий, а не из клиентских данных;
-- при повторной отправке не должен ломаться накопленный разговор;
-- точное имя маршрута может быть уточнено в API-дизайне, но разделение обязано сохраниться.
+- server-to-server request содержит `session_id`, `message`, `start_datetime`, `fio`;
+- `risk_params` и `simulation_id` передаются, когда сообщение связано с конкретной симуляцией и данные доступны;
+- `risk_params.as_is` и `risk_params.to_be` собираются из доверенного existing simulation detail API или валидируются backend перед отправкой;
+- backend использует HTTPS/mTLS/OTT для вызова RAIN, когда окружение это поддерживает;
+- тестовый режим без OTT на ИФТ допускается только как явно зафиксированный технический долг, если OTT не готов во 2Q.
 
 **Зависимости:**
-- окно агента на фронтенде;
-- защищённый транспорт.
+- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`;
+- existing simulation detail API;
+- инфраструктура mTLS/OTT.
 
-### BE-FR-4. Сервер должен поддерживать явный перезапуск сессии
+### BE-FR-3. Polling endpoint возвращает состояние run
 
-**Описание:**  
-Сервер должен позволять клиенту безопасно завершить неудачную сессию и начать новую.
+**Описание:**
+Backend должен предоставить endpoint для чтения состояния run.
 
 **Правила и ограничения:**
-- ошибочный ответ должен позволять фронту понять, нужен ли перезапуск;
-- новая сессия не должна наследовать повреждённое состояние завершённой сессии;
-- повторное открытие с новым `session_id` должно создавать новый разговор.
+- endpoint возвращает `run_id`, `session_id`, `status`, `created_at`, `updated_at`;
+- для terminal status возвращается нормализованный результат: `message_id` и/или `response` preview;
+- для `failed`/`timeout` возвращается безопасный для UI код и сообщение;
+- endpoint не раскрывает OTT, внутренние URL RAIN, stack trace или полный технический лог;
+- чтение чужого run запрещено.
 
 **Зависимости:**
-- правила обработки ошибок на фронтенде.
+- `agent_dialog_run` storage.
+
+### BE-FR-4. История сообщений отдаётся через pagination
+
+**Описание:**
+Backend должен отдавать историю диалога страницами.
+
+**Правила и ограничения:**
+- поддерживаются параметры `limit` и `before`;
+- default `limit` рекомендуемо `20`, max `50`;
+- порядок ответа должен быть стабильным и позволять frontend восстановить хронологию;
+- backend возвращает `next_cursor` или `has_more`;
+- большие сообщения могут отдавать `truncated=true` и `full_message_available=true`, если UI не должен сразу грузить полный текст;
+- backend не отдаёт всю историю без лимита.
+
+**Зависимости:**
+- `agent_dialog_message` storage;
+- индексы по `session_id`, `created_at` или sequence.
+
+### BE-FR-5. Лимиты длины и размера
+
+**Описание:**
+Backend должен централизованно ограничивать размер входного prompt, ответа RAIN и страницы истории.
+
+**Правила и ограничения:**
+- `message_max_chars` конфигурируемый, рекомендуемый MVP default `8000`;
+- `agent_response_max_chars` конфигурируемый, рекомендуемый MVP default `50000`;
+- `history_page_max_messages` конфигурируемый, рекомендуемый max `50`;
+- при превышении `message_max_chars` возвращается `400 message_too_long`;
+- если `response` RAIN превышает лимит, backend сохраняет ошибку или усечённое сообщение только по явно согласованному правилу; silent truncation запрещён;
+- лимиты должны быть возвращаемы frontend через config/status endpoint или синхронизированы в deployment config.
+
+**Зависимости:**
+- frontend validation;
+- storage capacity.
+
+### BE-FR-6. Timeout и retry policy
+
+**Описание:**
+Backend должен иметь явную политику timeout для долгого вызова RAIN.
+
+**Правила и ограничения:**
+- server-to-server `POST /chat` имеет hard timeout, рекомендуемый MVP default `180` секунд для диалогового взаимодействия;
+- для сценария создания БТ hard timeout может быть больше только после согласования SLA с RAIN, так как в системных требованиях нет значения от подтверждения до ссылки;
+- при timeout run получает terminal status `timeout`;
+- автоматический retry `POST /chat` запрещён для сообщений, которые могли привести к созданию БТ, пока RAIN не предоставит идемпотентный ключ или безопасный status endpoint;
+- для технических ошибок до передачи запроса в RAIN допускается retry по инфраструктурной политике, но он должен быть прозрачно логирован.
+
+**Зависимости:**
+- SLA RAIN;
+- бизнес-правила публикации БТ.
 
 ## Модель данных
 
@@ -205,28 +272,39 @@ Backend должен иметь единый REST открытия или вос
 
 | Сущность / таблица | Поле | Тип | Обязательность | Описание |
 |---|---|---|---|---|
-| `agent_dialog_session` | `session_id` | UUID/string | обязательно | идентификатор диалога |
-| `agent_dialog_session` | `history` | JSONB/document | обязательно | каноническая история сообщений |
-| `agent_dialog_session` | `agent_context` | JSONB/document | обязательно | накопленный контекст разговора |
-| `agent_dialog_session` | `status` | string | обязательно | состояние разговора |
-| `agent_dialog_session` | `last_activity_at` | timestamp | обязательно | используется для правил времени жизни |
-| `agent_dialog_session` | `dialog_started_at` | timestamp with timezone | обязательно | дата и время первого открытия окна |
-| `agent_dialog_session` | `user_full_name` | string | обязательно | ФИО пользователя из СУДИР, использованное при отправке текста |
+| `agent_ui_session` | `session_id` | UUID/string | обязательно | идентификатор UI-сессии окна агента |
+| `agent_ui_session` | `user_id` | string/UUID | обязательно | пользователь СУДИР |
+| `agent_ui_session` | `start_datetime` | timestamp with timezone | обязательно | дата и время первого открытия окна |
+| `agent_ui_session` | `status` | string | обязательно | `active`, `restarted`, `closed` |
+| `agent_dialog_run` | `run_id` | UUID/string | обязательно | идентификатор async run |
+| `agent_dialog_run` | `session_id` | UUID/string | обязательно | ссылка на UI-сессию |
+| `agent_dialog_run` | `status` | enum | обязательно | `queued`, `running`, `succeeded`, `failed`, `timeout`, `cancelled` |
+| `agent_dialog_run` | `rain_http_status` | integer/null | опционально | статус ответа RAIN |
+| `agent_dialog_run` | `error_code` | string/null | опционально | нормализованный код ошибки |
+| `agent_dialog_run` | `created_at` / `updated_at` | timestamp | обязательно | контроль polling и timeout |
+| `agent_dialog_message` | `message_id` | UUID/string | обязательно | идентификатор сообщения |
+| `agent_dialog_message` | `session_id` | UUID/string | обязательно | ссылка на UI-сессию |
+| `agent_dialog_message` | `run_id` | UUID/string/null | опционально | run, породивший сообщение |
+| `agent_dialog_message` | `role` | enum | обязательно | `user`, `agent`, `system` |
+| `agent_dialog_message` | `content` | text | обязательно | текст сообщения |
+| `agent_dialog_message` | `content_length` | integer | обязательно | длина сообщения для лимитов |
+| `agent_dialog_message` | `created_at` | timestamp | обязательно | порядок истории |
 
 ### Инварианты и ограничения
 
-- `session_id` уникален;
-- `session_id` приходит извне как клиентский UUID и после создания записи не меняется;
-- открытие и восстановление не меняют историю, кроме возможной инициализации новой сессии;
-- отправка сообщения использует существующий `agent_context`;
-- `dialog_started_at` не изменяется после первого сообщения в рамках текущей сессии;
-- клиентская история не имеет приоритета над серверной историей.
+- у одного `session_id` не может быть более одного active run;
+- `session_id` принадлежит пользовательской СУДИР-сессии и не должен быть доступен другому пользователю;
+- user message сохраняется до запуска RAIN;
+- agent message сохраняется только после успешного ответа RAIN;
+- история отдаётся только с `limit`;
+- silent truncation ответа агента запрещён без явного признака `truncated`.
 
 ### Индексы / уникальности / FK
 
-- уникальный индекс по `session_id`;
-- входной `session_id` валидируется как UUID до попытки чтения или создания записи;
-- индекс по `last_activity_at` для обслуживания правил времени жизни.
+- уникальный индекс по `run_id`;
+- индекс active run по `session_id`, `status`;
+- индекс истории по `session_id`, `created_at` или sequence;
+- уникальность `session_id` в рамках пользователя или пользовательской СУДИР-сессии.
 
 ## API-контракт
 
@@ -234,95 +312,136 @@ Backend должен иметь единый REST открытия или вос
 
 | Метод и маршрут | Назначение | Кто вызывает | Примечание |
 |---|---|---|---|
-| `POST /dialog/session` | открыть или восстановить окно агента | окно агента на фронтенде | запрос содержит только `session_id` |
-| `POST /dialog/{session_id}/message` | отправить пользовательский текст | окно агента на фронтенде | использует уже восстановленный контекст и получает ФИО пользователя с датой-временем старта диалога |
+| `POST /dialog/{session_id}/message` | создать async run отправки сообщения | frontend agent window | возвращает `202 { run_id }` |
+| `GET /dialog/{session_id}/runs/{run_id}` | получить статус run | frontend polling | terminal statuses: `succeeded`, `failed`, `timeout`, `cancelled` |
+| `GET /dialog/{session_id}/messages` | получить страницу истории | frontend agent window | параметры `limit`, `before` |
+| `POST RAIN /chat` | отправить сообщение агенту | backend АС КОДА | server-to-server по `agent_openapi.yaml` |
 
 ### OpenAPI fragment
 
 ```yaml
 openapi: 3.0.3
 info:
-  title: API сессии окна агента
+  title: Agent Dialog Async Facade API
   version: 1.0.0
 paths:
-  /dialog/session:
-    post:
-      summary: Открыть или восстановить окно диалога
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [session_id]
-              properties:
-                session_id:
-                  type: string
-                  format: uuid
-      responses:
-        "200":
-          description: Текущее состояние сессии
   /dialog/{session_id}/message:
     post:
-      summary: Отправить пользовательское сообщение в восстановленную сессию
+      summary: Создать async run отправки сообщения агенту
       parameters:
         - in: path
           name: session_id
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [user_prompt, user_full_name, dialog_started_at]
+              required: [message]
               properties:
-                user_prompt:
+                message:
                   type: string
-                user_full_name:
+                  maxLength: 8000
+                simulation_id:
                   type: string
-                  description: ФИО пользователя из СУДИР
-                dialog_started_at:
+                  nullable: true
+                mode:
                   type: string
-                  format: date-time
-                  description: Момент времени, зафиксированный при первом открытии окна диалога
+                  enum: [consultation, bt_creation]
+                  nullable: true
+      responses:
+        "202":
+          description: Run создан
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run_id, status]
+                properties:
+                  run_id:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: queued
+        "400":
+          description: Ошибка валидации
+        "409":
+          description: По session_id уже есть активный run
+        "503":
+          description: Агент не готов
+  /dialog/{session_id}/runs/{run_id}:
+    get:
+      summary: Получить статус async run
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
-          description: Обновлённый ответ диалога
+          description: Состояние run
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run_id, status]
+                properties:
+                  run_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [queued, running, succeeded, failed, timeout, cancelled]
+                  message_id:
+                    type: string
+                    nullable: true
+                  error_code:
+                    type: string
+                    nullable: true
+                  error_message:
+                    type: string
+                    nullable: true
+  /dialog/{session_id}/messages:
+    get:
+      summary: Получить страницу истории диалога
+      parameters:
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+        - in: query
+          name: before
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Страница сообщений
 components: {}
 ```
 
 ### Примеры запросов и ответов
 
-#### Пример 1. Восстановление окна
-
-```http
-POST /dialog/session HTTP/1.1
-Content-Type: application/json
-```
-
-```json
-{
-  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-}
-```
-
-```json
-{
-  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "history": [
-    {
-      "role": "agent",
-      "text": "Продолжаем предыдущий разговор."
-    }
-  ],
-  "restartAvailable": true
-}
-```
-
-#### Пример 2. Отправка сообщения
+#### Пример 1. Создание run
 
 ```http
 POST /dialog/a1b2c3d4-e5f6-7890-abcd-ef1234567890/message HTTP/1.1
@@ -331,79 +450,156 @@ Content-Type: application/json
 
 ```json
 {
-  "user_prompt": "Сформируй БТ по этой симуляции.",
-  "user_full_name": "Иванов Иван Иванович",
-  "dialog_started_at": "2026-04-27T11:42:00+03:00"
+  "message": "Сформируй БТ по этой симуляции.",
+  "simulation_id": "SIM-CC-148",
+  "mode": "bt_creation"
 }
 ```
 
 ```json
 {
-  "agentResponse": "Подготовил черновик. Проверьте детали.",
-  "restartAvailable": true
+  "run_id": "7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51",
+  "status": "queued"
+}
+```
+
+#### Пример 2. Server-to-server вызов RAIN
+
+```http
+POST /chat HTTP/1.1
+Content-Type: application/json
+```
+
+```json
+{
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "message": "Сформируй БТ по этой симуляции.",
+  "risk_params": {
+    "as_is": {
+      "PD_LIMIT": "0.38"
+    },
+    "to_be": {
+      "PD_LIMIT": "0.42"
+    }
+  },
+  "simulation_id": "SIM-CC-148",
+  "start_datetime": "2026-04-29T12:30:00.123+03:00",
+  "fio": "Иванов Иван Иванович"
+}
+```
+
+```json
+{
+  "response": "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345"
+}
+```
+
+#### Пример 3. Polling terminal status
+
+```http
+GET /dialog/a1b2c3d4-e5f6-7890-abcd-ef1234567890/runs/7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51 HTTP/1.1
+```
+
+```json
+{
+  "run_id": "7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51",
+  "status": "succeeded",
+  "message_id": "msg-1002451"
+}
+```
+
+#### Пример 4. Страница истории
+
+```http
+GET /dialog/a1b2c3d4-e5f6-7890-abcd-ef1234567890/messages?limit=20 HTTP/1.1
+```
+
+```json
+{
+  "items": [
+    {
+      "message_id": "msg-1002450",
+      "role": "user",
+      "content": "Сформируй БТ по этой симуляции.",
+      "created_at": "2026-04-29T12:30:03.000+03:00"
+    },
+    {
+      "message_id": "msg-1002451",
+      "role": "agent",
+      "content": "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345",
+      "created_at": "2026-04-29T12:31:40.000+03:00"
+    }
+  ],
+  "next_cursor": null,
+  "has_more": false
 }
 ```
 
 ## Интеграции, вычисления и фоновые процессы
 
-- Внешние системы: AI-агент RAIN;
-- Асинхронные процессы: обслуживание времени жизни сессий;
-- Вычисление статусов / derived fields: текущее состояние окна определяется хранилищем сессий агента;
-- Идемпотентность / ретраи: повторное открытие или восстановление с тем же `session_id` должно быть безопасным и не порождать второй разговор.
+- Внешние системы: AI-агент RAIN, existing simulation detail API;
+- Асинхронные процессы: worker/background task вызова RAIN `/chat`;
+- Вычисление статусов / derived fields: `run.status`, `has_active_run`, `has_more`;
+- Идемпотентность / ретраи: автоматический retry `POST /chat` для БТ запрещён без идемпотентности RAIN.
 
 ## Ошибки и валидация
 
 ### Валидационные правила
 
-- открытие и восстановление принимают только `session_id`;
-- отправка сообщения принимает `user_prompt`, ФИО пользователя, дату-время старта диалога и идентификатор существующей сессии;
-- клиентский набор данных с историей и `contextPrompt` должен отвергаться;
-- отсутствие сессии или её окончательное истечение должно возвращаться детерминированной ошибкой или новой сессией по согласованным правилам реализации.
+- `session_id` обязателен и валиден;
+- `message` обязателен, непустой и не длиннее `message_max_chars`;
+- `start_datetime` хранится в UI-сессии и передаётся в RAIN в формате ISO 8601;
+- `fio` берётся из СУДИР-профиля пользователя;
+- нельзя создать второй active run по тому же `session_id`;
+- polling чужого `run_id` запрещён;
+- история без `limit` использует безопасный default.
 
 ### Ошибки API
 
 | Код/сценарий | Условие | Ответ |
 |---|---|---|
-| `400 invalid_session_open_payload` | открытие или восстановление содержит поля кроме `session_id` | ошибка валидации |
-| `400 invalid_session_id_format` | `session_id` не является валидным UUID | ошибка валидации |
-| `404 session_not_found` | отправка сообщения идёт в несуществующую сессию | ошибка отсутствующей сессии |
-| `409 session_recovery_conflict` | конфликт восстановления одной и той же сессии | детерминированный отказ, если он нужен реализации |
-| `502 agent_error` | ошибка на стороне агента | ошибка с признаком возможности перезапуска сессии |
+| `400 message_empty` | пустой текст | ошибка валидации |
+| `400 message_too_long` | prompt превышает лимит | ошибка валидации с текущим лимитом |
+| `404 session_not_found` | `session_id` не найден или не принадлежит пользователю | ошибка отсутствующей сессии |
+| `404 run_not_found` | `run_id` не найден в сессии | ошибка отсутствующего run |
+| `409 run_in_progress` | уже есть active run | конфликт |
+| `503 agent_not_ready` | RAIN readiness не готов | временная недоступность |
+| `504 agent_timeout` | RAIN не ответил в hard timeout | terminal status `timeout` |
+| `502 agent_error` | RAIN вернул ошибку или некорректный ответ | terminal status `failed` |
 
 ## Миграция и обратная совместимость
 
-- Нужны ли миграции данных: зависит от новой модели хранилища сессий;
-- Нужен ли backfill: нет;
-- Есть ли риски для текущего baseline: да, контракт запуска использует восстановление сессии по `session_id`, без `contextPrompt`;
-- Что должно попасть в release finalization: контракт открытия сессии, контракт отправки сообщения, правила времени жизни сессии и правила перезапуска.
+- Нужны ли миграции данных: да, если история и run status хранятся в постоянном backend-хранилище АС КОДА.
+- Нужен ли backfill: нет.
+- Есть ли риски для текущего baseline: да, прежняя модель прямого синхронного ответа заменяется async facade над RAIN `/chat`.
+- Что должно попасть в release finalization: async contract, лимиты, timeout policy, health/status behavior и правила хранения истории.
 
 ## Observability и аудит
 
-- Логи: открытие и восстановление, отправка сообщения, `session_id`, результат восстановления;
-- Метрики: количество восстановлений, количество новых сессий, количество сообщений, количество перезапусков сессии;
-- Audit trail: отдельно бизнес-аудитится только публикация БТ, а не обычное открытие окна.
+- Логи: создание run, вызов RAIN, terminal status, timeout, error_code, `session_id`, `run_id`;
+- Метрики: run duration, success/failure/timeout rate, readiness state, средний размер prompt/response, количество сообщений в истории;
+- Audit trail: обычные сообщения технически логируются, бизнес-аудит публикации БТ фиксируется в slice `bt-publication`.
 
 ## Критерии приемки
 
-### BE-AC-1. Модель открытия и восстановления
-- [ ] Единый REST открытия окна принимает только `session_id`
-- [ ] `session_id` приходит как валидный UUID, сгенерированный фронтом
-- [ ] Первый unseen `session_id` создаёт новую серверную сессию
-- [ ] История и контекст восстанавливаются на стороне агента
-- [ ] Клиентский `contextPrompt` не используется для открытия окна
+### BE-AC-1. Async facade
+- [ ] `POST /message` возвращает `202 { run_id }` без ожидания полного ответа RAIN
+- [ ] Backend вызывает RAIN `/chat` в фоне
+- [ ] Polling endpoint возвращает terminal status
+- [ ] Active run lock не позволяет создать второй run в той же сессии
 
-### BE-AC-2. Отправка сообщения
-- [ ] Пользовательский текст отправляется отдельным действием после открытия окна
-- [ ] Отправка текста использует контекст на стороне агента по `session_id`
-- [ ] Отправка текста передаёт ФИО пользователя из СУДИР и дату-время старта диалога
-- [ ] Повторное открытие или восстановление с тем же `session_id` безопасно и не создаёт вторую историю
+### BE-AC-2. История и лимиты
+- [ ] User message и agent response сохраняются в истории АС КОДА
+- [ ] История отдаётся только страницами с `limit`
+- [ ] Backend отклоняет prompt длиннее configured limit
+- [ ] Backend не отдаёт всю историю без pagination
 
-### BE-AC-3. Ошибки и перезапуск
-- [ ] При ошибке сервер возвращает детерминированную ошибку
-- [ ] Ошибка позволяет фронту показать обязательную кнопку перезапуска сессии
-- [ ] Новая сессия после перезапуска не наследует ошибочное состояние завершённой сессии
+### BE-AC-3. Timeout и ошибки
+- [ ] При timeout RAIN run получает terminal status `timeout`
+- [ ] Ошибки RAIN нормализуются для UI
+- [ ] Автоматический retry не выполняется для БТ без идемпотентности
 
 ## Открытые вопросы и допущения
 
-- В требованиях намеренно разделены открытие или восстановление и отправка сообщения, хотя сервер может реализовать их через один внутренний сервис.
-- Точное поведение истёкшей сессии следует закрепить в API-дизайне: либо новая сессия, либо явная ошибка с предложением пересоздать `session_id`.
+- Значения `message_max_chars`, `agent_response_max_chars` и hard timeout должны быть подтверждены с командами RAIN и эксплуатации.
+- Требуется отдельно решить, нужен ли RAIN структурированный `btUrl` в ответе вместо извлечения URL из строки `response`.
