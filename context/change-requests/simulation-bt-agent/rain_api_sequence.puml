@@ -1,0 +1,70 @@
+@startuml
+title АС КОДА - RAIN: async REST, lazy session, paginated history
+
+actor User as U
+participant "АС КОДА Frontend" as FE
+participant "АС КОДА Backend\nagent integration boundary" as BE
+participant "RAIN" as RAIN
+
+== Открытие панели агента ==
+U -> FE: Открыть панель агента
+FE -> FE: Создать/переиспользовать session_id
+FE -> BE: GET /dialog/agent/status
+BE -> RAIN: GET /health/liveness
+RAIN --> BE: alive
+BE -> RAIN: GET /health/readiness
+RAIN --> BE: ready/not_ready
+BE --> FE: normalized status
+FE --> U: Панель открыта, status chip обновлён
+
+note over FE,RAIN
+Открытие панели не создаёт сессию в RAIN.
+Сессия создаётся лениво при первом POST /chat/runs.
+end note
+
+== Первое сообщение и lazy session ==
+U -> FE: Отправить сообщение
+FE -> BE: POST /dialog/{session_id}/message
+note right of FE
+Frontend передаёт только новое сообщение
+и контекст текущей симуляции.
+end note
+BE -> BE: Сгенерировать/проверить Idempotency-Key
+BE -> RAIN: POST /chat/runs\nIdempotency-Key\nsession_id, message, context
+alt session_id ещё нет у RAIN
+  RAIN -> RAIN: Создать session_id и историю
+else session_id уже есть
+  RAIN -> RAIN: Использовать существующую историю
+end
+RAIN --> BE: 202 Accepted\nrun_id, session_created, retry_after
+BE --> FE: run_id, status=queued
+FE --> U: Показать ожидание, заблокировать ввод
+
+== Polling статуса run ==
+loop пока run не terminal
+  FE -> BE: GET /dialog/{session_id}/runs/{run_id}
+  BE -> RAIN: GET /chat/runs/{run_id}
+  RAIN --> BE: queued/running/retry_after
+  BE --> FE: normalized run status
+end
+
+BE -> RAIN: GET /chat/runs/{run_id}/result
+RAIN --> BE: message_id, artifacts[]
+BE --> FE: terminal status + result summary
+
+== Синхронизация истории ==
+FE -> BE: GET /dialog/{session_id}/messages?after=sync_cursor
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=sync_cursor
+RAIN --> BE: items[], older_cursor, sync_cursor,\nmessage_count, last_message_seq, history_version
+BE -> BE: Сверить/обновить локальную копию, если она ведётся
+BE --> FE: items[], cursors, history metadata
+FE --> U: Показать новые сообщения
+
+== Догрузка старых сообщений ==
+U -> FE: Скролл вверх
+FE -> BE: GET /dialog/{session_id}/messages?before=older_cursor
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?before=older_cursor
+RAIN --> BE: previous items[], older_cursor
+BE --> FE: previous items[], older_cursor
+FE --> U: Добавить сообщения выше
+@enduml

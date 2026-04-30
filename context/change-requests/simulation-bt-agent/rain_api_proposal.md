@@ -645,6 +645,8 @@ POST /chat/runs/{run_id}/cancel
 
 ### Sequence diagram
 
+PlantUML-исходник вынесен отдельно: [rain_api_sequence.puml](rain_api_sequence.puml).
+
 ```plantuml
 @startuml
 title АС КОДА - RAIN: async REST, lazy session, paginated history

@@ -4,7 +4,7 @@
 Feature: `simulation-bt-agent`
 Slice: `bt-publication`
 Область: `MVP`
-Дата обновления: `2026-04-29`
+Дата обновления: `2026-04-30`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Связь с feature-level документом
@@ -41,6 +41,7 @@ Slice: `bt-publication`
 - `DEC-2026-04-27-SIMULATION-BT-AGENT-003`
 - `DEC-2026-04-28-SIMULATION-BT-AGENT-004`
 - `DEC-2026-04-29-SIMULATION-BT-AGENT-007`
+- `DEC-2026-04-30-SIMULATION-BT-AGENT-009`
 
 ### Связанные артефакты
 
@@ -272,8 +273,8 @@ BT run использует общий async facade, но server-to-server paylo
 | Метод и маршрут | Назначение | Кто вызывает | Примечание |
 |---|---|---|---|
 | `GET /api/v1/simulation/{number}` / existing detail API | вернуть признаки доступности и данные риск-параметров | backend/frontend АС КОДА | источник BT-контекста |
-| `POST /dialog/{session_id}/message` | создать async run, включая BT mode | frontend agent window | возвращает `run_id` |
-| `POST RAIN /chat` | отправить сообщение агенту | backend АС КОДА | контракт из `agent_openapi.yaml` |
+| `POST /dialog/message` | создать async run, включая BT mode | frontend agent window | `session_id` в body; возвращает статус сессии без `run_id` |
+| `POST RAIN /chat/runs` | создать run агенту | backend АС КОДА | server-to-server по принятому RAIN API |
 
 ### OpenAPI fragment
 
@@ -283,16 +284,9 @@ info:
   title: BT Publication via RAIN Chat
   version: 1.0.0
 paths:
-  /dialog/{session_id}/message:
+  /dialog/message:
     post:
       summary: Создать async run для сообщения или БТ-сценария
-      parameters:
-        - in: path
-          name: session_id
-          required: true
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -301,6 +295,10 @@ paths:
               type: object
               required: [message]
               properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  nullable: true
                 message:
                   type: string
                 mode:
@@ -326,8 +324,9 @@ components: {}
 #### Пример 1. Server-to-server вызов RAIN для БТ
 
 ```http
-POST /chat HTTP/1.1
+POST /chat/runs HTTP/1.1
 Content-Type: application/json
+Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 ```
 
 ```json
@@ -352,7 +351,9 @@ Content-Type: application/json
 
 ```json
 {
-  "response": "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345"
+  "run_id": "7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51",
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "queued"
 }
 ```
 
@@ -368,7 +369,7 @@ Content-Type: application/json
 ## Интеграции, вычисления и фоновые процессы
 
 - Внешние системы: RAIN, Confluence через RAIN, existing simulation detail API;
-- Асинхронные процессы: BT run выполняется через общий background call RAIN `/chat`;
+- Асинхронные процессы: BT run выполняется через RAIN `POST /chat/runs`;
 - Вычисление статусов / derived fields: доступность BT-сценария, `url_candidates`;
 - Идемпотентность / ретраи: автоматический retry после передачи BT run в RAIN запрещён без идемпотентности.
 
