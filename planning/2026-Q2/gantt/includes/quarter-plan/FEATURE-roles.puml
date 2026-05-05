@@ -1,0 +1,4 @@
+' FEATURE: roles
+[Roles: matrix and RBAC rules] as [ROLES_STORY_CORE] lasts 1 days
+[ROLES_STORY_CORE] starts 2026/03/30
+[ROLES_STORY_CORE] is colored in LightGreen

@@ -1,5 +1,5 @@
 @startuml
-title АС КОДА - RAIN: async REST, lazy session, paginated history
+title АС КОДА - RAIN: async REST, backend session, cursor sync
 
 actor User as U
 participant "АС КОДА Frontend" as FE
@@ -8,63 +8,63 @@ participant "RAIN" as RAIN
 
 == Открытие панели агента ==
 U -> FE: Открыть панель агента
-FE -> FE: Создать/переиспользовать session_id
+FE -> BE: POST /dialog/session\nsession_id отсутствует
+BE --> FE: session_id,\ncan_send_message,\ndialog_status=idle
 FE -> BE: GET /dialog/agent/status
 BE -> RAIN: GET /health/liveness
 RAIN --> BE: alive
 BE -> RAIN: GET /health/readiness
 RAIN --> BE: ready/not_ready
 BE --> FE: normalized status
+FE -> BE: GET /dialog/messages?session_id=...&limit=20
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
+RAIN --> BE: items[], older_cursor,\nsync_cursor, history_version
+BE --> FE: items[], older_cursor,\nsync_cursor, has_more_before
 FE --> U: Панель открыта, status chip обновлён
 
 note over FE,RAIN
-Открытие панели не создаёт сессию в RAIN.
-Сессия создаётся лениво при первом POST /chat/runs.
+Открытие панели не создаёт run в RAIN.
+Frontend не генерирует session_id и не отправляет context/contextPrompt.
 end note
 
-== Первое сообщение и lazy session ==
+== Первое сообщение ==
 U -> FE: Отправить сообщение
-FE -> BE: POST /dialog/{session_id}/message
-note right of FE
-Frontend передаёт только новое сообщение
-и контекст текущей симуляции.
-end note
-BE -> BE: Сгенерировать/проверить Idempotency-Key
-BE -> RAIN: POST /chat/runs\nIdempotency-Key\nsession_id, message, context
-alt session_id ещё нет у RAIN
-  RAIN -> RAIN: Создать session_id и историю
-else session_id уже есть
-  RAIN -> RAIN: Использовать существующую историю
-end
-RAIN --> BE: 202 Accepted\nrun_id, session_created, retry_after
-BE --> FE: run_id, status=queued
+FE -> BE: POST /dialog/message\nsession_id, message,\noptional simulation_id/mode
+BE -> BE: Проверить пользователя,\nreadiness, лимит 3000,\nactive run lock
+BE -> RAIN: POST /chat/runs\nIdempotency-Key\nsession_id, message,\noptional simulation_id/risk_params,\nstart_datetime, fio
+RAIN --> BE: 202 Accepted\nrun_id, status=queued
+BE -> BE: Сохранить run_ref
+BE --> FE: 202 Accepted\nsession_id,\ncan_send_message=false,\ndialog_status=queued
 FE --> U: Показать ожидание, заблокировать ввод
 
-== Polling статуса run ==
-loop пока run не terminal
-  FE -> BE: GET /dialog/{session_id}/runs/{run_id}
+== Polling статуса сессии ==
+loop пока dialog_status queued/running
+  FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
   BE -> RAIN: GET /chat/runs/{run_id}
-  RAIN --> BE: queued/running/retry_after
-  BE --> FE: normalized run status
+  RAIN --> BE: queued/running/terminal
+  alt known_sync_cursor передан
+    BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=known_sync_cursor&limit=1
+    RAIN --> BE: items[] или пусто
+  end
+  BE --> FE: session_id,\ncan_send_message,\ndialog_status,\noptional history_changed
 end
 
-BE -> RAIN: GET /chat/runs/{run_id}/result
-RAIN --> BE: message_id, artifacts[]
-BE --> FE: terminal status + result summary
+== Результат и синхронизация истории ==
+alt dialog_status == succeeded
+  BE -> RAIN: GET /chat/runs/{run_id}/result
+  RAIN --> BE: message, artifacts[]
+end
 
-== Синхронизация истории ==
-FE -> BE: GET /dialog/{session_id}/messages?after=sync_cursor
-BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=sync_cursor
-RAIN --> BE: items[], older_cursor, sync_cursor,\nmessage_count, last_message_seq, history_version
-BE -> BE: Сверить/обновить локальную копию, если она ведётся
-BE --> FE: items[], cursors, history metadata
-FE --> U: Показать новые сообщения
+FE -> BE: GET /dialog/messages?session_id=...&limit=20
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
+RAIN --> BE: latest items[], cursors,\nlast_message_seq, history_version
+BE --> FE: latest items[], older_cursor,\nsync_cursor, has_more_before
 
 == Догрузка старых сообщений ==
-U -> FE: Скролл вверх
-FE -> BE: GET /dialog/{session_id}/messages?before=older_cursor
-BE -> RAIN: GET /chat/sessions/{session_id}/messages?before=older_cursor
-RAIN --> BE: previous items[], older_cursor
-BE --> FE: previous items[], older_cursor
-FE --> U: Добавить сообщения выше
+U -> FE: Скролл вверх / загрузить ещё
+FE -> BE: GET /dialog/messages?session_id=...&limit=20&before=older_cursor
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20&before=older_cursor
+RAIN --> BE: previous items[], older_cursor,\nsync_cursor
+BE --> FE: previous items[], older_cursor,\nsync_cursor, has_more_before
+FE --> U: Добавить сообщения выше\nбез сброса scroll-position
 @enduml

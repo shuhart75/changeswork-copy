@@ -1,0 +1,52 @@
+' FEATURE: simulations
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SIMULATIONS-001: materialized, mapping=explicit
+[PLAN FE Артефакты на detail-странице симуляции] as [STORY_STORY_SIMULATIONS_001] starts 2026/03/19
+[STORY_STORY_SIMULATIONS_001] ends 2026/04/29
+[STORY_STORY_SIMULATIONS_001] is colored in Gainsboro
+[STORY_STORY_SIMULATIONS_001] is 100% completed
+
+' Execution task layer
+[RSCON-2439 FE Раздел Документы СИМУЛЯЦИЯ: добавить артефакты] as [TASK_RSCON_2439] on {FE1} lasts 3 days
+[TASK_RSCON_2439] starts 2026/04/25
+[TASK_RSCON_2439] is colored in LightCoral
+[TASK_RSCON_2439] is 100% completed
+
+[RSCON-2487 BE Доработки по пилотам (БД, АПИ) для симуляции конфига пилотов] as [TASK_RSCON_2487] on {B2} lasts 2 days
+[TASK_RSCON_2487] starts 2026/05/12
+[TASK_RSCON_2487] is colored in LightBlue
+[TASK_RSCON_2487] is 0% completed
+
+[RSCON-2488 BE Новый метод апи для симуляции конфигурации пилотов] as [TASK_RSCON_2488] on {B2} lasts 1 days
+[TASK_RSCON_2488] starts 2026/05/14
+[TASK_RSCON_2488] is colored in LightBlue
+[TASK_RSCON_2488] is 0% completed
+
+[RSCON-2473 BE Доработки по симуляции (БД, АПИ) для симуляции конфига пилотов] as [TASK_RSCON_2473] on {B2} lasts 2 days
+[TASK_RSCON_2473] starts 2026/05/15
+[TASK_RSCON_2473] is colored in LightBlue
+[TASK_RSCON_2473] is 0% completed
+
+[RSCON-2475 BE Симуляция конфигурации пилотов. RSCON-CONFIG] as [TASK_RSCON_2475] on {B1} lasts 4 days
+[TASK_RSCON_2475] starts 2026/05/15
+[TASK_RSCON_2475] is colored in LightBlue
+[TASK_RSCON_2475] is 0% completed
+
+[RSCON-2472 FE Симуляция конфигурации пилотов] as [TASK_RSCON_2472] on {F2} lasts 6 days
+[TASK_RSCON_2472] starts 2026/05/15
+[TASK_RSCON_2472] is colored in LightCoral
+[TASK_RSCON_2472] is 0% completed
+
+[RSCON-2474 BE Симуляция конфига пилотов. Интеграция с ФП Симуляция: запуск, деталка] as [TASK_RSCON_2474] on {B1} lasts 3 days
+[TASK_RSCON_2474] starts 2026/05/22
+[TASK_RSCON_2474] is colored in LightBlue
+[TASK_RSCON_2474] is 0% completed
+
+[RSCON-2471 FE Уведомления в пилотах о симуляции] as [TASK_RSCON_2471] on {F2} lasts 2 days
+[TASK_RSCON_2471] starts 2026/05/26
+[TASK_RSCON_2471] is colored in LightCoral
+[TASK_RSCON_2471] is 0% completed

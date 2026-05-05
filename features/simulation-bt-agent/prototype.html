@@ -275,22 +275,20 @@
 
       function makeInitialSession() {
         return {
-          id: "3ccabaf4-7d41-4b91-a020-a6f7547f11d2",
-          startedAt: "27.04.2026 12:06:14",
+          id: "",
+          startedAt: "",
           open: false,
           loading: false,
           error: "",
           draft: "",
           latestBtUrl: "",
+          pendingBtUrl: "",
           copiedBtUrl: false,
-          messages: [
-            {
-              id: "sys-1",
-              role: "assistant",
-              text:
-                "Здравствуйте. Я RAIN и могу продолжить текущую сессию по `session_id`, подсказать по симуляции и помочь подготовить БТ, если контекст страницы подходит.",
-            },
-          ],
+          dialogStatus: "idle",
+          canSendMessage: true,
+          historyChanged: false,
+          pendingAssistantMessage: null,
+          messages: [],
         };
       }
 
@@ -313,6 +311,34 @@
             : detailTab === "results"
               ? `Итоги симуляции ${selectedSimulation.id}`
               : selectedSimulation.id;
+
+        function makeBackendSession(counter) {
+          return {
+            id: `as-koda-session-${String(counter).padStart(3, "0")}`,
+            startedAt: counter === 1 ? "30.04.2026 12:06:14" : "30.04.2026 12:24:50",
+            messages: [
+              {
+                id: `sys-${counter}`,
+                role: "assistant",
+                text:
+                  "Здравствуйте. Я RAIN. Откройте нужную симуляцию или задайте вопрос — я продолжу диалог в этой панели.",
+              },
+            ],
+          };
+        }
+
+        function getDialogStatusView(status) {
+          const statusMap = {
+            idle: { label: "Готов к диалогу", color: "success" },
+            queued: { label: "Запрос принят", color: "warning" },
+            running: { label: "Агент отвечает", color: "warning" },
+            succeeded: { label: "Ответ готов", color: "success" },
+            failed: { label: "Ошибка ответа", color: "error" },
+            timeout: { label: "Нет ответа", color: "error" },
+            cancelled: { label: "Остановлено", color: "default" },
+          };
+          return statusMap[status] || statusMap.idle;
+        }
 
         function getContext(pageName, simulation, activeTab) {
           if (pageName === "list") {
@@ -366,6 +392,16 @@
         function openAgent() {
           setAgent((current) => ({
             ...current,
+            ...(current.id
+              ? {}
+              : {
+                  id: makeBackendSession(sessionCounter).id,
+                  startedAt: makeBackendSession(sessionCounter).startedAt,
+                  messages: makeBackendSession(sessionCounter).messages,
+                  dialogStatus: "idle",
+                  canSendMessage: true,
+                  historyChanged: false,
+                }),
             open: true,
             error: "",
           }));
@@ -412,7 +448,7 @@
 
         function handleSend() {
           const text = agent.draft.trim();
-          if (!text || agent.loading) {
+          if (!text || agent.loading || !agent.canSendMessage) {
             return;
           }
 
@@ -428,41 +464,74 @@
             error: "",
             draft: "",
             latestBtUrl: "",
+            pendingBtUrl: "",
             copiedBtUrl: false,
+            dialogStatus: "running",
+            canSendMessage: false,
+            historyChanged: false,
+            pendingAssistantMessage: null,
             messages: current.messages.concat(userMessage),
           }));
 
           window.setTimeout(() => {
             if (!currentContext.eligible) {
+              const assistantMessage = {
+                id: `msg-${Date.now()}-assistant`,
+                role: "assistant",
+                text:
+                  "Для текущей страницы я могу только продолжить диалог. Чтобы сформировать БТ, откройте завершённую симуляцию с доступным выводом в ПРОМ.",
+              };
               setAgent((current) => ({
                 ...current,
                 loading: false,
-                messages: current.messages.concat({
-                  id: `msg-${Date.now()}-assistant`,
-                  role: "assistant",
-                  text:
-                    "Для текущей страницы я могу только продолжить диалог. Чтобы сформировать БТ, откройте завершённую симуляцию с доступным выводом в ПРОМ.",
-                }),
+                dialogStatus: "succeeded",
+                canSendMessage: true,
+                historyChanged: true,
+                pendingAssistantMessage: assistantMessage,
               }));
               return;
             }
 
             const nextLink =
               selectedSimulation.btLink || "https://confluence.example.local/pages/viewpage.action?pageId=1002451";
+            const assistantMessage = {
+              id: `msg-${Date.now()}-assistant`,
+              role: "assistant",
+              text:
+                `Черновик запроса принят.\n\n- Собраны итоговые риск-параметры из симуляции\n- Использована бизнес-цель текущего релиза\n- БТ опубликовано: ${nextLink}\n- Скопируйте ссылку из окна агента и при желании сохраните её в итогах симуляции вручную`,
+            };
 
             setAgent((current) => ({
               ...current,
               loading: false,
-              latestBtUrl: nextLink,
+              pendingBtUrl: nextLink,
               copiedBtUrl: false,
-              messages: current.messages.concat({
-                id: `msg-${Date.now()}-assistant`,
-                role: "assistant",
-                text:
-                  `Черновик запроса принят.\n\n- Собраны итоговые риск-параметры из симуляции\n- Использована бизнес-цель текущего релиза\n- БТ опубликовано: ${nextLink}\n- Скопируйте ссылку из окна агента и при желании сохраните её в итогах симуляции вручную`,
-              }),
+              dialogStatus: "succeeded",
+              canSendMessage: true,
+              historyChanged: true,
+              pendingAssistantMessage: assistantMessage,
             }));
           }, 700);
+        }
+
+        function handleLoadNewMessages() {
+          setAgent((current) => {
+            if (!current.pendingAssistantMessage) {
+              return {
+                ...current,
+                historyChanged: false,
+              };
+            }
+
+            return {
+              ...current,
+              messages: current.messages.concat(current.pendingAssistantMessage),
+              latestBtUrl: current.pendingBtUrl,
+              pendingBtUrl: "",
+              pendingAssistantMessage: null,
+              historyChanged: false,
+            };
+          });
         }
 
         function handleCopyBtUrl() {
@@ -489,14 +558,19 @@
           const nextCounter = sessionCounter + 1;
           setSessionCounter(nextCounter);
           setAgent({
-            id: `3ccabaf4-7d41-4b91-a020-a6f7547f11d${nextCounter}`,
-            startedAt: "27.04.2026 12:24:50",
+            id: makeBackendSession(nextCounter).id,
+            startedAt: makeBackendSession(nextCounter).startedAt,
             open: true,
             loading: false,
             error: "",
             draft: "",
             latestBtUrl: "",
+            pendingBtUrl: "",
             copiedBtUrl: false,
+            dialogStatus: "idle",
+            canSendMessage: true,
+            historyChanged: false,
+            pendingAssistantMessage: null,
             messages: [
               {
                 id: `restart-${nextCounter}`,
@@ -527,6 +601,7 @@
               label: "Сформировать БТ для текущей симуляции",
               tooltip:
                 "Подставит в поле ввода черновик запроса по текущей завершённой симуляции. После этого текст можно отредактировать и отправить.",
+              disabled: !agent.canSendMessage || Boolean(agent.error),
               onClick: handleInsertDraft,
             },
           ];
@@ -572,11 +647,16 @@
                     size="small"
                     aria-label={action.label}
                     onClick={action.onClick}
+                    disabled={action.disabled}
                     sx={{
                       width: 30,
                       height: 30,
                       color: "#ffffff",
                       backgroundColor: "primary.main",
+                      "&.Mui-disabled": {
+                        backgroundColor: "#cbd5e1",
+                        color: "#f8fafc",
+                      },
                       "&:hover": {
                         backgroundColor: "primary.dark",
                       },
@@ -1064,6 +1144,8 @@
           );
         }
 
+        const dialogStatusView = getDialogStatusView(agent.dialogStatus);
+
         return (
           <ThemeProvider theme={shellTheme}>
             <CssBaseline />
@@ -1168,6 +1250,12 @@
                             size="small"
                           />
                           <Chip
+                            label={dialogStatusView.label}
+                            color={dialogStatusView.color}
+                            size="small"
+                            variant={agent.dialogStatus === "idle" ? "outlined" : "filled"}
+                          />
+                          <Chip
                             clickable
                             onClick={handleRestartSession}
                             label="Перезапустить сессию"
@@ -1196,7 +1284,9 @@
                           <Typography color="text.secondary" sx={{ fontSize: 12.5, lineHeight: 1.35 }}>
                             {agent.error
                               ? `${agent.error} Рекомендация: перезапустите сессию и повторите отправку.`
-                              : "Сессия активна, история чата восстанавливается по session_id, можно продолжать диалог."}
+                              : agent.id
+                                ? "Диалог открыт. При повторном открытии панель продолжит эту сессию."
+                                : "Диалог будет создан при первом открытии панели."}
                           </Typography>
                         </Stack>
                       </Paper>
@@ -1207,6 +1297,28 @@
 
                   <Stack spacing={1} sx={{ px: 2, py: 1.5, flex: 1, overflowY: "auto" }}>
                     {agent.messages.map((message) => renderMessage(message))}
+                    {agent.historyChanged ? (
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          px: 1.5,
+                          py: 1,
+                          borderRadius: 2.5,
+                          borderColor: "#b9d3f2",
+                          backgroundColor: "#f4f8ff",
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {formatIcon("mark_chat_unread", { fontSize: 19, color: "#2c4f7c" })}
+                          <Typography sx={{ flex: 1, fontSize: 13.2, fontWeight: 600, color: "#2c4f7c" }}>
+                            Новое сообщение
+                          </Typography>
+                          <Button variant="outlined" size="small" onClick={handleLoadNewMessages}>
+                            Показать
+                          </Button>
+                        </Stack>
+                      </Paper>
+                    ) : null}
                     {agent.latestBtUrl ? (
                       <Paper
                         sx={{
@@ -1248,7 +1360,12 @@
                         rows={5}
                         value={agent.draft}
                         onChange={handleDraftChange}
-                        placeholder="Введите сообщение агенту."
+                        placeholder={
+                          agent.canSendMessage
+                            ? "Введите сообщение агенту."
+                            : "Дождитесь ответа агента."
+                        }
+                        disabled={!agent.canSendMessage || Boolean(agent.error)}
                         fullWidth
                         inputProps={{
                           style: {
@@ -1257,7 +1374,11 @@
                         }}
                       />
                       <Stack direction="row" spacing={1.25} justifyContent="flex-end">
-                        <Button variant="contained" onClick={handleSend} disabled={agent.loading || !agent.draft.trim()}>
+                        <Button
+                          variant="contained"
+                          onClick={handleSend}
+                          disabled={agent.loading || !agent.canSendMessage || Boolean(agent.error) || !agent.draft.trim()}
+                        >
                           Отправить
                         </Button>
                       </Stack>

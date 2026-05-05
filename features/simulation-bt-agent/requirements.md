@@ -3,7 +3,7 @@
 Статус: **draft**
 Feature: `features/simulation-bt-agent/feature.md`
 Квартал: `2026-Q2`
-Дата обновления: `2026-04-30`
+Дата обновления: `2026-05-05`
 Шаблон: `.workflow/templates/requirements/feature-requirements.template.md`
 
 ## Оглавление
@@ -20,13 +20,13 @@ Feature: `features/simulation-bt-agent/feature.md`
 
 ## Источники и приоритет
 
-1. Принятый целевой контракт RAIN: `context/change-requests/simulation-bt-agent/rain_api_proposal.md`.
-2. Исходный контракт агента: `context/change-requests/simulation-bt-agent/agent_openapi.yaml`.
+1. Принятый целевой контракт RAIN, согласованный с RAIN: `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`.
+2. Предыдущие проектные предложения и исходные материалы: `context/change-requests/simulation-bt-agent/rain_api_proposal.md`, `context/change-requests/simulation-bt-agent/agent_openapi.yaml`.
 3. Системные требования и SLA: `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`.
 4. Existing simulation API: `context/change-requests/simulation-bt-agent/simulations_api.md`.
 5. Ранее подготовленные feature/slice artifacts.
 
-Если системные требования или исходный `agent_openapi.yaml` противоречат принятому `rain_api_proposal.md`, для целевой API-интеграции используется `rain_api_proposal.md`. Системные требования остаются источником бизнес-сценариев, SLA, ограничений HTTPS/mTLS/OTT и требований к UI-сессии.
+Если системные требования, `rain_api_proposal.md` или исходный `agent_openapi.yaml` противоречат принятому `agent_openapi_1.yaml`, для целевой API-интеграции используется `agent_openapi_1.yaml`. Системные требования остаются источником бизнес-сценариев, SLA, ограничений HTTPS/mTLS/OTT и требований к UI-сессии.
 
 ## Интеграционное решение MVP
 
@@ -37,6 +37,9 @@ Feature: `features/simulation-bt-agent/feature.md`
 - Frontend не работает с конкретным `run_id` и не получает объект текущего run в обычном UI-контракте. Backend АС КОДА отдаёт session-level view по `GET /dialog/status?session_id=...`, потому что в одной `session_id` допускается только один active run.
 - `session_id` создаётся и валидируется backend АС КОДА. Frontend хранит полученный opaque `session_id` только для продолжения сессии; если frontend вызывает dialog API без `session_id`, backend создаёт новую UI-сессию и тем самым сбрасывает предыдущий диалоговый контекст для текущего окна.
 - История диалога и агентский контекст принадлежат RAIN; backend АС КОДА проксирует/нормализует историю и может хранить локальную копию для UI/аудита по правилам синхронизации, но не является владельцем агентского контекста.
+- АС КОДА не отправляет в RAIN отдельное поле `context`/`contextPrompt`: для консультации передаётся только `message`, а для БТ-сценария дополнительно передаются согласованные поля `simulation_id`, `risk_params`, `start_datetime` и `fio`.
+- Максимальная длина пользовательского `message` для отправки в RAIN в MVP: `3000` символов; лимит валидируется на frontend и backend до server-to-server вызова.
+- `history_changed` не является состоянием backend. Это вычисляемый признак относительно `known_sync_cursor`, который frontend получил из последней синхронизации истории и передал в status request; если cursor не передан, backend не обязан возвращать этот признак.
 - `btUrl` как отдельное поле RAIN не используется в текущих требованиях; целевой контракт RAIN возвращает структурированные `artifacts[]` для результата run, включая возможную ссылку на БТ.
 
 ## Порядок slice для контроля
@@ -102,7 +105,7 @@ Planning story: `planning/stories/STORY-SIMULATION-BT-AGENT-001.md`
 - открыть окно как неблокирующую панель без сброса состояния страницы;
 - при первом открытии окна вызвать backend без `session_id`, получить `session_id` и дальше передавать его параметром для продолжения той же UI-сессии;
 - при намеренном сбросе сессии вызвать dialog API без `session_id`, чтобы backend создал новую UI-сессию и вернул новый `session_id`;
-- при открытии окна не отправлять `contextPrompt`, историю, риск-параметры или ФИО в RAIN;
+- при открытии окна не отправлять `context`, `contextPrompt`, историю, риск-параметры или ФИО в RAIN;
 - показывать status chip агента по данным backend status API;
 - блокировать поле ввода, отправку и agent actions, если агент не готов или есть активный run.
 
@@ -202,34 +205,38 @@ participant "RAIN" as RAIN
 == Открытие панели ==
 U -> FE: Открыть окно агента
 FE -> BE: POST /dialog/session\nsession_id отсутствует
-BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed=false
+BE --> FE: session_id,\ncan_send_message,\ndialog_status
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
-BE --> FE: items[], older_cursor,\nhas_more_before
-FE -> BE: GET /dialog/status?session_id=...
-BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed
+BE --> FE: items[], older_cursor,\nsync_cursor, has_more_before
+FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
+BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed=false
 
 == Отправка сообщения ==
 U -> FE: Отправить prompt
 FE -> BE: POST /dialog/message\nsession_id, message
 BE -> BE: Проверить/создать session_id,\nreadiness, лимиты и отсутствие active run
-BE -> RAIN: POST /chat/runs\nsession_id, message, context
+BE -> RAIN: POST /chat/runs\nsession_id, message,\noptional simulation_id/risk_params,\nstart_datetime, fio
 RAIN --> BE: 202 Accepted\nrun_id, status=queued
 BE -> BE: Сохранить внутренний\nagent_dialog_run_ref
-BE --> FE: 202 Accepted\nsession_id,\ncan_send_message=false,\ndialog_status=queued,\nhistory_changed=false
+BE --> FE: 202 Accepted\nsession_id,\ncan_send_message=false,\ndialog_status=queued
 FE --> U: Заблокировать composer\nпоказать ожидание
 
 == Polling статуса сессии ==
 loop пока dialog_status queued/running
-  FE -> BE: GET /dialog/status?session_id=...
+  FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
   BE -> RAIN: GET /chat/runs/{run_id}
   RAIN --> BE: run status
+  alt known_sync_cursor передан и нужна проверка истории
+    BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=known_sync_cursor&limit=1
+    RAIN --> BE: items[] или пусто
+  end
   BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed
 end
 
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
 RAIN --> BE: latest items[], cursors
-BE --> FE: latest items[], older_cursor,\nhas_more_before
+BE --> FE: latest items[], older_cursor,\nsync_cursor, has_more_before
 alt Пользователь находится внизу истории
   FE --> U: Показать ответ и оставить scroll внизу
 else Пользователь читает старые сообщения выше
@@ -243,7 +250,7 @@ U -> FE: Скролл вверх / Загрузить ещё
 FE -> BE: GET /dialog/messages?session_id=...&limit=20&before=older_cursor
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20&before=older_cursor
 RAIN --> BE: previous items[], older_cursor,\nhas_more_before
-BE --> FE: previous items[], older_cursor,\nhas_more_before
+BE --> FE: previous items[], older_cursor,\nsync_cursor, has_more_before
 FE --> U: Добавить сообщения выше\nбез сброса scroll-position
 @enduml
 ```
@@ -280,9 +287,10 @@ FE --> U: Добавить сообщения выше\nбез сброса scro
 - принять пользовательское сообщение и создать run в RAIN через `POST /chat/runs`;
 - маппить данные АС КОДА в поля RAIN: `session_id`, `message`, `risk_params`, `simulation_id`, `start_datetime`, `fio`;
 - хранить внутренний `agent_dialog_run_ref` между UI-сессией АС КОДА и `run_id` RAIN и проксировать статус RAIN;
-- предоставить polling endpoint статуса сессии с `session_id` в параметрах запроса, возвращающий `session_id`, `dialog_status`, `can_send_message`, `history_changed` и ошибку без раскрытия `run_id`;
-- проксировать/нормализовать историю RAIN и отдавать её frontend порциями через cursor/limit;
-- применять server-side ограничения длины prompt, response и истории;
+- предоставить polling endpoint статуса сессии с `session_id` в параметрах запроса, возвращающий `session_id`, `dialog_status`, `can_send_message` и ошибку без раскрытия `run_id`;
+- вычислять и возвращать `history_changed` только относительно `known_sync_cursor`, переданного frontend; если cursor отсутствует, backend не хранит догадку о состоянии frontend history window;
+- проксировать/нормализовать историю RAIN и отдавать её frontend порциями через cursor/limit вместе с `sync_cursor` для последующей проверки новых сообщений;
+- применять server-side ограничение длины пользовательского `message` до `3000` символов и лимиты страниц истории;
 - не выполнять автоматический retry для операций, которые могли создать БТ, если нет идемпотентного ключа от RAIN.
 
 Связанный детальный BE pack: `slices/dialog-session/requirements/backend.md`

@@ -1,6 +1,6 @@
 @startgantt
 title План на квартал - 2026-Q2
-Project starts 2026-04-01
+Project starts 2026-03-30
 saturday are closed
 sunday are closed
 
@@ -33,13 +33,28 @@ ganttDiagram {
 -- Согласования --
 !include includes/quarter-plan/FEATURE-approvals.puml
 
+-- Артефакты --
+!include includes/quarter-plan/FEATURE-artifacts.puml
+
 -- Внедрения --
 !include includes/quarter-plan/FEATURE-deployments.puml
 
 -- Пакеты --
 !include includes/quarter-plan/FEATURE-packages.puml
 
+-- Пилоты --
+!include includes/quarter-plan/FEATURE-pilots.puml
+
+-- Ролевая модель и RBAC --
+!include includes/quarter-plan/FEATURE-roles.puml
+
 -- Скоркарты --
 !include includes/quarter-plan/FEATURE-scorecards.puml
+
+-- Симуляции --
+!include includes/quarter-plan/FEATURE-simulations.puml
+
+-- Табличные риск-параметры --
+!include includes/quarter-plan/FEATURE-tabular-risk-parameters.puml
 
 @endgantt

@@ -7,4 +7,4 @@ Feature: `features/roles/feature.md`
 
 | Story ID | Summary | Analyst anchor, дн | Team estimate, дн | Agreed estimate, дн | Agreed total, дн | Notes |
 |---|---|---|---|---|---:|---|
-| imported-rbac-scope | RBAC как existing cross-feature scope | `n/a` | `n/a` | `n/a` | n/a | Отдельные planning stories в standalone-проекте пока не нормализованы |
+| STORY-ROLES-001 | Аналитика ролевой модели, ролей и матрицы прав | `1 / 0 / 0 / 0` | `1 / 0 / 0 / 0` | `1 / 0 / 0 / 0` | 1 | Actualized пока virtual item `AN_ROLES` |

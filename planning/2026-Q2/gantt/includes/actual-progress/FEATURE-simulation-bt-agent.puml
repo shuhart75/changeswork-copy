@@ -1,0 +1,39 @@
+' FEATURE: simulation-bt-agent
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SIMULATION-BT-AGENT-001: materialized, mapping=inferred
+[PLAN BE Точка входа и контекст запуска БТ] as [STORY_STORY_SIMULATION_BT_AGENT_001] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_001] ends 2026/05/13
+[STORY_STORY_SIMULATION_BT_AGENT_001] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_001] is 21% completed
+
+' Story STORY-SIMULATION-BT-AGENT-002: materialized, mapping=inferred
+[PLAN BE Сессия диалога и оркестрация AI-агента] as [STORY_STORY_SIMULATION_BT_AGENT_002] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_002] ends 2026/05/13
+[STORY_STORY_SIMULATION_BT_AGENT_002] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_002] is 21% completed
+
+' Story STORY-SIMULATION-BT-AGENT-003: materialized, mapping=inferred
+[PLAN BE Публикация БТ, сохранение ссылки и аудит] as [STORY_STORY_SIMULATION_BT_AGENT_003] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_003] ends 2026/05/20
+[STORY_STORY_SIMULATION_BT_AGENT_003] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_003] is 16% completed
+
+' Execution task layer
+[RSCON-2480 FE агент AI - БТ по симуляции] as [TASK_RSCON_2480] on {FE1} lasts 10 days
+[TASK_RSCON_2480] starts 2026/04/28
+[TASK_RSCON_2480] is colored in LightCoral
+[TASK_RSCON_2480] is 30% completed
+
+[RSCON-2479 BE агент AI - БТ по симуляции] as [TASK_RSCON_2479] on {BE1} lasts 4 days
+[TASK_RSCON_2479] starts 2026/05/04
+[TASK_RSCON_2479] is colored in LightBlue
+[TASK_RSCON_2479] is 0% completed
+
+[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} lasts 5 days
+[TASK_QA_SIM_BT_AGENT] starts 2026/05/14
+[TASK_QA_SIM_BT_AGENT] is colored in Gold
+[TASK_QA_SIM_BT_AGENT] is 0% completed

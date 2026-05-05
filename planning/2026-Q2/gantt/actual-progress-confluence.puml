@@ -1,0 +1,506 @@
+@startgantt
+title Реальный прогресс - 2026-Q2
+Project starts 2026-03-16
+saturday are closed
+sunday are closed
+
+2026/05/01 is closed
+2026/05/09 is closed
+2026/05/11 is closed
+2026/06/12 is closed
+
+printscale daily zoom 1.5
+projectscale daily
+today is colored in LightSalmon
+!$now = %now()
+[Мы сейчас здесь] as [TODAY_MARK] happens %date("YYYY-MM-dd", $now)
+2026/05/21 is colored in LightSteelBlue
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+' Реальный прогресс
+
+' BEGIN INCLUDE: preamble/common.puml
+' Add team calendar, release milestones, and external dependency blocks here.
+' END INCLUDE: preamble/common.puml
+
+' BEGIN INCLUDE: preamble/actual-progress.puml
+' Release milestones and factual notes for actual-progress only.
+[Релиз RSCON-2438 КОДА 01.024.00] as [REL_RSCON_2438] happens at 2026/05/21
+' END INCLUDE: preamble/actual-progress.puml
+
+-- Согласования --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-approvals.puml
+' FEATURE: approvals
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-APPROVALS-001: virtual, mapping=explicit
+[PLAN BE Approval core и интеграция с ЖЦ] as [STORY_STORY_APPROVALS_001] starts 2026/04/01
+[STORY_STORY_APPROVALS_001] ends 2026/05/26
+[STORY_STORY_APPROVALS_001] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_001] is 0% completed
+
+' Story STORY-APPROVALS-002: virtual, mapping=explicit
+[PLAN FE Страница "Согласования"] as [STORY_STORY_APPROVALS_002] starts 2026/04/06
+[STORY_STORY_APPROVALS_002] ends 2026/05/20
+[STORY_STORY_APPROVALS_002] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_002] is 0% completed
+
+' Execution task layer
+[AN процесс согласования/утверждения (BE core)] as [TASK_AN_AP_CORE] on {A1} lasts 2 days
+[TASK_AN_AP_CORE] starts 2026/04/01
+[TASK_AN_AP_CORE] is colored in LightGreen
+[TASK_AN_AP_CORE] is 0% completed
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A2} lasts 1 days
+[TASK_AN_PILOT_LC_AP] starts 2026/04/05
+[TASK_AN_PILOT_LC_AP] is colored in LightGreen
+[TASK_AN_PILOT_LC_AP] is 0% completed
+
+[AN страница "Согласования" (BE): контракты/фильтры/действия] as [TASK_AN_AP_PAGE_BE] on {A1} lasts 1 days
+[TASK_AN_AP_PAGE_BE] starts 2026/04/06
+[TASK_AN_AP_PAGE_BE] is colored in LightGreen
+[TASK_AN_AP_PAGE_BE] is 0% completed
+
+[BE процесс согласования и утверждения - БД+логика] as [TASK_BE_AP_CORE] on {B1} lasts 10 days
+[TASK_BE_AP_CORE] starts 2026/04/06
+[TASK_BE_AP_CORE] is colored in LightBlue
+[TASK_BE_AP_CORE] is 0% completed
+
+[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [TASK_AN_AP_PAGE_FE] on {A2} lasts 1 days
+[TASK_AN_AP_PAGE_FE] starts 2026/04/07
+[TASK_AN_AP_PAGE_FE] is colored in LightGreen
+[TASK_AN_AP_PAGE_FE] is 0% completed
+
+[FE страница "Согласования"] as [TASK_FE_AP_PAGE] on {F1} lasts 10 days
+[TASK_FE_AP_PAGE] starts 2026/04/14
+[TASK_FE_AP_PAGE] is colored in LightCoral
+[TASK_FE_AP_PAGE] is 0% completed
+
+[BE страница "Согласования" - API, логика] as [TASK_BE_AP_PAGE] on {B1} lasts 10 days
+[TASK_BE_AP_PAGE] starts 2026/05/20
+[TASK_BE_AP_PAGE] is colored in LightBlue
+[TASK_BE_AP_PAGE] is 0% completed
+
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} lasts 5 days
+[TASK_BE_PILOT_LC_AP] starts 2026/05/20
+[TASK_BE_PILOT_LC_AP] is colored in LightBlue
+[TASK_BE_PILOT_LC_AP] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-approvals.puml
+
+-- Артефакты --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-artifacts.puml
+' FEATURE: artifacts
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-ARTIFACTS-001: mixed, mapping=explicit
+[PLAN BE Shared backend-контур артефактов и доступ к разделу Документы] as [STORY_STORY_ARTIFACTS_001] starts 2026/03/16
+[STORY_STORY_ARTIFACTS_001] ends 2026/04/29
+[STORY_STORY_ARTIFACTS_001] is colored in Gainsboro
+[STORY_STORY_ARTIFACTS_001] is 100% completed
+
+' Execution task layer
+[AN артефакты (BE): модель/контракты/права] as [TASK_AN_ART_BE] on {A2} lasts 1 days
+[TASK_AN_ART_BE] starts 2026/03/31
+[TASK_AN_ART_BE] is colored in LightGreen
+[TASK_AN_ART_BE] is 100% completed
+
+[BE артефакты (ссылки на документы) - БД + API] as [TASK_BE_ART] on {B2} lasts 3 days
+[TASK_BE_ART] starts 2026/04/01
+[TASK_BE_ART] is colored in LightBlue
+[TASK_BE_ART] is 100% completed
+
+[RSCON-2468 BE Дать доступ к разделу Документы для пользователей] as [TASK_RSCON_2468] on {BE3} lasts 2 days
+[TASK_RSCON_2468] starts 2026/04/28
+[TASK_RSCON_2468] is colored in LightBlue
+[TASK_RSCON_2468] is 100% completed
+' END INCLUDE: includes/actual-progress/FEATURE-artifacts.puml
+
+-- Внедрения --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-deployments.puml
+' FEATURE: deployments
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-DEPLOYMENTS-001: materialized, mapping=explicit
+[PLAN BE Backend foundation для внедрений] as [STORY_STORY_DEPLOYMENTS_001] starts 2026/04/14
+[STORY_STORY_DEPLOYMENTS_001] ends 2026/04/23
+[STORY_STORY_DEPLOYMENTS_001] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_001] is 9% completed
+
+' Story STORY-DEPLOYMENTS-002: materialized, mapping=explicit
+[PLAN BE Жизненный цикл внедрений] as [STORY_STORY_DEPLOYMENTS_002] starts 2026/04/15
+[STORY_STORY_DEPLOYMENTS_002] ends 2026/04/30
+[STORY_STORY_DEPLOYMENTS_002] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_002] is 0% completed
+
+' Story STORY-DEPLOYMENTS-003: materialized, mapping=explicit
+[PLAN FE Список внедрений] as [STORY_STORY_DEPLOYMENTS_003] starts 2026/04/06
+[STORY_STORY_DEPLOYMENTS_003] ends 2026/04/10
+[STORY_STORY_DEPLOYMENTS_003] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_003] is 100% completed
+
+' Story STORY-DEPLOYMENTS-004: materialized, mapping=explicit
+[PLAN FE Форма создания и редактирования] as [STORY_STORY_DEPLOYMENTS_004] starts 2026/04/20
+[STORY_STORY_DEPLOYMENTS_004] ends 2026/04/24
+[STORY_STORY_DEPLOYMENTS_004] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_004] is 0% completed
+
+' Story STORY-DEPLOYMENTS-005: mixed, mapping=inferred
+[PLAN FE Детальная страница и связанные блоки] as [STORY_STORY_DEPLOYMENTS_005] starts 2026/04/13
+[STORY_STORY_DEPLOYMENTS_005] ends 2026/04/25
+[STORY_STORY_DEPLOYMENTS_005] is colored in Gainsboro
+[STORY_STORY_DEPLOYMENTS_005] is 0% completed
+
+' Execution task layer
+[RSCON-2346 FE список внедрений] as [TASK_RSCON_2346] on {FE1} lasts 5 days
+[TASK_RSCON_2346] starts 2026/04/06
+[TASK_RSCON_2346] is colored in LightCoral
+[TASK_RSCON_2346] is 100% completed
+
+[RSCON-2347 FE детальная внедрения] as [TASK_RSCON_2347] on {TBD_FE} lasts 5 days
+[TASK_RSCON_2347] starts 2026/04/13
+[TASK_RSCON_2347] is colored in LightCoral
+[TASK_RSCON_2347] is 0% completed
+
+[RSCON-2349 BE внедрений БД + API] as [TASK_RSCON_2349] on {BE3} lasts 3 days
+[TASK_RSCON_2349] starts 2026/04/17
+[TASK_RSCON_2349] is colored in LightBlue
+[TASK_RSCON_2349] is 15% completed
+
+[RSCON-2348 FE форма создания/редактирования внедрений] as [TASK_RSCON_2348] on {TBD_FE} lasts 5 days
+[TASK_RSCON_2348] starts 2026/04/20
+[TASK_RSCON_2348] is colored in LightCoral
+[TASK_RSCON_2348] is 0% completed
+
+[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {TBD_AN} lasts 5 days
+[TASK_AN_CHD1] starts 2026/04/21
+[TASK_AN_CHD1] is colored in LightGreen
+[TASK_AN_CHD1] is 0% completed
+
+[BE детальная страница Внедрения] as [TASK_BE_CHD1] on {TBD_BE} lasts 5 days
+[TASK_BE_CHD1] starts 2026/04/21
+[TASK_BE_CHD1] is colored in LightBlue
+[TASK_BE_CHD1] is 0% completed
+
+[RSCON-2445 BE Базовая функциональность для внедрений] as [TASK_RSCON_2445] on {BE3} lasts 2 days
+[TASK_RSCON_2445] starts 2026/04/22
+[TASK_RSCON_2445] is colored in LightBlue
+[TASK_RSCON_2445] is 0% completed
+
+[RSCON-2410 BE ЖЦ внедрений] as [TASK_RSCON_2410] on {BE3} lasts 5 days
+[TASK_RSCON_2410] starts 2026/04/24
+[TASK_RSCON_2410] is colored in LightBlue
+[TASK_RSCON_2410] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-deployments.puml
+
+-- Пакеты --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-packages.puml
+' FEATURE: packages
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-PACKAGES-001: virtual, mapping=explicit
+[PLAN FE Страница Пакеты и пакетирование awaiting ratification] as [STORY_STORY_PACKAGES_001] starts 2026/04/07
+[STORY_STORY_PACKAGES_001] ends 2026/05/06
+[STORY_STORY_PACKAGES_001] is colored in LightSteelBlue
+[STORY_STORY_PACKAGES_001] is 13% completed
+
+' Execution task layer
+[AN страница Пакеты (BE): контракты и массовые действия] as [TASK_AN_PKG_BE] on {A3} lasts 1 days
+[TASK_AN_PKG_BE] starts 2026/04/09
+[TASK_AN_PKG_BE] is colored in LightGreen
+[TASK_AN_PKG_BE] is 80% completed
+
+[AN страница Пакеты (FE): UX, компоненты и edge cases] as [TASK_AN_PKG_FE] on {A3} lasts 1 days
+[TASK_AN_PKG_FE] starts 2026/04/10
+[TASK_AN_PKG_FE] is colored in LightGreen
+[TASK_AN_PKG_FE] is 80% completed
+
+[FE страница Пакеты] as [TASK_FE_PKG_PAGE] on {F2} lasts 10 days
+[TASK_FE_PKG_PAGE] starts 2026/05/21
+[TASK_FE_PKG_PAGE] is colored in LightCoral
+[TASK_FE_PKG_PAGE] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-packages.puml
+
+-- Пилоты --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-pilots.puml
+' FEATURE: pilots
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-PILOTS-001: virtual, mapping=explicit
+[PLAN FE Workspace пилотов: артефакты и lifecycle approval] as [STORY_STORY_PILOTS_001] starts 2026/04/01
+[STORY_STORY_PILOTS_001] ends 2026/05/23
+[STORY_STORY_PILOTS_001] is colored in LightSteelBlue
+[STORY_STORY_PILOTS_001] is 55% completed
+
+' Execution task layer
+[AN блок артефактов (FE): пилоты] as [TASK_AN_FE_PILOT_ART] on {A2} lasts 1 days
+[TASK_AN_FE_PILOT_ART] starts 2026/04/01
+[TASK_AN_FE_PILOT_ART] is colored in LightGreen
+[TASK_AN_FE_PILOT_ART] is 100% completed
+
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A3} lasts 1 days
+[TASK_AN_PILOT_LC_AP] starts 2026/04/01
+[TASK_AN_PILOT_LC_AP] is colored in LightGreen
+[TASK_AN_PILOT_LC_AP] is 100% completed
+
+[FE пилоты - блок артефакты + UI под ЖЦ] as [TASK_FE_PILOT_ART] on {F1} lasts 4 days
+[TASK_FE_PILOT_ART] starts 2026/04/06
+[TASK_FE_PILOT_ART] is colored in LightCoral
+[TASK_FE_PILOT_ART] is 100% completed
+
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} lasts 5 days
+[TASK_BE_PILOT_LC_AP] starts 2026/05/19
+[TASK_BE_PILOT_LC_AP] is colored in LightBlue
+[TASK_BE_PILOT_LC_AP] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-pilots.puml
+
+-- Ролевая модель и RBAC --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-roles.puml
+' FEATURE: roles
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-ROLES-001: virtual, mapping=explicit
+[PLAN AN Аналитика ролевой модели, ролей и матрицы прав] as [STORY_STORY_ROLES_001] starts 2026/03/30
+[STORY_STORY_ROLES_001] ends 2026/03/30
+[STORY_STORY_ROLES_001] is colored in LightSteelBlue
+[STORY_STORY_ROLES_001] is 100% completed
+
+' Execution task layer
+[AN новые роли: роли/права/матрица] as [TASK_AN_ROLES] on {A1} lasts 1 days
+[TASK_AN_ROLES] starts 2026/03/30
+[TASK_AN_ROLES] is colored in LightGreen
+[TASK_AN_ROLES] is 100% completed
+' END INCLUDE: includes/actual-progress/FEATURE-roles.puml
+
+-- Скоркарты --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-scorecards.puml
+' FEATURE: scorecards
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SCORECARDS-001: materialized, mapping=inferred
+[PLAN BE Backend foundation, шаблоны и критичность скоркарт] as [STORY_STORY_SCORECARDS_001] starts 2026/04/03
+[STORY_STORY_SCORECARDS_001] ends 2026/04/10
+[STORY_STORY_SCORECARDS_001] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_001] is 100% completed
+
+' Story STORY-SCORECARDS-002: materialized, mapping=inferred
+[PLAN FE Workspace скоркарты: вкладка, деталка, источники и использование] as [STORY_STORY_SCORECARDS_002] starts 2026/04/08
+[STORY_STORY_SCORECARDS_002] ends 2026/04/22
+[STORY_STORY_SCORECARDS_002] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_002] is 95% completed
+
+' Story STORY-SCORECARDS-003: materialized, mapping=inferred
+[PLAN FE Создание, редактирование и привязка скоркарты] as [STORY_STORY_SCORECARDS_003] starts 2026/04/08
+[STORY_STORY_SCORECARDS_003] ends 2026/04/28
+[STORY_STORY_SCORECARDS_003] is colored in Gainsboro
+[STORY_STORY_SCORECARDS_003] is 73% completed
+
+' Execution task layer
+[RSCON-2343 BE Сущность скоркарты] as [TASK_RSCON_2343] on {B2} lasts 5 days
+[TASK_RSCON_2343] starts 2026/04/03
+[TASK_RSCON_2343] is colored in LightBlue
+[TASK_RSCON_2343] is 100% completed
+
+[RSCON-2342 BE Оценка критичности + шаблоны для скоркарт] as [TASK_RSCON_2342] on {B3} lasts 4 days
+[TASK_RSCON_2342] starts 2026/04/07
+[TASK_RSCON_2342] is colored in LightBlue
+[TASK_RSCON_2342] is 100% completed
+
+[RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт] as [TASK_RSCON_2340] on {F2} lasts 10 days
+[TASK_RSCON_2340] starts 2026/04/08
+[TASK_RSCON_2340] is colored in LightCoral
+[TASK_RSCON_2340] is 100% completed
+
+[RSCON-2344 BE Привязка скоркарты] as [TASK_RSCON_2344] on {B2} lasts 1 days
+[TASK_RSCON_2344] starts 2026/04/10
+[TASK_RSCON_2344] is colored in LightBlue
+[TASK_RSCON_2344] is 100% completed
+
+[RSCON-2341 FE Прикрепление существующей скоркарты] as [TASK_RSCON_2341] on {TBD_FE} lasts 4 days
+[TASK_RSCON_2341] starts 2026/04/23
+[TASK_RSCON_2341] is colored in LightCoral
+[TASK_RSCON_2341] is 0% completed
+
+[RSCON-2339 FE Удаление блока метрик. Новая вкладка скоркарт] as [TASK_RSCON_2339] on {BE1} lasts 1 days
+[TASK_RSCON_2339] starts 2026/05/04
+[TASK_RSCON_2339] is colored in LightCoral
+[TASK_RSCON_2339] is 50% completed
+' END INCLUDE: includes/actual-progress/FEATURE-scorecards.puml
+
+-- Формирование БТ из симуляции через AI-агента RAIN --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-simulation-bt-agent.puml
+' FEATURE: simulation-bt-agent
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SIMULATION-BT-AGENT-001: materialized, mapping=inferred
+[PLAN BE Точка входа и контекст запуска БТ] as [STORY_STORY_SIMULATION_BT_AGENT_001] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_001] ends 2026/05/13
+[STORY_STORY_SIMULATION_BT_AGENT_001] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_001] is 21% completed
+
+' Story STORY-SIMULATION-BT-AGENT-002: materialized, mapping=inferred
+[PLAN BE Сессия диалога и оркестрация AI-агента] as [STORY_STORY_SIMULATION_BT_AGENT_002] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_002] ends 2026/05/13
+[STORY_STORY_SIMULATION_BT_AGENT_002] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_002] is 21% completed
+
+' Story STORY-SIMULATION-BT-AGENT-003: materialized, mapping=inferred
+[PLAN BE Публикация БТ, сохранение ссылки и аудит] as [STORY_STORY_SIMULATION_BT_AGENT_003] starts 2026/04/28
+[STORY_STORY_SIMULATION_BT_AGENT_003] ends 2026/05/20
+[STORY_STORY_SIMULATION_BT_AGENT_003] is colored in Gainsboro
+[STORY_STORY_SIMULATION_BT_AGENT_003] is 16% completed
+
+' Execution task layer
+[RSCON-2480 FE агент AI - БТ по симуляции] as [TASK_RSCON_2480] on {FE1} lasts 10 days
+[TASK_RSCON_2480] starts 2026/04/28
+[TASK_RSCON_2480] is colored in LightCoral
+[TASK_RSCON_2480] is 30% completed
+
+[RSCON-2479 BE агент AI - БТ по симуляции] as [TASK_RSCON_2479] on {BE1} lasts 4 days
+[TASK_RSCON_2479] starts 2026/05/04
+[TASK_RSCON_2479] is colored in LightBlue
+[TASK_RSCON_2479] is 0% completed
+
+[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} lasts 5 days
+[TASK_QA_SIM_BT_AGENT] starts 2026/05/14
+[TASK_QA_SIM_BT_AGENT] is colored in Gold
+[TASK_QA_SIM_BT_AGENT] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-simulation-bt-agent.puml
+
+-- Симуляции --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-simulations.puml
+' FEATURE: simulations
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-SIMULATIONS-001: materialized, mapping=explicit
+[PLAN FE Артефакты на detail-странице симуляции] as [STORY_STORY_SIMULATIONS_001] starts 2026/03/19
+[STORY_STORY_SIMULATIONS_001] ends 2026/04/29
+[STORY_STORY_SIMULATIONS_001] is colored in Gainsboro
+[STORY_STORY_SIMULATIONS_001] is 100% completed
+
+' Execution task layer
+[RSCON-2439 FE Раздел Документы СИМУЛЯЦИЯ: добавить артефакты] as [TASK_RSCON_2439] on {FE1} lasts 3 days
+[TASK_RSCON_2439] starts 2026/04/25
+[TASK_RSCON_2439] is colored in LightCoral
+[TASK_RSCON_2439] is 100% completed
+
+[RSCON-2487 BE Доработки по пилотам (БД, АПИ) для симуляции конфига пилотов] as [TASK_RSCON_2487] on {B2} lasts 2 days
+[TASK_RSCON_2487] starts 2026/05/12
+[TASK_RSCON_2487] is colored in LightBlue
+[TASK_RSCON_2487] is 0% completed
+
+[RSCON-2488 BE Новый метод апи для симуляции конфигурации пилотов] as [TASK_RSCON_2488] on {B2} lasts 1 days
+[TASK_RSCON_2488] starts 2026/05/14
+[TASK_RSCON_2488] is colored in LightBlue
+[TASK_RSCON_2488] is 0% completed
+
+[RSCON-2473 BE Доработки по симуляции (БД, АПИ) для симуляции конфига пилотов] as [TASK_RSCON_2473] on {B2} lasts 2 days
+[TASK_RSCON_2473] starts 2026/05/15
+[TASK_RSCON_2473] is colored in LightBlue
+[TASK_RSCON_2473] is 0% completed
+
+[RSCON-2475 BE Симуляция конфигурации пилотов. RSCON-CONFIG] as [TASK_RSCON_2475] on {B1} lasts 4 days
+[TASK_RSCON_2475] starts 2026/05/15
+[TASK_RSCON_2475] is colored in LightBlue
+[TASK_RSCON_2475] is 0% completed
+
+[RSCON-2472 FE Симуляция конфигурации пилотов] as [TASK_RSCON_2472] on {F2} lasts 6 days
+[TASK_RSCON_2472] starts 2026/05/15
+[TASK_RSCON_2472] is colored in LightCoral
+[TASK_RSCON_2472] is 0% completed
+
+[RSCON-2474 BE Симуляция конфига пилотов. Интеграция с ФП Симуляция: запуск, деталка] as [TASK_RSCON_2474] on {B1} lasts 3 days
+[TASK_RSCON_2474] starts 2026/05/22
+[TASK_RSCON_2474] is colored in LightBlue
+[TASK_RSCON_2474] is 0% completed
+
+[RSCON-2471 FE Уведомления в пилотах о симуляции] as [TASK_RSCON_2471] on {F2} lasts 2 days
+[TASK_RSCON_2471] starts 2026/05/26
+[TASK_RSCON_2471] is colored in LightCoral
+[TASK_RSCON_2471] is 0% completed
+' END INCLUDE: includes/actual-progress/FEATURE-simulations.puml
+
+-- Табличные риск-параметры --
+' BEGIN INCLUDE: includes/actual-progress/FEATURE-tabular-risk-parameters.puml
+' FEATURE: tabular-risk-parameters
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-TABULAR-RISK-PARAMETERS-001: materialized, mapping=explicit
+[PLAN BE Backend табличных риск-параметров и интеграция с источниками/запуском симуляции] as [STORY_STORY_TABULAR_RISK_PARAMETERS_001] starts 2026/04/16
+[STORY_STORY_TABULAR_RISK_PARAMETERS_001] ends 2026/05/04
+[STORY_STORY_TABULAR_RISK_PARAMETERS_001] is colored in Gainsboro
+[STORY_STORY_TABULAR_RISK_PARAMETERS_001] is 67% completed
+
+' Story STORY-TABULAR-RISK-PARAMETERS-002: materialized, mapping=explicit
+[PLAN FE Frontend форма изменения табличных риск-параметров] as [STORY_STORY_TABULAR_RISK_PARAMETERS_002] starts 2026/04/20
+[STORY_STORY_TABULAR_RISK_PARAMETERS_002] ends 2026/05/07
+[STORY_STORY_TABULAR_RISK_PARAMETERS_002] is colored in Gainsboro
+[STORY_STORY_TABULAR_RISK_PARAMETERS_002] is 86% completed
+
+' Execution task layer
+[RSCON-2430 BE Табличные риск-параметры: API, БД, логика] as [TASK_RSCON_2430] on {BE2} lasts 3 days
+[TASK_RSCON_2430] starts 2026/04/17
+[TASK_RSCON_2430] is colored in LightBlue
+[TASK_RSCON_2430] is 100% completed
+
+[RSCON-2429 FE Переделка формы для изменения риск-параметров] as [TASK_RSCON_2429] on {FE1} lasts 10 days
+[TASK_RSCON_2429] starts 2026/04/20
+[TASK_RSCON_2429] is colored in LightCoral
+[TASK_RSCON_2429] is 100% completed
+
+[RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции] as [TASK_RSCON_2432] on {BE2} lasts 3 days
+[TASK_RSCON_2432] starts 2026/05/06
+[TASK_RSCON_2432] is colored in LightBlue
+[TASK_RSCON_2432] is 0% completed
+
+[RSCON-2452 BE Табличные риск-параметры - шедулер очистки файлов] as [TASK_RSCON_2452] on {FE2} lasts 3 days
+[TASK_RSCON_2452] starts 2026/04/29
+[TASK_RSCON_2452] is colored in LightBlue
+[TASK_RSCON_2452] is 100% completed
+
+[QA Табличные риск-параметры] as [TASK_QA_TABULAR_RISK_PARAMETERS] on {Q1} lasts 4 days
+[TASK_QA_TABULAR_RISK_PARAMETERS] starts 2026/05/04
+[TASK_QA_TABULAR_RISK_PARAMETERS] is colored in Gold
+[TASK_QA_TABULAR_RISK_PARAMETERS] is 50% completed
+' END INCLUDE: includes/actual-progress/FEATURE-tabular-risk-parameters.puml
+
+@endgantt

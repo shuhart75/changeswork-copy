@@ -1,0 +1,4 @@
+' FEATURE: pilots
+[Pilots: artifacts and lifecycle approval workspace] as [PILOTS_CMD_WORKSPACE] lasts 13 days
+[PILOTS_CMD_WORKSPACE] starts 2026/04/01
+[PILOTS_CMD_WORKSPACE] is colored in LightCoral

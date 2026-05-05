@@ -4,7 +4,7 @@
 Feature: `simulation-bt-agent`
 Slice: `agent-entrypoint`
 Область: `MVP`
-Дата обновления: `2026-04-30`
+Дата обновления: `2026-05-05`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Связь с feature-level документом
@@ -29,7 +29,8 @@ Slice: `agent-entrypoint`
 - `../../requirements.md`
 - `baseline/current/domain/aggregates/simulation.md`
 - `baseline/current/domain/contexts/research-and-execution.md`
-- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi.yaml` как устаревший исходный контракт
 - `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `context/change-requests/simulation-bt-agent/simulations_api.md`
 
@@ -43,6 +44,7 @@ Slice: `agent-entrypoint`
 - `DEC-2026-04-27-SIMULATION-BT-AGENT-002`
 - `DEC-2026-04-29-SIMULATION-BT-AGENT-007`
 - `DEC-2026-04-30-SIMULATION-BT-AGENT-009`
+- `DEC-2026-05-05-SIMULATION-BT-AGENT-010`
 
 ### Связанные артефакты
 
@@ -162,7 +164,7 @@ Backend должен иметь endpoint открытия/восстановле
 - если `session_id` не передан, backend создаёт новый UUID и фиксирует `start_datetime`;
 - UI-сессия связывается с текущим пользователем СУДИР;
 - повторный вызов с тем же `session_id` восстанавливает UI-сессию и active run status, если он есть;
-- дополнительные данные вроде `contextPrompt`, истории и риск-параметров в этом вызове не нужны.
+- дополнительные данные вроде `message`, `context`, `contextPrompt`, истории и риск-параметров в этом вызове не нужны.
 
 **Зависимости:**
 - frontend UI session;
@@ -268,7 +270,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [session_id, can_send_message, dialog_status, history_changed]
+                required: [session_id, can_send_message, dialog_status]
                 properties:
                   session_id:
                     type: string
@@ -280,6 +282,8 @@ paths:
                     enum: [idle, queued, running, succeeded, failed, timeout, cancelled]
                   history_changed:
                     type: boolean
+                    nullable: true
+                    description: Не требуется при открытии сессии; вычисляется только status endpoint от known_sync_cursor.
   /dialog/agent/status:
     get:
       summary: Получить нормализованный статус RAIN
@@ -327,8 +331,7 @@ Content-Type: application/json
 {
   "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "can_send_message": true,
-  "dialog_status": "idle",
-  "history_changed": false
+  "dialog_status": "idle"
 }
 ```
 
@@ -349,8 +352,7 @@ Content-Type: application/json
 {
   "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "can_send_message": false,
-  "dialog_status": "running",
-  "history_changed": false
+  "dialog_status": "running"
 }
 ```
 

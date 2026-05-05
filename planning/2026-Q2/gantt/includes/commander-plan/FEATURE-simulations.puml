@@ -1,0 +1,4 @@
+' FEATURE: simulations
+[Simulations: artifacts on detail page] as [SIM_CMD_ART] lasts 6 days
+[SIM_CMD_ART] starts 2026/03/19
+[SIM_CMD_ART] is colored in LightCoral

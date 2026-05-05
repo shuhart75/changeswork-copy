@@ -13,7 +13,7 @@ Feature: `features/simulation-bt-agent/feature.md`
 
 ## Источники
 - `../../references.md`
-- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`
 - `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `context/change-requests/simulation-bt-agent/simulations_api.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/requirements-v1.md`

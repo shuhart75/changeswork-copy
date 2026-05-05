@@ -1,0 +1,17 @@
+' FEATURE: roles
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-ROLES-001: virtual, mapping=explicit
+[PLAN AN Аналитика ролевой модели, ролей и матрицы прав] as [STORY_STORY_ROLES_001] starts 2026/03/30
+[STORY_STORY_ROLES_001] ends 2026/03/30
+[STORY_STORY_ROLES_001] is colored in LightSteelBlue
+[STORY_STORY_ROLES_001] is 100% completed
+
+' Execution task layer
+[AN новые роли: роли/права/матрица] as [TASK_AN_ROLES] on {A1} lasts 1 days
+[TASK_AN_ROLES] starts 2026/03/30
+[TASK_AN_ROLES] is colored in LightGreen
+[TASK_AN_ROLES] is 100% completed

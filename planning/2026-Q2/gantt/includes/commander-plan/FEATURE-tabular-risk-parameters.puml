@@ -1,0 +1,8 @@
+' FEATURE: tabular-risk-parameters
+[Tabular risk parameters: backend and integrations] as [TRP_CMD_BE] lasts 16 days
+[TRP_CMD_BE] starts 2026/04/16
+[TRP_CMD_BE] is colored in LightBlue
+
+[Tabular risk parameters: frontend form] as [TRP_CMD_FE] lasts 13 days
+[TRP_CMD_FE] starts 2026/05/22
+[TRP_CMD_FE] is colored in LightCoral

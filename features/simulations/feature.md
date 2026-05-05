@@ -34,7 +34,8 @@
 - `baseline/current/api/simulations.md`
 
 ## Planning stories
-- Для этой feature в текущем виде planning stories не поднимались: это normalization of existing coverage, а не новая квартальная дельта.
+- `planning/stories/STORY-SIMULATIONS-001.md` — точечная story-опора для slice `artifacts-related`, добавленная ради materialization в `actual-progress`;
+- остальная часть feature по-прежнему живёт как normalization of existing coverage без отдельного квартального planning-слоя.
 
 ## Риски и зависимости
 - legacy simulation docs частично используют старый URI-стиль `/api/simulations/...`, который не до конца выровнен с `v1`-контрактами;

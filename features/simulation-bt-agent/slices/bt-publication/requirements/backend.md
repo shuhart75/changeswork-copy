@@ -4,7 +4,7 @@
 Feature: `simulation-bt-agent`
 Slice: `bt-publication`
 Область: `MVP`
-Дата обновления: `2026-04-30`
+Дата обновления: `2026-05-05`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Связь с feature-level документом
@@ -14,9 +14,9 @@ Slice: `bt-publication`
 
 ## Назначение пакета
 
-- Зафиксировать server-side правила передачи контекста симуляции в RAIN `/chat`.
+- Зафиксировать server-side правила передачи данных симуляции в RAIN `POST /chat/runs`.
 - Сохранить использование existing simulation detail API как источника признаков доступности и риск-параметров.
-- Описать публикацию БТ через текстовый ответ RAIN `response`, без гарантированного отдельного поля `btUrl`.
+- Описать публикацию БТ через результат RAIN run: `message.content` и структурированные `artifacts[]`.
 - Зафиксировать отсутствие автоматической записи ссылки на БТ в данные симуляции.
 
 ## Источники и трассировка
@@ -27,7 +27,8 @@ Slice: `bt-publication`
 - `../../feature.md`
 - `../../references.md`
 - `../../requirements.md`
-- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi.yaml` как устаревший исходный контракт
 - `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `context/change-requests/simulation-bt-agent/simulations_api.md`
 
@@ -42,6 +43,7 @@ Slice: `bt-publication`
 - `DEC-2026-04-28-SIMULATION-BT-AGENT-004`
 - `DEC-2026-04-29-SIMULATION-BT-AGENT-007`
 - `DEC-2026-04-30-SIMULATION-BT-AGENT-009`
+- `DEC-2026-05-05-SIMULATION-BT-AGENT-010`
 
 ### Связанные артефакты
 
@@ -58,7 +60,7 @@ Slice: `bt-publication`
 
 ### Источник правды
 
-Источником правды для доступности действия по БТ и риск-параметров является existing simulation detail API. Источником текста результата является RAIN `ChatResponse.response`. Структурированного источника `btUrl` в текущем контракте RAIN нет.
+Источником правды для доступности действия по БТ и риск-параметров является existing simulation detail API. Источником результата публикации является RAIN `RunResultResponse`: текст ответа находится в `message.content`, а структурированные ссылки и артефакты публикации находятся в `artifacts[]`.
 
 ### Затронутые bounded contexts / aggregates
 
@@ -70,8 +72,8 @@ Slice: `bt-publication`
 ### Термины и определения
 
 - `BT run` — async run, связанный с режимом `bt_creation`.
-- `risk_params` — структура RAIN `/chat` с `as_is` и `to_be`.
-- `BT URL candidate` — URL, найденный в строковом ответе RAIN.
+- `risk_params` — структура RAIN `CreateRunRequest` с `as_is` и `to_be`.
+- `BT artifact` — элемент `artifacts[]` результата RAIN run с `type=bt_page`, `url` и optional `title`.
 
 ## Бизнес-правила и системные ограничения
 
@@ -92,11 +94,11 @@ Slice: `bt-publication`
 - только ручная отправка сообщения создаёт async run;
 - RAIN может создать БТ только в ходе диалога и после явного подтверждения пользователя, если это предусмотрено агентским сценарием.
 
-### BR-4. Ответ RAIN текстовый
-- RAIN возвращает только `response`;
-- backend сохраняет `response` как сообщение агента;
-- backend может извлечь URL-кандидаты для удобства UI, но не должен гарантировать `btUrl`, пока контракт RAIN его не содержит;
-- отсутствие URL в `response` не должно приводить к фиктивной ссылке.
+### BR-4. Ответ RAIN читается из result и artifacts
+- RAIN возвращает результат завершённого run через `GET /chat/runs/{run_id}/result`;
+- backend сохраняет `message.content` как сообщение агента;
+- backend передаёт frontend структурированные `artifacts[]`, если RAIN вернул их в результате;
+- отсутствие artifact `bt_page` не должно приводить к фиктивной ссылке.
 
 ### BR-5. Автосохранение ссылки в Simulation не выполняется
 - backend не обновляет поле `btLink` или аналог в данных симуляции;
@@ -108,24 +110,24 @@ Slice: `bt-publication`
 ### Входит в MVP
 
 - проверка доступности BT-сценария по existing simulation detail API;
-- сбор `risk_params.as_is` и `risk_params.to_be` для RAIN `/chat`;
-- передача `simulation_id` в RAIN `/chat`;
+- сбор `risk_params.as_is` и `risk_params.to_be` для RAIN `POST /chat/runs`;
+- передача `simulation_id` в RAIN `POST /chat/runs`;
 - сохранение текстового ответа RAIN в истории;
-- извлечение URL-кандидата из `response`, если это безопасно и однозначно;
+- передача structured `artifacts[]` из результата RAIN run во frontend projection;
 - аудит успешного/неуспешного BT run по доступным признакам;
 - отсутствие автосохранения ссылки в симуляцию.
 
 ### Не входит в MVP
 
 - отдельный preparatory backend endpoint для черновика;
-- автоматическая запись `btUrl` в Simulation;
-- гарантия структурированного `btUrl`;
+- автоматическая запись URL БТ в Simulation;
+- отдельное поле `btUrl` во frontend API;
 - автоматический retry публикации БТ при timeout;
 - проверка уникальности названия БТ на стороне АС КОДА.
 
 ### Отложено после MVP
 
-- расширение контракта RAIN `ChatResponse.btUrl`;
+- автоматическое сохранение `bt_page.url` в симуляцию;
 - идемпотентный ключ публикации;
 - статусный endpoint RAIN для проверки результата после timeout;
 - автоматическое сохранение выбранной ссылки в симуляцию.
@@ -142,14 +144,15 @@ Slice: `bt-publication`
 ### Сценарий BE-2. Вызов RAIN с BT-контекстом
 1. Backend создаёт async run.
 2. Backend собирает `risk_params.as_is` и `risk_params.to_be`.
-3. Backend вызывает RAIN `POST /chat` с `session_id`, `message`, `simulation_id`, `risk_params`, `start_datetime`, `fio`.
-4. RAIN возвращает `response`.
-5. Backend сохраняет ответ как сообщение агента.
+3. Backend вызывает RAIN `POST /chat/runs` с `session_id`, `message`, `simulation_id`, `risk_params`, `start_datetime`, `fio`.
+4. RAIN возвращает `run_id` и async status.
+5. После terminal `succeeded` backend читает `GET /chat/runs/{run_id}/result`.
+6. Backend сохраняет `message.content` как сообщение агента и передаёт `artifacts[]` frontend projection.
 
-### Сценарий BE-3. Ответ содержит ссылку
-1. Backend получает `response` от RAIN.
-2. Backend сохраняет полный текст ответа в истории.
-3. Backend может извлечь URL-кандидаты и пометить их для UI.
+### Сценарий BE-3. Результат содержит artifact БТ
+1. Backend получает `RunResultResponse` от RAIN.
+2. Backend сохраняет `message.content` в истории.
+3. Backend передаёт artifact `bt_page` с `url` и `title`, если он присутствует.
 4. Backend не обновляет данные симуляции.
 
 ### Сценарий BE-4. Timeout после возможной публикации
@@ -179,12 +182,12 @@ Slice: `bt-publication`
 ### BE-FR-2. Backend формирует `risk_params` для RAIN
 
 **Описание:**
-Backend должен передать RAIN риск-параметры в формате, совместимом с `agent_openapi.yaml`.
+Backend должен передать RAIN риск-параметры в формате, совместимом с `agent_openapi_1.yaml`.
 
 **Правила и ограничения:**
 - `risk_params.as_is` содержит текущие значения риск-параметров;
 - `risk_params.to_be` содержит новые значения риск-параметров;
-- значения приводятся к string, если контракт RAIN требует `additionalProperties: string`;
+- значения приводятся к string или number согласно схеме `RiskParams` из `agent_openapi_1.yaml`;
 - если риск-параметры отсутствуют, backend должен либо вызвать RAIN без `risk_params` для консультационного режима, либо отклонить BT run как неполный контекст;
 - frontend не является единственным источником правды для `risk_params`.
 
@@ -192,7 +195,7 @@ Backend должен передать RAIN риск-параметры в фор
 - mapping полей existing simulation detail API;
 - RAIN `ChatRequest.risk_params`.
 
-### BE-FR-3. Backend вызывает RAIN `/chat` с BT-контекстом
+### BE-FR-3. Backend вызывает RAIN `POST /chat/runs` с BT-контекстом
 
 **Описание:**
 BT run использует общий async facade, но server-to-server payload должен содержать дополнительные поля симуляции.
@@ -207,23 +210,22 @@ BT run использует общий async facade, но server-to-server paylo
 
 **Зависимости:**
 - `dialog-session` async run;
-- RAIN `/chat`.
+- RAIN `POST /chat/runs` и `GET /chat/runs/{run_id}/result`.
 
-### BE-FR-4. Backend сохраняет `response` и извлекает URL-кандидаты
+### BE-FR-4. Backend сохраняет `message.content` и передаёт `artifacts[]`
 
 **Описание:**
-Ответ RAIN должен быть сохранён как текстовое сообщение агента; URL на БТ может быть извлечён для UI, но не считается контрактным полем.
+Результат RAIN должен быть сохранён как сообщение агента; структурированные artifacts должны быть доступны frontend projection после terminal success.
 
 **Правила и ограничения:**
-- backend сохраняет исходный `response`;
-- backend может извлечь URL по безопасному URL parser;
-- если найден один Confluence URL, backend может вернуть его как `url_candidates[0]` в сообщении;
-- если URL нет или их несколько, UI показывает только текст и не делает предположений;
+- backend сохраняет исходный `message.content`;
+- backend передаёт `artifacts[]` из `RunResultResponse`, не придумывая их самостоятельно;
+- если artifact `bt_page` отсутствует, UI показывает только текст и не делает предположений;
 - backend не должен менять содержание ответа агента.
 
 **Зависимости:**
-- формат `ChatResponse.response`;
-- правила безопасного linkify.
+- формат `RunResultResponse.message` и `Artifact`;
+- правила безопасного linkify для текста сообщения.
 
 ### BE-FR-5. Retry публикации ограничен
 
@@ -251,15 +253,15 @@ BT run использует общий async facade, но server-to-server paylo
 | `Simulation` detail response | `riskParameters` / `riskParamsChange` | object/array | условно обязательно | источник `risk_params` |
 | `agent_dialog_run` | `mode` | enum/string | опционально | `consultation` или `bt_creation` |
 | `agent_dialog_run` | `simulation_id` | string/null | условно обязательно | симуляция для BT run |
-| `agent_dialog_run` | `url_candidates` | JSON/null | опционально | URL, извлечённые из `response` |
-| `agent_dialog_message` | `content` | text | обязательно | исходный `response` RAIN |
+| `agent_dialog_run` | `artifacts` | JSON/null | опционально | структурированные artifacts из RAIN result, включая `bt_page.url` |
+| `agent_dialog_message` | `content` | text | обязательно | исходный `message.content` RAIN |
 
 ### Инварианты и ограничения
 
 - BT run не стартует без проверки симуляции;
 - `risk_params` не берутся на доверие только из браузера;
-- автоматическая запись `btUrl` в `Simulation` не выполняется;
-- отсутствующий URL в `response` не заменяется фиктивным значением.
+- автоматическая запись URL БТ в `Simulation` не выполняется;
+- отсутствующий artifact `bt_page` не заменяется фиктивным значением.
 
 ### Индексы / уникальности / FK
 
@@ -275,6 +277,7 @@ BT run использует общий async facade, но server-to-server paylo
 | `GET /api/v1/simulation/{number}` / existing detail API | вернуть признаки доступности и данные риск-параметров | backend/frontend АС КОДА | источник BT-контекста |
 | `POST /dialog/message` | создать async run, включая BT mode | frontend agent window | `session_id` в body; возвращает статус сессии без `run_id` |
 | `POST RAIN /chat/runs` | создать run агенту | backend АС КОДА | server-to-server по принятому RAIN API |
+| `GET RAIN /chat/runs/{run_id}/result` | получить результат успешного run | backend АС КОДА | источник `message.content` и `artifacts[]` |
 
 ### OpenAPI fragment
 
@@ -301,6 +304,7 @@ paths:
                   nullable: true
                 message:
                   type: string
+                  maxLength: 3000
                 mode:
                   type: string
                   enum: [consultation, bt_creation]
@@ -357,7 +361,35 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 }
 ```
 
-#### Пример 2. Ошибка неподходящей симуляции
+#### Пример 2. Server-to-server результат успешного run
+
+```http
+GET /chat/runs/7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51/result HTTP/1.1
+```
+
+```json
+{
+  "run_id": "7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51",
+  "session_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "idempotency_key": "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8",
+  "message": {
+    "message_id": "msg-789",
+    "role": "assistant",
+    "content": "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345",
+    "created_at": "2026-04-29T12:31:40.000+03:00",
+    "run_id": "7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51"
+  },
+  "artifacts": [
+    {
+      "type": "bt_page",
+      "url": "https://confluence.example.local/pages/viewpage.action?pageId=12345",
+      "title": "БТ SIM-CC-148"
+    }
+  ]
+}
+```
+
+#### Пример 3. Ошибка неподходящей симуляции
 
 ```json
 {
@@ -370,7 +402,7 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 
 - Внешние системы: RAIN, Confluence через RAIN, existing simulation detail API;
 - Асинхронные процессы: BT run выполняется через RAIN `POST /chat/runs`;
-- Вычисление статусов / derived fields: доступность BT-сценария, `url_candidates`;
+- Вычисление статусов / derived fields: доступность BT-сценария, projection `artifacts[]`;
 - Идемпотентность / ретраи: автоматический retry после передачи BT run в RAIN запрещён без идемпотентности.
 
 ## Ошибки и валидация
@@ -381,7 +413,7 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 - пользователь должен иметь доступ к симуляции;
 - симуляция должна быть завершена и доступна к выводу в ПРОМ;
 - риск-параметры должны быть доступны или BT run отклоняется как неполный контекст;
-- `response` RAIN не должен интерпретироваться как JSON, если контракт возвращает строку.
+- `message.content` RAIN не должен интерпретироваться как JSON; структурированные результаты берутся только из `artifacts[]`.
 
 ### Ошибки API
 
@@ -398,12 +430,12 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 
 - Нужны ли миграции данных: нет для `Simulation`, да для хранения run/history, если ещё не создано.
 - Нужен ли backfill: нет.
-- Есть ли риски для текущего baseline: да, `btUrl` больше нельзя считать структурированным полем ответа агента.
-- Что должно попасть в release finalization: mapping `risk_params`, правило отсутствия автосохранения, ограничение retry, необходимость структурированного `btUrl` как открытый вопрос.
+- Есть ли риски для текущего baseline: да, `btUrl` больше нельзя считать отдельным frontend/backend полем; используется `artifacts[]`.
+- Что должно попасть в release finalization: mapping `risk_params`, правило отсутствия автосохранения, ограничение retry, обработка `artifacts[]`.
 
 ## Observability и аудит
 
-- Логи: BT run, `simulation_id`, terminal status, URL candidates count, ошибки валидации;
+- Логи: BT run, `simulation_id`, terminal status, artifacts count, ошибки валидации;
 - Метрики: длительность BT run, success/failure/timeout rate, количество ответов с URL;
 - Audit trail: успешная и неуспешная публикация БТ по доступным признакам; автоматического события сохранения ссылки в симуляцию нет.
 
@@ -416,9 +448,9 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 - [ ] Backend передаёт RAIN `simulation_id` и `risk_params` для BT run
 
 ### BE-AC-2. Ответ и ссылка
-- [ ] Backend сохраняет исходный `response` RAIN
-- [ ] Backend не обещает отдельный `btUrl`, если его нет в контракте RAIN
-- [ ] URL-кандидаты извлекаются только из реального текста ответа
+- [ ] Backend сохраняет исходный `message.content` RAIN
+- [ ] Backend не обещает отдельный `btUrl`, потому что ссылка приходит через `artifacts[]`
+- [ ] Artifact `bt_page` передаётся frontend только если он реально пришёл из RAIN result
 - [ ] Backend не обновляет `Simulation.btLink` автоматически
 
 ### BE-AC-3. Timeout и retry
@@ -428,6 +460,5 @@ Idempotency-Key: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
 
 ## Открытые вопросы и допущения
 
-- Нужно запросить у RAIN структурированный `btUrl` или `artifacts` в `ChatResponse`.
-- Нужно подтвердить, что `risk_params.additionalProperties` действительно должны быть строками, и согласовать mapping числовых/булевых значений.
+- Нужно подтвердить полный mapping `risk_params` из existing simulation detail API в схему `RiskParams` из `agent_openapi_1.yaml`.
 - Нужно согласовать idempotency key для сценария создания БТ, иначе автоматический retry остаётся запрещённым.

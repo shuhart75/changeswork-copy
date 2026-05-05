@@ -1,0 +1,4 @@
+' FEATURE: artifacts
+[Artifacts: shared backend and documents access] as [ART_STORY_CORE] lasts 5 days
+[ART_STORY_CORE] starts 2026/03/30
+[ART_STORY_CORE] is colored in LightBlue

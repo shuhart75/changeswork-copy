@@ -34,7 +34,7 @@ Feature импортирована из `changesWork` и current-system requirem
 - `slices/rbac/requirements/backend.md`
 
 ## Planning stories
-- отдельные planning stories в standalone-проекте пока не нормализованы; imported RBAC scope зафиксирован как единый slice.
+- `planning/stories/STORY-ROLES-001.md`
 
 ## Риски и зависимости
 - feature доменно влияет почти на все соседние features;

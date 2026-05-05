@@ -1,10 +1,15 @@
 # Actualization map
 
 Feature: `features/simulations/feature.md`
+Quarter: `2026-Q2`
+Baseline: `commander-plan`
 
-Для imported existing coverage actualization map не ведём.
+## Правила
+- Основная часть `simulations` по-прежнему отражает imported existing coverage.
+- Для slice `artifacts-related` добавляем точечную story map, чтобы `RSCON-2439` был виден в общем `actual-progress`.
 
-## Почему
-- actual-progress используется для новых или переактуализируемых planning stories;
-- simulation scope здесь зафиксирован как уже существующий baseline, а не как активный квартальный план;
-- historical legacy tasks сохранены в raw snapshot и references.
+## Mapping
+
+| Story ID | Summary | Baseline Start | Baseline Duration (дн) | Actualization State | Mapping Mode | Replaced By | Residual Virtual Tasks | Depends On |
+|---|---|---|---:|---|---|---|---|---|
+| STORY-SIMULATIONS-001 | Артефакты на detail-странице симуляции | 2026-03-19 | 6 | materialized | explicit | RSCON-2439 |  |  |

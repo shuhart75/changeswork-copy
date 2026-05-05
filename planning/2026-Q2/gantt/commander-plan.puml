@@ -1,6 +1,6 @@
 @startgantt
 title Командирский план - 2026-Q2
-Project starts 2026-04-01
+Project starts 2026-03-16
 saturday are closed
 sunday are closed
 
@@ -33,13 +33,28 @@ ganttDiagram {
 -- Согласования --
 !include includes/commander-plan/FEATURE-approvals.puml
 
+-- Артефакты --
+!include includes/commander-plan/FEATURE-artifacts.puml
+
 -- Внедрения --
 !include includes/commander-plan/FEATURE-deployments.puml
 
 -- Пакеты --
 !include includes/commander-plan/FEATURE-packages.puml
 
+-- Пилоты --
+!include includes/commander-plan/FEATURE-pilots.puml
+
+-- Ролевая модель и RBAC --
+!include includes/commander-plan/FEATURE-roles.puml
+
 -- Скоркарты --
 !include includes/commander-plan/FEATURE-scorecards.puml
+
+-- Симуляции --
+!include includes/commander-plan/FEATURE-simulations.puml
+
+-- Табличные риск-параметры --
+!include includes/commander-plan/FEATURE-tabular-risk-parameters.puml
 
 @endgantt

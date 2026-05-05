@@ -1,0 +1,27 @@
+' FEATURE: artifacts
+' Actual-progress overlay:
+' - STORY rows are commander-plan stories actualized by linked execution tasks
+' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
+
+' Story layer
+' Story STORY-ARTIFACTS-001: mixed, mapping=explicit
+[PLAN BE Shared backend-контур артефактов и доступ к разделу Документы] as [STORY_STORY_ARTIFACTS_001] starts 2026/03/16
+[STORY_STORY_ARTIFACTS_001] ends 2026/04/29
+[STORY_STORY_ARTIFACTS_001] is colored in Gainsboro
+[STORY_STORY_ARTIFACTS_001] is 100% completed
+
+' Execution task layer
+[AN артефакты (BE): модель/контракты/права] as [TASK_AN_ART_BE] on {A2} lasts 1 days
+[TASK_AN_ART_BE] starts 2026/03/31
+[TASK_AN_ART_BE] is colored in LightGreen
+[TASK_AN_ART_BE] is 100% completed
+
+[BE артефакты (ссылки на документы) - БД + API] as [TASK_BE_ART] on {B2} lasts 3 days
+[TASK_BE_ART] starts 2026/04/01
+[TASK_BE_ART] is colored in LightBlue
+[TASK_BE_ART] is 100% completed
+
+[RSCON-2468 BE Дать доступ к разделу Документы для пользователей] as [TASK_RSCON_2468] on {BE3} lasts 2 days
+[TASK_RSCON_2468] starts 2026/04/28
+[TASK_RSCON_2468] is colored in LightBlue
+[TASK_RSCON_2468] is 100% completed

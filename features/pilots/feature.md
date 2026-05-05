@@ -34,7 +34,7 @@ Feature импортирована из `changesWork` и current-system requirem
 - `slices/workspace/requirements/backend.md`
 
 ## Planning stories
-- отдельные planning stories в standalone-проекте пока не нормализованы; imported pilot scope зафиксирован как единый workspace.
+- `planning/stories/STORY-PILOTS-001.md`
 
 ## Риски и зависимости
 - feature зависит от `deployments`, `scorecards`, `approvals` и shared `artifacts`;

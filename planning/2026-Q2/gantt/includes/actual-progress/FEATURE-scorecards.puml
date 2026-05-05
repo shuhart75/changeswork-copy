@@ -14,7 +14,7 @@
 [PLAN FE Workspace скоркарты: вкладка, деталка, источники и использование] as [STORY_STORY_SCORECARDS_002] starts 2026/04/08
 [STORY_STORY_SCORECARDS_002] ends 2026/04/22
 [STORY_STORY_SCORECARDS_002] is colored in Gainsboro
-[STORY_STORY_SCORECARDS_002] is 91% completed
+[STORY_STORY_SCORECARDS_002] is 95% completed
 
 ' Story STORY-SCORECARDS-003: materialized, mapping=inferred
 [PLAN FE Создание, редактирование и привязка скоркарты] as [STORY_STORY_SCORECARDS_003] starts 2026/04/08
@@ -43,12 +43,12 @@
 [TASK_RSCON_2344] is colored in LightBlue
 [TASK_RSCON_2344] is 100% completed
 
-[RSCON-2339 FE Удаление блока метрик + новая вкладка для скоркарт] as [TASK_RSCON_2339] on {TBD_FE} lasts 1 days
-[TASK_RSCON_2339] starts 2026/04/22
-[TASK_RSCON_2339] is colored in LightCoral
-[TASK_RSCON_2339] is 0% completed
-
 [RSCON-2341 FE Прикрепление существующей скоркарты] as [TASK_RSCON_2341] on {TBD_FE} lasts 4 days
 [TASK_RSCON_2341] starts 2026/04/23
 [TASK_RSCON_2341] is colored in LightCoral
 [TASK_RSCON_2341] is 0% completed
+
+[RSCON-2339 FE Удаление блока метрик. Новая вкладка скоркарт] as [TASK_RSCON_2339] on {BE1} lasts 1 days
+[TASK_RSCON_2339] starts 2026/05/04
+[TASK_RSCON_2339] is colored in LightCoral
+[TASK_RSCON_2339] is 50% completed

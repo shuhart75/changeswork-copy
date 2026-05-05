@@ -6,14 +6,14 @@ Feature: `features/simulation-bt-agent/feature.md`
 Дата обновления: `2026-04-29`
 
 ## Назначение
-Описать часть сценария БТ внутри окна агента: условия доступности inline action `Сформировать БТ для текущей симуляции`, шаблон черновика запроса на основе уже реализованной деталки симуляции, ручное редактирование текста перед отправкой, передачу `simulation_id` и `risk_params` в RAIN `/chat`, а также показ текстового ответа агента и URL-кандидатов для ручного копирования без автосохранения в симуляцию.
+Описать часть сценария БТ внутри окна агента: условия доступности inline action `Сформировать БТ для текущей симуляции`, шаблон черновика запроса на основе уже реализованной деталки симуляции, ручное редактирование текста перед отправкой, передачу `simulation_id` и `risk_params` в RAIN `POST /chat/runs`, а также показ `message.content` и структурированного `bt_page` artifact из результата run для ручного копирования без автосохранения в симуляцию.
 
 ## Связанные planning stories
 - `STORY-SIMULATION-BT-AGENT-003`
 
 ## Источники
 - `../../references.md`
-- `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
+- `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`
 - `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `context/change-requests/simulation-bt-agent/simulations_api.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/requirements-v1.md`

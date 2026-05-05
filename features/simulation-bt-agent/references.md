@@ -4,6 +4,11 @@
 - `/home/reutov/Documents/AI/simulations_AI_agent`
 
 ## Requirements and analysis sources
+- `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml` — согласованный с RAIN целевой контракт
+- `context/change-requests/simulation-bt-agent/frontend_backend_openapi.yaml` — frontend/backend facade examples, derived from requirements
+- `context/change-requests/simulation-bt-agent/frontend_backend_cursor_examples.md` — cursor/history sync examples, derived from requirements
+- `context/change-requests/simulation-bt-agent/rain_api_sequence.puml` — актуальная sequence diagram async REST integration
+- `context/change-requests/simulation-bt-agent/SSE.puml` — obsolete previous-iteration diagram, не использовать как текущий контракт
 - `context/change-requests/simulation-bt-agent/agent_openapi.yaml`
 - `context/change-requests/simulation-bt-agent/Системные_требования_для_интеграции_АС_КОДА_и_AI_Агента_RAIN.md`
 - `/home/reutov/Documents/AI/simulations_AI_agent/docs/requirements/requirements-v1.md`

@@ -35,11 +35,12 @@ Feature импортирована из `changesWork` и current-system requirem
 - `slices/core/requirements/backend.md`
 
 ## Planning stories
-- отдельные planning stories в standalone-проекте пока не нормализованы; feature зафиксирована как imported shared scope.
+- `planning/stories/STORY-ARTIFACTS-001.md`
 
 ## Риски и зависимости
 - feature зависит от прав на родительские сущности;
 - изменение shared artifacts behavior потенциально затрагивает `pilots`, `simulations`, `deployments`.
+- execution-слой смешанный: shared core пришёл из legacy как virtual execution items, а follow-up `RSCON-2468` уже зафиксирован как реальная backlog-задача.
 
 ## Решение по кварталу
 - [x] imported shared scope зафиксирован

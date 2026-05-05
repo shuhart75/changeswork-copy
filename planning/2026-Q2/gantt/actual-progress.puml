@@ -1,6 +1,6 @@
 @startgantt
 title Реальный прогресс - 2026-Q2
-Project starts 2026-04-01
+Project starts 2026-03-16
 saturday are closed
 sunday are closed
 
@@ -14,6 +14,7 @@ projectscale daily
 today is colored in LightSalmon
 !$now = %now()
 [Мы сейчас здесь] as [TODAY_MARK] happens %date("YYYY-MM-dd", $now)
+2026/05/21 is colored in LightSteelBlue
 
 <style>
 ganttDiagram {
@@ -30,8 +31,13 @@ ganttDiagram {
 
 !include preamble/common.puml
 
+!include preamble/actual-progress.puml
+
 -- Согласования --
 !include includes/actual-progress/FEATURE-approvals.puml
+
+-- Артефакты --
+!include includes/actual-progress/FEATURE-artifacts.puml
 
 -- Внедрения --
 !include includes/actual-progress/FEATURE-deployments.puml
@@ -39,7 +45,22 @@ ganttDiagram {
 -- Пакеты --
 !include includes/actual-progress/FEATURE-packages.puml
 
+-- Пилоты --
+!include includes/actual-progress/FEATURE-pilots.puml
+
+-- Ролевая модель и RBAC --
+!include includes/actual-progress/FEATURE-roles.puml
+
 -- Скоркарты --
 !include includes/actual-progress/FEATURE-scorecards.puml
+
+-- Формирование БТ из симуляции через AI-агента RAIN --
+!include includes/actual-progress/FEATURE-simulation-bt-agent.puml
+
+-- Симуляции --
+!include includes/actual-progress/FEATURE-simulations.puml
+
+-- Табличные риск-параметры --
+!include includes/actual-progress/FEATURE-tabular-risk-parameters.puml
 
 @endgantt

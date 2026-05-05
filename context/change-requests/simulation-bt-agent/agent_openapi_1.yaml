@@ -1,0 +1,588 @@
+openapi: 3.0.3
+info:
+  title: Rain API
+  description: |
+    API обработки сообщений.
+    - Идемпотентное создание run с ключом `Idempotency-Key`.
+    - Статусы run: `queued`, `running`, `succeeded`, `failed`, `timeout`, `cancelled`.
+    - Cursor-пагинация истории сообщений.
+  version: 1.0.0
+servers:
+  - url: /chat
+    description: Chat base path
+
+tags:
+  - name: Runs
+    description: Асинхронные операции обработки сообщений
+  - name: Messages
+    description: История сообщений
+
+paths:
+  /runs:
+    post:
+      tags:
+        - Runs
+      summary: Создать асинхронную операцию обработки сообщения
+      operationId: createRun
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdempotencyKey'
+          description: Уникальный ключ идемпотентности (UUID)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRunRequest'
+      responses:
+        '202':
+          description: Запрос принят, run создан
+          headers:
+            Location:
+              description: URL созданного run
+              schema:
+                type: string
+                format: uri-reference
+                example: /chat/runs/run-123
+            Retry-After:
+              description: Рекомендуемое время до повторного опроса статуса (секунды)
+              schema:
+                type: integer
+                example: 5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                status: "queued"
+                retry_after_seconds: 5
+        '200':
+          description: Запрос идемпотентен, run уже существует (тот же ключ и тело)
+          headers:
+            Retry-After:
+              description: Рекомендуемое время до повторного опроса статуса (опционально)
+              schema:
+                type: integer
+              example: 5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                status: "running"
+                retry_after_seconds: 5
+        '409':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /runs/{run_id}:
+    get:
+      tags:
+        - Runs
+      summary: Получить состояние run
+      operationId: getRunStatus
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: run-123
+      responses:
+        '200':
+          description: Состояние run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              examples:
+                running:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "running"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:30:20.000+03:00"
+                    retry_after_seconds: 5
+                succeeded:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "succeeded"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:31:40.000+03:00"
+                    result_url: "/chat/runs/run-123/result"
+                    message_id: "msg-789"
+                failed:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "failed"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:31:00.000+03:00"
+                    error:
+                      code: "agent_error"
+                      message: "Не удалось сформировать ответ"
+                timeout:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "timeout"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:35:00.000+03:00"
+                    error:
+                      code: "generation_timeout"
+                      message: "Ответ не был сформирован за отведённое время"
+                cancelled:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "cancelled"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:32:00.000+03:00"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /runs/{run_id}/result:
+    get:
+      tags:
+        - Runs
+      summary: Получить результат завершённого run
+      operationId: getRunResult
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: run-123
+      responses:
+        '200':
+          description: Результат завершённого run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                message:
+                  message_id: "msg-789"
+                  role: "assistant"
+                  content: "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345"
+                  created_at: "2026-04-29T12:31:40.000+03:00"
+                artifacts:
+                  - type: "bt_page"
+                    url: "https://confluence.example.local/pages/viewpage.action?pageId=12345"
+                    title: "БТ SIM-CC-148"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Run ещё не завершён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "run_not_completed"
+                  message: "Результат недоступен, пока run не завершён"
+
+  /sessions/{session_id}/messages:
+    get:
+      tags:
+        - Messages
+      summary: Получить страницу истории сообщений сессии
+      operationId: getSessionMessages
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: Размер страницы
+        - name: before
+          in: query
+          schema:
+            type: string
+          description: Cursor для загрузки более ранних сообщений
+        - name: after
+          in: query
+          schema:
+            type: string
+          description: Cursor для загрузки новых сообщений
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Порядок сообщений в выдаче
+      responses:
+        '200':
+          description: Страница сообщений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMessagesResponse'
+              example:
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                items:
+                  - message_id: "msg-101"
+                    role: "user"
+                    content: "Сформируй БТ по симуляции SIM-CC-148."
+                    created_at: "2026-04-29T12:30:03.000+03:00"
+                    run_id: "run-123"
+                  - message_id: "msg-102"
+                    role: "assistant"
+                    content: "Уточните бизнес-эффект для БТ."
+                    created_at: "2026-04-29T12:30:40.000+03:00"
+                    run_id: "run-123"
+                older_cursor: "cursor-older-001"
+                sync_cursor: "cursor-after-102"
+                message_count: 2
+                last_message_id: "msg-102"
+                last_message_seq: 102
+                history_version: "hv-20260429-000102"
+                has_more_before: true
+                has_more_after: false
+        '400':
+          description: Невалидный cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "invalid_cursor"
+                  message: "Cursor недействителен или истёк"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /messages/{message_id}:
+    get:
+      tags:
+        - Messages
+      summary: Получить одно сообщение целиком
+      operationId: getMessageById
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: msg-200
+      responses:
+        '200':
+          description: Сообщение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageObject'
+              example:
+                message_id: "msg-200"
+                role: "assistant"
+                content: "полный текст длинного ответа..."
+                created_at: "2026-04-29T12:35:00.000+03:00"
+                run_id: "run-123"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    IdempotencyKey:
+      type: string
+      format: uuid
+      example: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
+
+    CreateRunRequest:
+      type: object
+      required:
+        - session_id
+        - message
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Идентификатор сессии
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        message:
+          type: string
+          maxLength: 3000
+          description: Текст сообщения пользователя, максимум 3000 символов
+          example: "Сформируй БТ по симуляции SIM-CC-148."
+        mode:
+          type: string
+          description: Режим обработки (например, bt_creation)
+          example: "bt_creation"
+        simulation_id:
+          type: string
+          description: Идентификатор симуляции
+          example: "SIM-CC-148"
+        risk_params:
+          type: object
+          description: Параметры риска
+          properties:
+            as_is:
+              $ref: '#/components/schemas/RiskParams'
+            to_be:
+              $ref: '#/components/schemas/RiskParams'
+        start_datetime:
+          type: string
+          format: date-time
+          description: Опциональная временная метка начала
+          example: "2026-04-29T12:30:00.123+03:00"
+        fio:
+          type: string
+          description: ФИО инициатора
+          example: "Иванов Иван Иванович"
+
+    RiskParams:
+      type: object
+      description: Пара "показатель-значение" (значения как строки для точности decimal)
+      properties:
+        PD_LIMIT:
+          anyOf:
+            - type: number
+            - type: string
+          example: "0.38"                
+        UTIL_SEGMENT_CAP:
+          anyOf:
+            - type: number
+            - type: string
+          example: "98000"
+
+    RunStatusResponse:
+      type: object
+      required:
+        - run_id
+        - session_id
+        - idempotency_key
+        - status
+      properties:
+        run_id:
+          type: string
+          example: "run-123"
+        session_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed, timeout, cancelled]
+          example: "running"
+        created_at:
+          type: string
+          format: date-time
+          description: Время создания run
+        updated_at:
+          type: string
+          format: date-time
+          description: Время последнего обновления статуса
+        retry_after_seconds:
+          type: integer
+          description: Рекомендуемое время до повторного опроса (для активных статусов)
+          example: 5
+        result_url:
+          type: string
+          format: uri-reference
+          description: URL результата (только для статуса succeeded)
+          example: "/chat/runs/run-123/result"
+        message_id:
+          type: string
+          description: Идентификатор сообщения агента (при succeeded)
+          example: "msg-789"
+        error:
+          $ref: '#/components/schemas/ErrorInfo'
+
+    ErrorInfo:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    RunResultResponse:
+      type: object
+      required:
+        - run_id
+        - session_id
+        - idempotency_key
+        - message
+      properties:
+        run_id:
+          type: string
+          example: "run-123"
+        session_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        message:
+          $ref: '#/components/schemas/MessageObject'
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+
+    Artifact:
+      type: object
+      required:
+        - type
+        - url
+      properties:
+        type:
+          type: string
+          example: "bt_page"
+        url:
+          type: string
+          format: uri
+          example: "https://confluence.example.local/pages/viewpage.action?pageId=12345"
+        title:
+          type: string
+          example: "БТ SIM-CC-148"
+
+    MessageObject:
+      type: object
+      required:
+        - message_id
+        - role
+        - content
+        - created_at
+      properties:
+        message_id:
+          type: string
+          example: "msg-789"
+        role:
+          type: string
+          enum: [user, assistant]
+          example: "assistant"
+        content:
+          type: string
+          example: "Страница БТ создана: https://..."
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-29T12:31:40.000+03:00"
+        run_id:
+          type: string
+          description: Идентификатор run, породившего сообщение (для ассистента)
+          example: "run-123"
+
+    SessionMessagesResponse:
+      type: object
+      required:
+        - session_id
+        - items
+        - older_cursor
+        - sync_cursor
+        - message_count
+        - last_message_id
+        - last_message_seq
+        - history_version
+        - has_more_before
+        - has_more_after
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/MessageObject'
+              - type: object
+                properties:
+                  run_id:
+                    type: string
+                required: [run_id]
+        older_cursor:
+          type: string
+          nullable: true
+          description: Cursor для более старых сообщений (null если нет)
+        sync_cursor:
+          type: string
+          description: Cursor для инкрементальной синхронизации
+        message_count:
+          type: integer
+          description: Количество сообщений в текущей странице
+        last_message_id:
+          type: string
+        last_message_seq:
+          type: integer
+          description: Порядковый номер последнего сообщения в истории
+        history_version:
+          type: string
+          description: Версия истории (для контроля согласованности)
+        has_more_before:
+          type: boolean
+          description: Есть ли более ранние сообщения
+        has_more_after:
+          type: boolean
+          description: Есть ли более новые сообщения (относительно after)
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorInfo'
+
+  responses:
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: "not_found"
+              message: "Запрашиваемый ресурс не существует"
+    IdempotencyConflict:
+      description: Конфликт идемпотентности – тот же ключ, другое тело
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: "idempotency_conflict"
+              message: "Idempotency-Key уже использован для другого запроса"
+              retryable: false
