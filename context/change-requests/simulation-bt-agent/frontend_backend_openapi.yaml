@@ -9,22 +9,13 @@ info:
     - frontend does not work with RAIN directly;
     - frontend does not receive OTT, mTLS details, internal RAIN URLs, or run_id;
     - session_id is an opaque token managed by backend;
-    - message history is loaded page by page with cursor-based backward pagination.
-    - history_changed is derived only against known_sync_cursor supplied by frontend.
+    - message history is loaded page by page with cursor-based backward pagination;
+    - history_changed is not part of the frontend/backend API;
     - user message is limited to 3000 characters.
-
-    Source of truth:
-    - features/simulation-bt-agent/requirements.md
-    - features/simulation-bt-agent/slices/agent-entrypoint/requirements/backend.md
-    - features/simulation-bt-agent/slices/dialog-session/requirements/backend.md
-    - features/simulation-bt-agent/slices/bt-publication/requirements/backend.md
 tags:
   - name: Dialog Session
-    description: Create, continue, reset, and inspect agent UI sessions.
   - name: Agent Status
-    description: Read normalized readiness of the RAIN agent through AS KODA backend.
   - name: Dialog History
-    description: Load dialog history pages for the agent panel.
 paths:
   /dialog/session:
     post:
@@ -32,26 +23,14 @@ paths:
       operationId: openDialogSession
       summary: Create, continue, or reset a dialog UI session
       description: |
-        Opens or restores the agent UI session for the current authenticated user.
-
-        Rules:
-        - if session_id is omitted, backend creates a new empty UI session;
-        - if session_id is provided, backend restores that session for the current user;
-        - this call does not invoke RAIN chat processing.
+        If session_id is omitted, backend creates a new empty UI session.
+        This call does not invoke RAIN chat processing.
       requestBody:
         required: false
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateSessionRequest'
-            examples:
-              create_new:
-                summary: Create a new empty session
-                value: {}
-              continue_existing:
-                summary: Continue an existing session
-                value:
-                  session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
       responses:
         '200':
           description: Session opened or restored
@@ -59,21 +38,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DialogSessionView'
-              examples:
-                idle_session:
-                  summary: New session
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: true
-                    dialog_status: idle
-                    error: null
-                running_session:
-                  summary: Existing session with active processing
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: false
-                    dialog_status: running
-                    error: null
+              example:
+                session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
+                can_send_message: true
+                dialog_status: idle
+                error: null
         '400':
           $ref: '#/components/responses/InvalidRequest'
         '403':
@@ -85,11 +54,6 @@ paths:
       tags: [Agent Status]
       operationId: getAgentStatus
       summary: Get normalized agent availability status
-      description: |
-        Returns the normalized agent status for the frontend status chip.
-
-        Backend aggregates RAIN liveness/readiness checks and hides all internal
-        transport details from the browser.
       responses:
         '200':
           description: Normalized agent status
@@ -97,28 +61,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AgentStatusResponse'
-              examples:
-                ready:
-                  value:
-                    status: ready
-                    liveness: alive
-                    readiness: ready
-                    checked_at: '2026-05-04T10:15:04+03:00'
-                    reason: null
-                not_ready:
-                  value:
-                    status: not_ready
-                    liveness: alive
-                    readiness: not_ready
-                    checked_at: '2026-05-04T10:15:04+03:00'
-                    reason: model_initializing
-                unavailable:
-                  value:
-                    status: unavailable
-                    liveness: null
-                    readiness: null
-                    checked_at: '2026-05-04T10:15:04+03:00'
-                    reason: health_check_timeout
+              example:
+                status: ready
+                liveness: alive
+                readiness: ready
+                checked_at: '2026-05-04T10:15:04+03:00'
+                reason: null
         '403':
           $ref: '#/components/responses/AccessDenied'
   /dialog/message:
@@ -128,33 +76,19 @@ paths:
       summary: Send a user message to the agent
       description: |
         Starts asynchronous processing of one user message.
-
-        Rules:
-        - backend returns quickly and does not wait for the full agent answer;
-        - if session_id is omitted, backend creates a new UI session first;
-        - frontend never receives run_id;
-        - if mode is bt_creation, simulation_id must be provided and backend
-          validates the simulation context before calling RAIN.
+        Backend returns quickly and does not wait for the full agent answer.
+        Frontend never receives run_id.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/SendMessageRequest'
-            examples:
-              consultation:
-                summary: Plain consultation message
-                value:
-                  session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                  message: Подскажи, что изменилось по этой симуляции.
-                  mode: consultation
-              bt_creation:
-                summary: BT creation message
-                value:
-                  session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                  message: Сформируй БТ для текущей симуляции.
-                  simulation_id: SIM-CC-148
-                  mode: bt_creation
+            example:
+              session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
+              message: Сформируй БТ для текущей симуляции.
+              simulation_id: SIM-CC-148
+              mode: bt_creation
       responses:
         '202':
           description: Message accepted, asynchronous processing started
@@ -162,13 +96,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DialogSessionView'
-              examples:
-                queued:
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: false
-                    dialog_status: queued
-                    error: null
+              example:
+                session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
+                can_send_message: false
+                dialog_status: queued
+                error: null
         '400':
           $ref: '#/components/responses/InvalidRequest'
         '403':
@@ -185,27 +117,14 @@ paths:
       operationId: getDialogStatus
       summary: Get session-level dialog status
       description: |
-        Returns the current frontend-facing state of the dialog session.
-
-        Rules:
-        - frontend polls this endpoint while dialog_status is queued or running;
-        - frontend does not see current run details or run_id;
-        - backend derives history_changed only when frontend sends known_sync_cursor;
-        - if session_id is omitted, backend creates a new empty UI session and
-          returns dialog_status=idle.
+        Frontend polls this endpoint while dialog_status is queued or running.
+        The response does not include run_id or history_changed.
       parameters:
         - name: session_id
           in: query
           required: false
-          description: Opaque backend-managed session token.
           schema:
             $ref: '#/components/schemas/SessionId'
-        - name: known_sync_cursor
-          in: query
-          required: false
-          description: Opaque sync cursor from the latest GET /dialog/messages response.
-          schema:
-            $ref: '#/components/schemas/Cursor'
       responses:
         '200':
           description: Current state of the dialog session
@@ -213,36 +132,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DialogSessionView'
-              examples:
-                idle:
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: true
-                    dialog_status: idle
-                    error: null
-                running:
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: false
-                    dialog_status: running
-                    history_changed: false
-                    error: null
-                succeeded:
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: true
-                    dialog_status: succeeded
-                    history_changed: true
-                    error: null
-                failed:
-                  value:
-                    session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
-                    can_send_message: true
-                    dialog_status: failed
-                    error:
-                      code: agent_error
-                      message: Не удалось получить ответ агента.
-                      retryable: true
+              example:
+                session_id: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
+                can_send_message: true
+                dialog_status: succeeded
+                error: null
         '400':
           $ref: '#/components/responses/InvalidRequest'
         '403':
@@ -255,24 +149,17 @@ paths:
       operationId: getDialogMessages
       summary: Get one page of dialog history
       description: |
-        Returns one stable page of dialog messages in chronological order.
-
-        Pagination rules:
-        - the latest page is requested without before;
-        - older history is requested with before=<older_cursor>;
-        - older_cursor is an opaque token and must not be interpreted by frontend;
-        - frontend should not request the full history at once.
+        Latest page is requested without before.
+        Older history is requested with before=<older_cursor>.
       parameters:
         - name: session_id
           in: query
           required: true
-          description: Opaque backend-managed session token.
           schema:
             $ref: '#/components/schemas/SessionId'
         - name: limit
           in: query
           required: false
-          description: Number of messages to return.
           schema:
             type: integer
             minimum: 1
@@ -281,7 +168,6 @@ paths:
         - name: before
           in: query
           required: false
-          description: Opaque cursor for loading earlier messages.
           schema:
             $ref: '#/components/schemas/Cursor'
       responses:
@@ -291,51 +177,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DialogMessagesPage'
-              examples:
-                latest_page:
-                  summary: Latest messages
-                  value:
-                    items:
-                      - message_id: msg-181
-                        role: user
-                        content: Сообщение 181
-                        created_at: '2026-05-04T10:00:01+03:00'
-                      - message_id: msg-182
-                        role: assistant
-                        content: Ответ 182
-                        created_at: '2026-05-04T10:00:05+03:00'
-                      - message_id: msg-200
-                        role: assistant
-                        content: Ответ 200
-                        created_at: '2026-05-04T10:09:07+03:00'
-                    older_cursor: cur_older_180_7YpQaL
-                    sync_cursor: cur_sync_200_Gh8nPx
-                    last_message_id: msg-200
-                    last_message_seq: 200
-                    history_version: hv-20260504-000200
-                    has_more_before: true
-                older_page:
-                  summary: Earlier messages loaded with before cursor
-                  value:
-                    items:
-                      - message_id: msg-161
-                        role: user
-                        content: Сообщение 161
-                        created_at: '2026-05-04T09:50:01+03:00'
-                      - message_id: msg-162
-                        role: assistant
-                        content: Ответ 162
-                        created_at: '2026-05-04T09:50:06+03:00'
-                      - message_id: msg-180
-                        role: assistant
-                        content: Ответ 180
-                        created_at: '2026-05-04T09:59:06+03:00'
-                    older_cursor: cur_older_160_aB91Zm
-                    sync_cursor: cur_sync_200_Gh8nPx
-                    last_message_id: msg-200
-                    last_message_seq: 200
-                    history_version: hv-20260504-000200
-                    has_more_before: true
+              example:
+                items:
+                  - message_id: msg-181
+                    role: user
+                    content: Сообщение 181
+                    created_at: '2026-05-04T10:00:01+03:00'
+                  - message_id: msg-182
+                    role: assistant
+                    content: Ответ 182
+                    created_at: '2026-05-04T10:00:05+03:00'
+                older_cursor: cur_older_180_7YpQaL
+                has_more_before: true
         '400':
           $ref: '#/components/responses/InvalidRequest'
         '403':
@@ -346,33 +199,18 @@ components:
   schemas:
     SessionId:
       type: string
-      description: Opaque backend-managed UI session token.
       minLength: 1
       example: sess-7f7d2d4e-5b6f-4a38-9e13-7c1b8a7d0011
     Cursor:
       type: string
-      description: Opaque cursor for backward pagination or sync checks.
       minLength: 1
       example: cur_older_180_7YpQaL
     DialogStatus:
       type: string
-      description: Frontend-facing dialog processing status.
-      enum:
-        - idle
-        - queued
-        - running
-        - succeeded
-        - failed
-        - timeout
-        - cancelled
+      enum: [idle, queued, running, succeeded, failed, timeout, cancelled]
     AgentStatus:
       type: string
-      description: Normalized frontend-facing agent availability status.
-      enum:
-        - ready
-        - not_ready
-        - unavailable
-        - unknown
+      enum: [ready, not_ready, unavailable, unknown]
     CreateSessionRequest:
       type: object
       additionalProperties: false
@@ -381,40 +219,25 @@ components:
           allOf:
             - $ref: '#/components/schemas/SessionId'
           nullable: true
-          description: |
-            Existing UI session token. If omitted or null, backend creates a new
-            empty session and treats the call as reset/new-session.
     SendMessageMode:
       type: string
-      description: Requested message processing mode.
-      enum:
-        - consultation
-        - bt_creation
+      enum: [consultation, bt_creation]
     SendMessageRequest:
       type: object
       additionalProperties: false
-      required:
-        - message
+      required: [message]
       properties:
         session_id:
           allOf:
             - $ref: '#/components/schemas/SessionId'
           nullable: true
-          description: |
-            Existing UI session token. If omitted or null, backend creates a new
-            session before sending the message.
         message:
           type: string
           minLength: 1
           maxLength: 3000
-          description: User message text.
-          example: Сформируй БТ для текущей симуляции.
         simulation_id:
           type: string
           nullable: true
-          description: |
-            Simulation identifier. Required when mode=bt_creation.
-          example: SIM-CC-148
         mode:
           allOf:
             - $ref: '#/components/schemas/SendMessageMode'
@@ -423,156 +246,94 @@ components:
     DialogError:
       type: object
       additionalProperties: false
-      required:
-        - code
-        - message
+      description: |
+        Frontend-facing safe error object.
+        Frontend reads the machine-readable code from error.code in HTTP error responses
+        and from DialogSessionView.error.code for terminal failed/timeout states.
+      required: [code, message]
       properties:
         code:
           type: string
-          description: |
-            Stable machine-readable error code.
-            Expected values include invalid_session_id_format, message_empty,
-            message_too_long, simulation_context_required,
-            simulation_not_eligible, invalid_cursor, access_denied,
-            session_not_found, run_in_progress, agent_not_ready, agent_error.
-          example: message_too_long
+          description: Machine-readable code used by frontend UI mapping, telemetry and diagnostics.
         message:
           type: string
-          description: Safe user-facing error message.
+          description: Safe user-facing or near-user-facing text without internal RAIN details.
         retryable:
           type: boolean
           nullable: true
-          description: Whether retry may be offered to the user.
     ApiErrorResponse:
       type: object
       additionalProperties: false
-      required:
-        - error
+      required: [error]
       properties:
         error:
           $ref: '#/components/schemas/DialogError'
     DialogSessionView:
       type: object
       additionalProperties: false
-      required:
-        - session_id
-        - can_send_message
-        - dialog_status
+      required: [session_id, can_send_message, dialog_status]
       properties:
         session_id:
           $ref: '#/components/schemas/SessionId'
         can_send_message:
           type: boolean
-          description: |
-            Whether the composer and inline actions are currently available.
         dialog_status:
           $ref: '#/components/schemas/DialogStatus'
-        history_changed:
-          type: boolean
-          nullable: true
-          description: |
-            Present only when frontend supplied known_sync_cursor. True means the
-            dialog history changed after that cursor; false means backend checked
-            the cursor and found no newer messages.
         error:
           allOf:
             - $ref: '#/components/schemas/DialogError'
           nullable: true
-          description: Optional safe error for terminal failed/timeout states.
     AgentStatusResponse:
       type: object
       additionalProperties: false
-      required:
-        - status
-        - checked_at
+      required: [status, checked_at]
       properties:
         status:
           $ref: '#/components/schemas/AgentStatus'
         liveness:
           type: string
           nullable: true
-          description: Raw liveness signal normalized by backend for diagnostics only.
-          example: alive
         readiness:
           type: string
           nullable: true
-          description: Raw readiness signal normalized by backend for diagnostics only.
-          example: ready
         checked_at:
           type: string
           format: date-time
-          description: Timestamp of the latest backend health check used for this response.
         reason:
           type: string
           nullable: true
-          description: Optional safe reason for non-ready status.
-          example: model_initializing
     DialogMessageRole:
       type: string
-      enum:
-        - user
-        - assistant
-        - system
+      enum: [user, assistant, system]
     DialogMessage:
       type: object
       additionalProperties: false
-      required:
-        - message_id
-        - role
-        - content
-        - created_at
+      required: [message_id, role, content, created_at]
       properties:
         message_id:
           type: string
-          description: Opaque message identifier.
-          example: msg-181
         role:
           $ref: '#/components/schemas/DialogMessageRole'
         content:
           type: string
-          description: Message text shown in the dialog history.
         created_at:
           type: string
           format: date-time
-          description: Message creation timestamp.
     DialogMessagesPage:
       type: object
       additionalProperties: false
-      required:
-        - items
-        - older_cursor
-        - sync_cursor
-        - has_more_before
+      required: [items, older_cursor, has_more_before]
       properties:
         items:
           type: array
-          description: Messages in chronological order within the returned page.
           items:
             $ref: '#/components/schemas/DialogMessage'
         older_cursor:
           allOf:
             - $ref: '#/components/schemas/Cursor'
           nullable: true
-          description: Cursor for loading earlier messages, null when there is no older page.
         has_more_before:
           type: boolean
-          description: Whether more earlier messages exist before this page.
-        sync_cursor:
-          allOf:
-            - $ref: '#/components/schemas/Cursor'
-          description: Cursor that represents the latest known history tail.
-        last_message_id:
-          type: string
-          nullable: true
-          description: Latest message id known to RAIN for this session.
-        last_message_seq:
-          type: integer
-          nullable: true
-          description: Latest message sequence, diagnostic/sync marker only.
-        history_version:
-          type: string
-          nullable: true
-          description: RAIN history version, diagnostic/sync marker only.
   responses:
     InvalidRequest:
       description: Validation or request-shape error
@@ -580,74 +341,27 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          examples:
-            invalid_session_id:
-              value:
-                error:
-                  code: invalid_session_id_format
-                  message: Некорректный идентификатор сессии.
-                  retryable: false
-            message_too_long:
-              value:
-                error:
-                  code: message_too_long
-                  message: Текст сообщения превышает допустимую длину.
-                  retryable: false
-            invalid_cursor:
-              value:
-                error:
-                  code: invalid_cursor
-                  message: Некорректный курсор истории.
-                  retryable: false
     AccessDenied:
       description: The user is authenticated but not allowed to access the requested data
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          examples:
-            default:
-              value:
-                error:
-                  code: access_denied
-                  message: Недостаточно прав для выполнения операции.
-                  retryable: false
     SessionNotFound:
       description: Session token not found or not owned by the current user
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          examples:
-            default:
-              value:
-                error:
-                  code: session_not_found
-                  message: Сессия не найдена или недоступна.
-                  retryable: false
     RunInProgress:
       description: Another message is already being processed in this session
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          examples:
-            default:
-              value:
-                error:
-                  code: run_in_progress
-                  message: Агент уже обрабатывает предыдущее сообщение.
-                  retryable: true
     AgentNotReady:
       description: The agent is currently not ready to accept a new message
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          examples:
-            default:
-              value:
-                error:
-                  code: agent_not_ready
-                  message: Агент сейчас не готов принимать сообщения.
-                  retryable: true

@@ -280,10 +280,6 @@ paths:
                   dialog_status:
                     type: string
                     enum: [idle, queued, running, succeeded, failed, timeout, cancelled]
-                  history_changed:
-                    type: boolean
-                    nullable: true
-                    description: Не требуется при открытии сессии; вычисляется только status endpoint от known_sync_cursor.
   /dialog/agent/status:
     get:
       summary: Получить нормализованный статус RAIN
@@ -389,11 +385,13 @@ GET /dialog/agent/status HTTP/1.1
 
 ### Ошибки API
 
-| Код/сценарий | Условие | Ответ |
-|---|---|---|
-| `400 invalid_session_id_format` | `session_id` не UUID | ошибка валидации |
-| `403 access_denied` | нет доступа к разделу симуляций | отказ доступа |
-| `503 agent_status_unavailable` | backend не смог проверить health RAIN | нормализованный `status=unknown/unavailable` |
+Frontend-facing ошибки возвращаются в `response.body.error.code`, кроме успешного `GET /dialog/agent/status`, где доступность агента определяется полями `status`, `liveness`, `readiness` и `reason`.
+
+| HTTP status | `error.code` для frontend | Источник кода | Условие | Ответ |
+|---|---|---|---|---|
+| `400` | `invalid_session_id_format` | backend validation `POST /dialog/session` | `session_id` не UUID | ошибка валидации |
+| `403` | `access_denied` | backend authorization | нет доступа к разделу симуляций | отказ доступа |
+| `503` | `agent_status_unavailable` | backend normalization of RAIN `/health/liveness`/`/health/readiness` failure | backend не смог проверить health RAIN | нормализованный `status=unknown/unavailable` |
 
 ## Миграция и обратная совместимость
 

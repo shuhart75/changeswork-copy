@@ -1,0 +1,82 @@
+@startuml
+title simulation-bt-agent: frontend new-message indicator with virtualized history
+
+actor User as U
+participant "АС КОДА Frontend" as FE
+participant "Frontend local state\nanchors + virtualized list" as LS
+participant "АС КОДА Backend" as BE
+participant "RAIN" as RAIN
+
+== Initial latest page ==
+FE -> BE: GET /dialog/messages?session_id=...&limit=20
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
+RAIN --> BE: latest items[], older_cursor,\nhas_more_before
+BE --> FE: latest items[], older_cursor,\nhas_more_before
+FE -> LS: current_latest_message_id = last(latest items)
+FE -> LS: acknowledged_latest_message_id = current_latest_message_id
+FE -> LS: is_near_bottom = true,\npending_new_message = false
+
+== User scrolls far upward ==
+U -> FE: Scroll far up in history
+FE -> BE: GET /dialog/messages?session_id=...&limit=20&before=older_cursor
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20&before=older_cursor
+RAIN --> BE: previous items[], older_cursor,\nhas_more_before
+BE --> FE: previous items[], older_cursor,\nhas_more_before
+FE -> LS: is_near_bottom = false
+FE -> LS: Virtualized list may unload\nlatest page message bodies
+note over FE,LS
+Virtualization may unload message bodies/pages,
+but must keep session-level anchors:
+acknowledged_latest_message_id,
+current_latest_message_id,
+is_near_bottom.
+end note
+
+== Active run completes ==
+loop polling while queued/running
+  FE -> BE: GET /dialog/status?session_id=...
+  BE -> RAIN: GET /chat/runs/{run_id}
+  RAIN --> BE: run status
+  BE --> FE: session_id,\ncan_send_message,\ndialog_status
+end
+
+BE --> FE: dialog_status=succeeded
+FE -> BE: GET /dialog/messages?session_id=...&limit=20
+BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
+RAIN --> BE: latest items[], older_cursor,\nhas_more_before
+BE --> FE: latest items[], older_cursor,\nhas_more_before
+FE -> LS: current_latest_message_id = last(latest items)
+
+alt current_latest_message_id != acknowledged_latest_message_id and is_near_bottom == false
+  FE -> LS: pending_new_message = true
+  FE --> U: Show sticky indicator\n"Новое сообщение"
+else is_near_bottom == true
+  FE -> LS: Render latest page at bottom
+  FE -> LS: acknowledged_latest_message_id = current_latest_message_id
+  FE -> LS: pending_new_message = false
+  FE --> U: Show new answer,\nkeep scroll at bottom
+else no newer latest message
+  FE -> LS: pending_new_message = false
+end
+
+== User acknowledges latest message ==
+alt User clicks "Новое сообщение"
+  U -> FE: Click sticky indicator
+  FE -> LS: Ensure latest page is present\nor request it again if unloaded
+  FE -> BE: GET /dialog/messages?session_id=...&limit=20
+  BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
+  RAIN --> BE: latest items[], older_cursor,\nhas_more_before
+  BE --> FE: latest items[], older_cursor,\nhas_more_before
+  FE -> LS: Scroll to last message
+  FE -> LS: acknowledged_latest_message_id = current_latest_message_id
+  FE -> LS: pending_new_message = false
+  FE --> U: Hide sticky indicator
+else User scrolls down manually to bottom
+  U -> FE: Scroll to bottom / near bottom
+  FE -> LS: is_near_bottom = true
+  FE -> LS: acknowledged_latest_message_id = current_latest_message_id
+  FE -> LS: pending_new_message = false
+  FE --> U: Hide sticky indicator
+end
+
+@enduml

@@ -279,6 +279,8 @@ BT run использует общий async facade, но server-to-server paylo
 | `POST RAIN /chat/runs` | создать run агенту | backend АС КОДА | server-to-server по принятому RAIN API |
 | `GET RAIN /chat/runs/{run_id}/result` | получить результат успешного run | backend АС КОДА | источник `message.content` и `artifacts[]` |
 
+Полный утверждённый RAIN OpenAPI приведён в общих требованиях `features/simulation-bt-agent/requirements.md` в разделе `Полный OpenAPI-контракт RAIN` и продублирован из `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`. Этот backend slice использует из него `POST /chat/runs`, `GET /chat/runs/{run_id}`, `GET /chat/runs/{run_id}/result`, `CreateRunRequest`, `RunResultResponse`, `Artifact`, `ErrorInfo` и не вводит отдельный BT-specific контракт RAIN.
+
 ### OpenAPI fragment
 
 ```yaml
@@ -393,8 +395,10 @@ GET /chat/runs/7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51/result HTTP/1.1
 
 ```json
 {
-  "error_code": "bt_context_not_available",
-  "message": "БТ можно сформировать только для завершённой симуляции, доступной к выводу в ПРОМ."
+  "error": {
+    "code": "bt_context_not_available",
+    "message": "БТ можно сформировать только для завершённой симуляции, доступной к выводу в ПРОМ."
+  }
 }
 ```
 
@@ -417,14 +421,16 @@ GET /chat/runs/7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51/result HTTP/1.1
 
 ### Ошибки API
 
-| Код/сценарий | Условие | Ответ |
-|---|---|---|
-| `400 bt_context_not_available` | симуляция неподходящая | ошибка бизнес-валидации |
-| `400 bt_risk_params_missing` | нет риск-параметров для BT run | ошибка неполного контекста |
-| `403 simulation_access_denied` | пользователь не имеет доступа к симуляции | отказ доступа |
-| `404 simulation_not_found` | симуляция не найдена | ошибка отсутствующей симуляции |
-| `504 agent_timeout` | RAIN не ответил до timeout | terminal status `timeout` |
-| `502 agent_error` | ошибка RAIN | terminal status `failed` |
+Frontend-facing ошибки возвращаются в `response.body.error.code`; terminal ошибки RAIN возвращаются в `DialogSessionView.error.code` при polling `GET /dialog/status?session_id=...`.
+
+| HTTP status | `error.code` для frontend | Источник кода | Условие | Ответ |
+|---|---|---|---|---|
+| `400` | `bt_context_not_available` | backend BT context validation; frontend может выявить тот же код локально по данным страницы | симуляция неподходящая | ошибка бизнес-валидации |
+| `400` | `bt_risk_params_missing` | backend mapping/validation of existing simulation detail API into RAIN `RiskParams` | нет риск-параметров для BT run | ошибка неполного контекста |
+| `403` | `simulation_access_denied` | backend authorization for simulation | пользователь не имеет доступа к симуляции | отказ доступа |
+| `404` | `simulation_not_found` | existing simulation detail API/backend lookup | симуляция не найдена | ошибка отсутствующей симуляции |
+| `200` | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error RAIN | RAIN не ответил до timeout | terminal status `timeout` |
+| `200` | `agent_error` | `DialogSessionView.error.code`, нормализованный из `RAIN RunStatusResponse.error.code` или `ErrorResponse.error.code` | ошибка RAIN | terminal status `failed` |
 
 ## Миграция и обратная совместимость
 

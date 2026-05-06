@@ -3,7 +3,7 @@
 Статус: **draft**
 Feature: `features/simulation-bt-agent/feature.md`
 Квартал: `2026-Q2`
-Дата обновления: `2026-05-05`
+Дата обновления: `2026-05-06`
 Шаблон: `.workflow/templates/requirements/feature-requirements.template.md`
 
 ## Оглавление
@@ -39,8 +39,629 @@ Feature: `features/simulation-bt-agent/feature.md`
 - История диалога и агентский контекст принадлежат RAIN; backend АС КОДА проксирует/нормализует историю и может хранить локальную копию для UI/аудита по правилам синхронизации, но не является владельцем агентского контекста.
 - АС КОДА не отправляет в RAIN отдельное поле `context`/`contextPrompt`: для консультации передаётся только `message`, а для БТ-сценария дополнительно передаются согласованные поля `simulation_id`, `risk_params`, `start_datetime` и `fio`.
 - Максимальная длина пользовательского `message` для отправки в RAIN в MVP: `3000` символов; лимит валидируется на frontend и backend до server-to-server вызова.
-- `history_changed` не является состоянием backend. Это вычисляемый признак относительно `known_sync_cursor`, который frontend получил из последней синхронизации истории и передал в status request; если cursor не передан, backend не обязан возвращать этот признак.
+- `history_changed` не используется во frontend/backend API: backend не хранит состояние видимой frontend history window, а frontend после terminal status сам запрашивает latest page истории и решает, обновлять низ чата или показать индикатор нового сообщения.
 - `btUrl` как отдельное поле RAIN не используется в текущих требованиях; целевой контракт RAIN возвращает структурированные `artifacts[]` для результата run, включая возможную ссылку на БТ.
+
+## Модель ошибок для frontend
+
+- Все ошибки frontend-facing `/dialog/*` API должны возвращать машинный код в `error.code` и безопасный для пользователя текст в `error.message`.
+- Если ошибка возвращается HTTP error response, frontend берёт код из `response.body.error.code`.
+- Если ошибка связана с terminal status сессии, frontend берёт код из `DialogSessionView.error.code` в ответе `GET /dialog/status?session_id=...`.
+- Если ошибка выявлена до обращения к backend, frontend использует локальный код валидации из FE-правил и не имитирует backend/Rain-код.
+- Если источник ошибки RAIN, backend АС КОДА берёт исходный `RAIN ErrorInfo.code` или terminal `RunStatusResponse.error.code`, маппит его в безопасный `DialogError.code` и не раскрывает stack trace, OTT, внутренний URL или сырой технический текст RAIN.
+- Для пользователя показывается сообщение из таблиц frontend-требований; `error.code` используется для выбора сценария UI, telemetry и диагностики.
+
+| Сценарий | Код для frontend | Откуда frontend берёт код | Пользовательское сообщение |
+|---|---|---|---|
+| Невалидный `session_id` | `invalid_session_id_format` | `response.body.error.code` от `POST /dialog/session` или `GET /dialog/status` | `Не удалось восстановить текущую сессию агента.` |
+| Нет доступа к разделу/сессии/симуляции | `access_denied`, `simulation_access_denied` | `response.body.error.code` от соответствующего `/dialog/*` endpoint | `Недостаточно прав для действия с агентом.` |
+| Сессия не найдена или не принадлежит пользователю | `session_not_found` | `response.body.error.code` от `/dialog/*` endpoint | `Не удалось восстановить текущую сессию агента.` |
+| Агент не готов принимать сообщения | `agent_not_ready` | `response.body.error.code` от `POST /dialog/message` или `AgentStatusResponse.status != ready` | `Агент сейчас не готов принимать сообщения.` |
+| Уже есть active run | `run_in_progress` | `response.body.error.code` от `POST /dialog/message` | `Дождитесь ответа агента перед отправкой нового сообщения.` |
+| Пустое сообщение | `message_empty` | frontend local validation или `response.body.error.code` от `POST /dialog/message` | `Введите сообщение перед отправкой.` |
+| Сообщение длиннее `3000` символов | `message_too_long` | frontend local validation или `response.body.error.code` от `POST /dialog/message` | `Сообщение слишком длинное. Сократите текст перед отправкой.` |
+| Не удалось прочитать статус RAIN run | `rain_status_unavailable` | `response.body.error.code` от `GET /dialog/status` | `Не удалось обновить статус агента. Попробуйте ещё раз.` |
+| RAIN завершил run ошибкой | `agent_error` | `DialogSessionView.error.code`, нормализованный из `RAIN RunStatusResponse.error.code` | `Не удалось получить результат от агента. Попробуйте позже.` |
+| RAIN завершил run timeout | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error RAIN | `Агент долго не отвечает. Попробуйте перезапустить сессию или повторить позже.` |
+| BT-сценарий недоступен для симуляции | `bt_context_not_available` | frontend context validation или `response.body.error.code` от `POST /dialog/message` | `Сформировать БТ можно только для завершённой симуляции, доступной к выводу в ПРОМ.` |
+| Нет риск-параметров для BT run | `bt_risk_params_missing` | `response.body.error.code` от `POST /dialog/message` | `Не удалось подготовить данные симуляции для БТ.` |
+
+## Полный OpenAPI-контракт RAIN
+
+Ниже приведена полная утверждённая версия server-to-server контракта RAIN из `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`. Этот блок включён в общие требования, чтобы FE/BE/QA видели целевой внешний контракт без перехода в отдельный файл. Каноническим файлом для машинной проверки остаётся `agent_openapi_1.yaml`; при изменении согласованного контракта RAIN нужно синхронно обновить и файл, и этот раздел.
+
+Важно для frontend/backend boundary: браузер не вызывает эти методы напрямую, не получает `run_id`, OTT/mTLS details и внутренние URL RAIN. Backend АС КОДА вызывает RAIN server-to-server и нормализует ответы в frontend-facing `/dialog/*` API.
+
+```yaml
+openapi: 3.0.3
+info:
+  title: Rain API
+  description: |
+    API обработки сообщений.
+    - Идемпотентное создание run с ключом `Idempotency-Key`.
+    - Статусы run: `queued`, `running`, `succeeded`, `failed`, `timeout`, `cancelled`.
+    - Cursor-пагинация истории сообщений.
+  version: 1.0.0
+servers:
+  - url: /chat
+    description: Chat base path
+
+tags:
+  - name: Runs
+    description: Асинхронные операции обработки сообщений
+  - name: Messages
+    description: История сообщений
+
+paths:
+  /runs:
+    post:
+      tags:
+        - Runs
+      summary: Создать асинхронную операцию обработки сообщения
+      operationId: createRun
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdempotencyKey'
+          description: Уникальный ключ идемпотентности (UUID)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRunRequest'
+      responses:
+        '202':
+          description: Запрос принят, run создан
+          headers:
+            Location:
+              description: URL созданного run
+              schema:
+                type: string
+                format: uri-reference
+                example: /chat/runs/run-123
+            Retry-After:
+              description: Рекомендуемое время до повторного опроса статуса (секунды)
+              schema:
+                type: integer
+                example: 5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                status: "queued"
+                retry_after_seconds: 5
+        '200':
+          description: Запрос идемпотентен, run уже существует (тот же ключ и тело)
+          headers:
+            Retry-After:
+              description: Рекомендуемое время до повторного опроса статуса (опционально)
+              schema:
+                type: integer
+              example: 5
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                status: "running"
+                retry_after_seconds: 5
+        '409':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /runs/{run_id}:
+    get:
+      tags:
+        - Runs
+      summary: Получить состояние run
+      operationId: getRunStatus
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: run-123
+      responses:
+        '200':
+          description: Состояние run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStatusResponse'
+              examples:
+                running:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "running"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:30:20.000+03:00"
+                    retry_after_seconds: 5
+                succeeded:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "succeeded"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:31:40.000+03:00"
+                    result_url: "/chat/runs/run-123/result"
+                    message_id: "msg-789"
+                failed:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "failed"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:31:00.000+03:00"
+                    error:
+                      code: "agent_error"
+                      message: "Не удалось сформировать ответ"
+                timeout:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "timeout"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:35:00.000+03:00"
+                    error:
+                      code: "generation_timeout"
+                      message: "Ответ не был сформирован за отведённое время"
+                cancelled:
+                  value:
+                    run_id: "run-123"
+                    session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                    status: "cancelled"
+                    created_at: "2026-04-29T12:30:00.123+03:00"
+                    updated_at: "2026-04-29T12:32:00.000+03:00"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /runs/{run_id}/result:
+    get:
+      tags:
+        - Runs
+      summary: Получить результат завершённого run
+      operationId: getRunResult
+      parameters:
+        - name: run_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: run-123
+      responses:
+        '200':
+          description: Результат завершённого run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunResultResponse'
+              example:
+                run_id: "run-123"
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                idempotency_key: "3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8"
+                message:
+                  message_id: "msg-789"
+                  role: "assistant"
+                  content: "Страница БТ создана: https://confluence.example.local/pages/viewpage.action?pageId=12345"
+                  created_at: "2026-04-29T12:31:40.000+03:00"
+                artifacts:
+                  - type: "bt_page"
+                    url: "https://confluence.example.local/pages/viewpage.action?pageId=12345"
+                    title: "БТ SIM-CC-148"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Run ещё не завершён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "run_not_completed"
+                  message: "Результат недоступен, пока run не завершён"
+
+  /sessions/{session_id}/messages:
+    get:
+      tags:
+        - Messages
+      summary: Получить страницу истории сообщений сессии
+      operationId: getSessionMessages
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: Размер страницы
+        - name: before
+          in: query
+          schema:
+            type: string
+          description: Cursor для загрузки более ранних сообщений
+        - name: after
+          in: query
+          schema:
+            type: string
+          description: Cursor для загрузки новых сообщений
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Порядок сообщений в выдаче
+      responses:
+        '200':
+          description: Страница сообщений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMessagesResponse'
+              example:
+                session_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                items:
+                  - message_id: "msg-101"
+                    role: "user"
+                    content: "Сформируй БТ по симуляции SIM-CC-148."
+                    created_at: "2026-04-29T12:30:03.000+03:00"
+                    run_id: "run-123"
+                  - message_id: "msg-102"
+                    role: "assistant"
+                    content: "Уточните бизнес-эффект для БТ."
+                    created_at: "2026-04-29T12:30:40.000+03:00"
+                    run_id: "run-123"
+                older_cursor: "cursor-older-001"
+                sync_cursor: "cursor-after-102"
+                message_count: 2
+                last_message_id: "msg-102"
+                last_message_seq: 102
+                history_version: "hv-20260429-000102"
+                has_more_before: true
+                has_more_after: false
+        '400':
+          description: Невалидный cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "invalid_cursor"
+                  message: "Cursor недействителен или истёк"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /messages/{message_id}:
+    get:
+      tags:
+        - Messages
+      summary: Получить одно сообщение целиком
+      operationId: getMessageById
+      parameters:
+        - name: message_id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: msg-200
+      responses:
+        '200':
+          description: Сообщение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageObject'
+              example:
+                message_id: "msg-200"
+                role: "assistant"
+                content: "полный текст длинного ответа..."
+                created_at: "2026-04-29T12:35:00.000+03:00"
+                run_id: "run-123"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    IdempotencyKey:
+      type: string
+      format: uuid
+      example: 3bdb8f6e-c9e1-46d0-b469-327d4b6fd0f8
+
+    CreateRunRequest:
+      type: object
+      required:
+        - session_id
+        - message
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Идентификатор сессии
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        message:
+          type: string
+          maxLength: 3000
+          description: Текст сообщения пользователя, максимум 3000 символов
+          example: "Сформируй БТ по симуляции SIM-CC-148."
+        mode:
+          type: string
+          description: Режим обработки (например, bt_creation)
+          example: "bt_creation"
+        simulation_id:
+          type: string
+          description: Идентификатор симуляции
+          example: "SIM-CC-148"
+        risk_params:
+          type: object
+          description: Параметры риска
+          properties:
+            as_is:
+              $ref: '#/components/schemas/RiskParams'
+            to_be:
+              $ref: '#/components/schemas/RiskParams'
+        start_datetime:
+          type: string
+          format: date-time
+          description: Опциональная временная метка начала
+          example: "2026-04-29T12:30:00.123+03:00"
+        fio:
+          type: string
+          description: ФИО инициатора
+          example: "Иванов Иван Иванович"
+
+    RiskParams:
+      type: object
+      description: Пара "показатель-значение" (значения как строки для точности decimal)
+      properties:
+        PD_LIMIT:
+          anyOf:
+            - type: number
+            - type: string
+          example: "0.38"                
+        UTIL_SEGMENT_CAP:
+          anyOf:
+            - type: number
+            - type: string
+          example: "98000"
+
+    RunStatusResponse:
+      type: object
+      required:
+        - run_id
+        - session_id
+        - idempotency_key
+        - status
+      properties:
+        run_id:
+          type: string
+          example: "run-123"
+        session_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed, timeout, cancelled]
+          example: "running"
+        created_at:
+          type: string
+          format: date-time
+          description: Время создания run
+        updated_at:
+          type: string
+          format: date-time
+          description: Время последнего обновления статуса
+        retry_after_seconds:
+          type: integer
+          description: Рекомендуемое время до повторного опроса (для активных статусов)
+          example: 5
+        result_url:
+          type: string
+          format: uri-reference
+          description: URL результата (только для статуса succeeded)
+          example: "/chat/runs/run-123/result"
+        message_id:
+          type: string
+          description: Идентификатор сообщения агента (при succeeded)
+          example: "msg-789"
+        error:
+          $ref: '#/components/schemas/ErrorInfo'
+
+    ErrorInfo:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    RunResultResponse:
+      type: object
+      required:
+        - run_id
+        - session_id
+        - idempotency_key
+        - message
+      properties:
+        run_id:
+          type: string
+          example: "run-123"
+        session_id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        message:
+          $ref: '#/components/schemas/MessageObject'
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+
+    Artifact:
+      type: object
+      required:
+        - type
+        - url
+      properties:
+        type:
+          type: string
+          example: "bt_page"
+        url:
+          type: string
+          format: uri
+          example: "https://confluence.example.local/pages/viewpage.action?pageId=12345"
+        title:
+          type: string
+          example: "БТ SIM-CC-148"
+
+    MessageObject:
+      type: object
+      required:
+        - message_id
+        - role
+        - content
+        - created_at
+      properties:
+        message_id:
+          type: string
+          example: "msg-789"
+        role:
+          type: string
+          enum: [user, assistant]
+          example: "assistant"
+        content:
+          type: string
+          example: "Страница БТ создана: https://..."
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-29T12:31:40.000+03:00"
+        run_id:
+          type: string
+          description: Идентификатор run, породившего сообщение (для ассистента)
+          example: "run-123"
+
+    SessionMessagesResponse:
+      type: object
+      required:
+        - session_id
+        - items
+        - older_cursor
+        - sync_cursor
+        - message_count
+        - last_message_id
+        - last_message_seq
+        - history_version
+        - has_more_before
+        - has_more_after
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/MessageObject'
+              - type: object
+                properties:
+                  run_id:
+                    type: string
+                required: [run_id]
+        older_cursor:
+          type: string
+          nullable: true
+          description: Cursor для более старых сообщений (null если нет)
+        sync_cursor:
+          type: string
+          description: Cursor для инкрементальной синхронизации
+        message_count:
+          type: integer
+          description: Количество сообщений в текущей странице
+        last_message_id:
+          type: string
+        last_message_seq:
+          type: integer
+          description: Порядковый номер последнего сообщения в истории
+        history_version:
+          type: string
+          description: Версия истории (для контроля согласованности)
+        has_more_before:
+          type: boolean
+          description: Есть ли более ранние сообщения
+        has_more_after:
+          type: boolean
+          description: Есть ли более новые сообщения (относительно after)
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorInfo'
+
+  responses:
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: "not_found"
+              message: "Запрашиваемый ресурс не существует"
+    IdempotencyConflict:
+      description: Конфликт идемпотентности – тот же ключ, другое тело
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: "idempotency_conflict"
+              message: "Idempotency-Key уже использован для другого запроса"
+              retryable: false
+```
 
 ## Порядок slice для контроля
 
@@ -207,9 +828,9 @@ U -> FE: Открыть окно агента
 FE -> BE: POST /dialog/session\nsession_id отсутствует
 BE --> FE: session_id,\ncan_send_message,\ndialog_status
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
-BE --> FE: items[], older_cursor,\nsync_cursor, has_more_before
-FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
-BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed=false
+BE --> FE: items[], older_cursor,\nhas_more_before
+FE -> BE: GET /dialog/status?session_id=...
+BE --> FE: session_id,\ncan_send_message,\ndialog_status
 
 == Отправка сообщения ==
 U -> FE: Отправить prompt
@@ -223,20 +844,16 @@ FE --> U: Заблокировать composer\nпоказать ожидание
 
 == Polling статуса сессии ==
 loop пока dialog_status queued/running
-  FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
+  FE -> BE: GET /dialog/status?session_id=...
   BE -> RAIN: GET /chat/runs/{run_id}
   RAIN --> BE: run status
-  alt known_sync_cursor передан и нужна проверка истории
-    BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=known_sync_cursor&limit=1
-    RAIN --> BE: items[] или пусто
-  end
-  BE --> FE: session_id,\ncan_send_message,\ndialog_status,\nhistory_changed
+  BE --> FE: session_id,\ncan_send_message,\ndialog_status
 end
 
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
 RAIN --> BE: latest items[], cursors
-BE --> FE: latest items[], older_cursor,\nsync_cursor, has_more_before
+BE --> FE: latest items[], older_cursor,\nhas_more_before
 alt Пользователь находится внизу истории
   FE --> U: Показать ответ и оставить scroll внизу
 else Пользователь читает старые сообщения выше
@@ -250,7 +867,7 @@ U -> FE: Скролл вверх / Загрузить ещё
 FE -> BE: GET /dialog/messages?session_id=...&limit=20&before=older_cursor
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20&before=older_cursor
 RAIN --> BE: previous items[], older_cursor,\nhas_more_before
-BE --> FE: previous items[], older_cursor,\nsync_cursor, has_more_before
+BE --> FE: previous items[], older_cursor,\nhas_more_before
 FE --> U: Добавить сообщения выше\nбез сброса scroll-position
 @enduml
 ```
@@ -288,8 +905,8 @@ FE --> U: Добавить сообщения выше\nбез сброса scro
 - маппить данные АС КОДА в поля RAIN: `session_id`, `message`, `risk_params`, `simulation_id`, `start_datetime`, `fio`;
 - хранить внутренний `agent_dialog_run_ref` между UI-сессией АС КОДА и `run_id` RAIN и проксировать статус RAIN;
 - предоставить polling endpoint статуса сессии с `session_id` в параметрах запроса, возвращающий `session_id`, `dialog_status`, `can_send_message` и ошибку без раскрытия `run_id`;
-- вычислять и возвращать `history_changed` только относительно `known_sync_cursor`, переданного frontend; если cursor отсутствует, backend не хранит догадку о состоянии frontend history window;
-- проксировать/нормализовать историю RAIN и отдавать её frontend порциями через cursor/limit вместе с `sync_cursor` для последующей проверки новых сообщений;
+- не возвращать `history_changed` и не хранить состояние frontend history window на backend;
+- проксировать/нормализовать историю RAIN и отдавать её frontend порциями через cursor/limit;
 - применять server-side ограничение длины пользовательского `message` до `3000` символов и лимиты страниц истории;
 - не выполнять автоматический retry для операций, которые могли создать БТ, если нет идемпотентного ключа от RAIN.
 

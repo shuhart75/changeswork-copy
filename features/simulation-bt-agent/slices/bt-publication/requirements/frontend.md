@@ -225,8 +225,8 @@ Frontend должен отображать текст ответа агента 
 |---|---|---|---|---|
 | `GET /api/v1/simulation/{number}` / existing detail API | чтение данных текущей симуляции для доступности action и шаблона | читаем статус, доступные действия, риск-параметры | при открытой подходящей странице симуляции | уже реализованный источник данных |
 | `POST /dialog/message` | ручная отправка черновика или изменённого текста | отправляем `session_id`, `message`, `simulation_id`, `mode=bt_creation` | после ручной отправки | возвращает `session_id`, `can_send_message`, `dialog_status`; не полный ответ RAIN |
-| `GET /dialog/status?session_id=...&known_sync_cursor=...` | ожидание результата | читаем `can_send_message`, `dialog_status`, optional `history_changed`, ошибку | пока run не terminal | общий polling по session_id, без `run_id` во frontend |
-| `GET /dialog/messages?session_id=...` | отображение ответа | читаем страницу сообщений агента и `sync_cursor` | после terminal status или открытия истории | текст ответа приходит как `content`; структурированные artifacts backend может отобразить рядом с сообщением |
+| `GET /dialog/status?session_id=...` | ожидание результата | читаем `can_send_message`, `dialog_status`, ошибку | пока run не terminal | общий polling по session_id, без `run_id` во frontend |
+| `GET /dialog/messages?session_id=...` | отображение ответа | читаем страницу сообщений агента | после terminal status или открытия истории | текст ответа приходит как `content`; структурированные artifacts backend может отобразить рядом с сообщением |
 
 ## Валидация на frontend
 
@@ -242,13 +242,13 @@ Frontend должен отображать текст ответа агента 
 
 ### Сообщения об ошибках
 
-| Ситуация | Сообщение | Где показываем |
-|---|---|---|
-| BT-сценарий недоступен | `Сформировать БТ можно только для завершённой симуляции, доступной к выводу в ПРОМ.` | tooltip/action |
-| Агент не готов | `Агент сейчас не готов принимать сообщения.` | action/composer |
-| Не удалось построить черновик | `Не удалось подготовить черновик запроса для БТ.` | composer |
-| Черновик слишком длинный | `Черновик слишком длинный. Сократите текст перед отправкой.` | composer |
-| Ошибка публикации или ответа агента | `Не удалось получить результат от агента. Попробуйте позже.` | история/статус run |
+| Ситуация | Код ошибки | Откуда frontend берёт код | Сообщение | Где показываем |
+|---|---|---|---|---|
+| BT-сценарий недоступен | `bt_context_not_available` | frontend context validation по данным страницы или `response.body.error.code` от `POST /dialog/message` | `Сформировать БТ можно только для завершённой симуляции, доступной к выводу в ПРОМ.` | tooltip/action |
+| Агент не готов | `agent_not_ready` | `AgentStatusResponse.status != ready` или `response.body.error.code` от `POST /dialog/message` | `Агент сейчас не готов принимать сообщения.` | action/composer |
+| Не удалось построить черновик | `bt_risk_params_missing`, `simulation_not_found` или local draft error | frontend validation по `GET /api/v1/simulation/{number}`; при отправке `response.body.error.code` от `POST /dialog/message` | `Не удалось подготовить черновик запроса для БТ.` | composer |
+| Черновик слишком длинный | `message_too_long` | frontend local validation или `response.body.error.code` от `POST /dialog/message` | `Черновик слишком длинный. Сократите текст перед отправкой.` | composer |
+| Ошибка публикации или ответа агента | `agent_error`, `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code` из `GET /dialog/status?session_id=...`, нормализованный backend из terminal status/error RAIN | `Не удалось получить результат от агента. Попробуйте позже.` | история/статус run |
 
 ## Нефункциональные требования к UI
 

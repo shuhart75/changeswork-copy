@@ -9,7 +9,7 @@ note as N
 - backend-managed session_id;
 - POST /dialog/message и GET /dialog/status?session_id=...;
 - history pagination через GET /dialog/messages;
-- history_changed только как производный признак от known_sync_cursor;
+- status response не сообщает о состоянии загруженной frontend history window;
 - результат публикации БТ из RunResultResponse.artifacts[].
 
 Не использовать как текущий контракт:

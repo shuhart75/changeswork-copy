@@ -1,6 +1,6 @@
 # Domain Impact — simulation-bt-agent
 
-Дата обновления: `2026-05-05`
+Дата обновления: `2026-05-06`
 Baseline target: `baseline/current/domain/`
 
 ## Decision registry
@@ -14,8 +14,8 @@ Baseline target: `baseline/current/domain/`
 | DEC-2026-04-28-SIMULATION-BT-AGENT-005 | `session_id` локально генерируется фронтом как UUID при первом открытии окна и хранится в пользовательской сессии АС КОДА | reverted-before-release | domain-wide | `features/simulation-bt-agent/slices/agent-entrypoint/requirements/frontend.md` |  | DEC-2026-04-30-SIMULATION-BT-AGENT-009 |
 | DEC-2026-04-29-SIMULATION-BT-AGENT-007 | Принятый контракт RAIN фиксируется по `rain_api_proposal.md`: RAIN предоставляет `liveness`, `readiness`, async runs и постраничную историю; АС КОДА владеет UI-сессией и frontend boundary, но не terminal status и не агентской историей | accepted | domain-wide | `context/change-requests/simulation-bt-agent/rain_api_proposal.md` | DEC-2026-04-28-SIMULATION-BT-AGENT-005 |  |
 | DEC-2026-04-30-SIMULATION-BT-AGENT-008 | Frontend API АС КОДА читает статус диалога по `session_id`, а не по конкретному `run_id`; история отображается как windowed pagination с индикатором новых сообщений, если пользователь прокрутил чат вверх | accepted | domain-wide | `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/dialog-session/requirements/*.md` | DEC-2026-04-29-SIMULATION-BT-AGENT-007 |  |
-| DEC-2026-04-30-SIMULATION-BT-AGENT-009 | `session_id` создаёт backend АС КОДА; frontend передаёт его параметром запроса для продолжения сессии, а отсутствие `session_id` означает создание новой/сброс текущей UI-сессии; status response сокращён до `session_id`, `can_send_message`, `dialog_status`, optional `history_changed`, `error` | accepted | domain-wide | `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-28-SIMULATION-BT-AGENT-005, DEC-2026-04-30-SIMULATION-BT-AGENT-008 |  |
-| DEC-2026-05-05-SIMULATION-BT-AGENT-010 | Согласованным контрактом RAIN считается `agent_openapi_1.yaml`; `message` ограничен 3000 символами; `history_changed` вычисляется только относительно frontend `known_sync_cursor`; АС КОДА не отправляет отдельный `context/contextPrompt`; результат БТ берётся из `artifacts[]` | accepted | domain-wide | `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`, `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-29-SIMULATION-BT-AGENT-007, DEC-2026-04-30-SIMULATION-BT-AGENT-008, DEC-2026-04-30-SIMULATION-BT-AGENT-009 |  |
+| DEC-2026-04-30-SIMULATION-BT-AGENT-009 | `session_id` создаёт backend АС КОДА; frontend передаёт его параметром запроса для продолжения сессии, а отсутствие `session_id` означает создание новой/сброс текущей UI-сессии; status response сокращён до `session_id`, `can_send_message`, `dialog_status`, `error` | accepted | domain-wide | `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-28-SIMULATION-BT-AGENT-005, DEC-2026-04-30-SIMULATION-BT-AGENT-008 |  |
+| DEC-2026-05-05-SIMULATION-BT-AGENT-010 | Согласованным контрактом RAIN считается `agent_openapi_1.yaml`, его полная версия включена в общие требования; `message` ограничен 3000 символами; frontend/backend API не использует признак изменения истории: после terminal status frontend сам запрашивает latest page истории и локально решает, обновлять низ чата или показать индикатор нового сообщения; frontend-facing ошибки имеют `error.code` и явно описанный источник кода; АС КОДА не отправляет отдельный `context/contextPrompt`; результат БТ берётся из `artifacts[]` | accepted | domain-wide | `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`, `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-29-SIMULATION-BT-AGENT-007, DEC-2026-04-30-SIMULATION-BT-AGENT-008, DEC-2026-04-30-SIMULATION-BT-AGENT-009 |  |
 
 ## Status values
 - `proposed` — решение сформулировано, но ещё не принято.
@@ -53,9 +53,11 @@ Baseline target: `baseline/current/domain/`
 - `risk_params`
 - `BT artifact`
 - `history cursor`
-- `sync_cursor`
-- `known_sync_cursor`
 - `history window`
+- `DialogError`
+- `acknowledged_latest_message_id`
+- `current_latest_message_id`
+- `pending_new_message`
 
 ## New or changed domain events
 - открытие UI-сессии агента;
@@ -81,10 +83,12 @@ Baseline target: `baseline/current/domain/`
 - пользовательское сообщение запускает RAIN async run через backend АС КОДА, frontend читает статус сессии через polling по `session_id`;
 - для одного `session_id` допускается только один active run;
 - длинная история загружается страницами через cursor/limit;
-- `GET /dialog/messages` возвращает `sync_cursor`, который frontend хранит как opaque marker последней синхронизации;
-- `history_changed` вычисляется только если frontend передал `known_sync_cursor` в `GET /dialog/status`; backend не хранит состояние frontend history window и scroll-position;
+- `GET /dialog/status` возвращает только состояние обработки сессии и не описывает состояние загруженной frontend history window;
+- после terminal `dialog_status` frontend запрашивает latest page через `GET /dialog/messages?session_id=...&limit=20`;
+- frontend-facing ошибки возвращают машинный код в `error.code`; frontend берёт его из `response.body.error.code` для HTTP error response или из `DialogSessionView.error.code` для terminal `failed`/`timeout`;
 - frontend стартует с последних `20` сообщений и может держать в памяти только window загруженных страниц, а не всю историю без ограничения;
-- если пользователь прокрутил историю вверх, новые сообщения не сбрасывают scroll-position; UI показывает индикатор новых сообщений и загружает последние сообщения по действию пользователя;
+- если пользователь прокрутил историю вверх, latest page не сбрасывает scroll-position; UI локально показывает индикатор новых сообщений по `acknowledged_latest_message_id/current_latest_message_id` и переводит пользователя к последним сообщениям только по действию пользователя;
+- виртуализация истории может выгружать body сообщений и страницы, удалённые от viewport, но не должна выгружать session-level anchors текущей UI-сессии;
 - пользовательский `message` ограничен `3000` символами и валидируется на frontend/backend до вызова RAIN;
 - действие по БТ доступно только для конкретной завершённой симуляции с доступной опцией вывода в ПРОМ;
 - в Q2 поддерживается продукт `Кредитные карты`;
@@ -105,9 +109,10 @@ Baseline target: `baseline/current/domain/`
 - frontend API АС КОДА: `POST /dialog/session` создаёт/восстанавливает UI-сессию без вызова RAIN;
 - frontend API АС КОДА: `GET /dialog/agent/status` отдаёт нормализованный readiness/liveness status;
 - frontend API АС КОДА: `POST /dialog/message` создаёт async run и возвращает `202` со статусом сессии;
-- frontend API АС КОДА: `GET /dialog/status?session_id=...&known_sync_cursor=...` отдаёт `session_id`, `can_send_message`, `dialog_status`, optional `history_changed` и ошибку;
-- frontend API АС КОДА: `GET /dialog/messages?session_id=...&limit=&before=` отдаёт историю страницами, `older_cursor`, `sync_cursor` и признаки для windowed UI;
+- frontend API АС КОДА: `GET /dialog/status?session_id=...` отдаёт `session_id`, `can_send_message`, `dialog_status` и ошибку;
+- frontend API АС КОДА: `GET /dialog/messages?session_id=...&limit=&before=` отдаёт историю страницами, `older_cursor` и `has_more_before`;
 - server-to-server RAIN: `GET /health/liveness`, `GET /health/readiness`, `POST /chat/runs`, `GET /chat/runs/{run_id}`, `GET /chat/runs/{run_id}/result`, `GET /chat/sessions/{session_id}/messages`;
+- полный OpenAPI-контракт RAIN продублирован в общих требованиях для handoff и остаётся синхронизированным с `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`;
 - existing simulation detail API `GET /api/v1/simulation/{number}` переиспользуется как источник данных страницы для BT-сценария;
 - `btUrl` как отдельное поле frontend API АС КОДА не требуется; ссылка на БТ берётся из `artifacts[]` результата RAIN run;
 - аудит и защищённый транспорт для межсервисного обмена остаются обязательными.
@@ -116,16 +121,16 @@ Baseline target: `baseline/current/domain/`
 
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/simulation-bt-agent/requirements.md` | root source-of-truth перестроен под `agent_openapi_1.yaml`, async facade, session-level polling, cursor-based `history_changed`, `message=3000`, health status и `artifacts[]` результата | propagated |
+| `features/simulation-bt-agent/requirements.md` | root source-of-truth перестроен под `agent_openapi_1.yaml`, содержит полный RAIN OpenAPI, async facade, session-level polling без признака изменения истории, latest-page refresh после terminal status, `message=3000`, health status, `error.code` model и `artifacts[]` результата | propagated |
 | `features/simulation-bt-agent/slices/agent-entrypoint/slice.md` | обновлена цель slice под UI-сессию и status health | propagated |
-| `features/simulation-bt-agent/slices/agent-entrypoint/requirements/frontend.md` | открытие окна, backend-managed `session_id`, status chip и blocked composer описаны без прямого вызова RAIN | propagated |
-| `features/simulation-bt-agent/slices/agent-entrypoint/requirements/backend.md` | описаны `POST /dialog/session`, создание/продолжение/сброс UI-сессии, `GET /dialog/agent/status`, liveness/readiness и status cache | propagated |
-| `features/simulation-bt-agent/slices/dialog-session/slice.md` | обновлена цель slice под async run, polling, RAIN-owned историю, `known_sync_cursor` и лимит `message=3000` | propagated |
-| `features/simulation-bt-agent/slices/dialog-session/requirements/frontend.md` | описаны async run, polling с `known_sync_cursor`, optional `history_changed`, terminal statuses, blocked composer, history window и индикатор новых сообщений | propagated |
-| `features/simulation-bt-agent/slices/dialog-session/requirements/backend.md` | описаны backend async facade без path `session_id`, session status endpoint, run storage, history pagination с `sync_cursor`, `message=3000` и timeout/retry policy | propagated |
+| `features/simulation-bt-agent/slices/agent-entrypoint/requirements/frontend.md` | открытие окна, backend-managed `session_id`, status chip, blocked composer и источники frontend error codes описаны без прямого вызова RAIN | propagated |
+| `features/simulation-bt-agent/slices/agent-entrypoint/requirements/backend.md` | описаны `POST /dialog/session`, создание/продолжение/сброс UI-сессии, `GET /dialog/agent/status`, liveness/readiness, status cache и frontend-facing error codes | propagated |
+| `features/simulation-bt-agent/slices/dialog-session/slice.md` | обновлена цель slice под async run, polling, RAIN-owned историю, latest-page refresh после terminal status и лимит `message=3000` | propagated |
+| `features/simulation-bt-agent/slices/dialog-session/requirements/frontend.md` | описаны async run, polling без признака изменения истории, terminal statuses, blocked composer, history window, anchor-based индикатор новых сообщений при виртуализации и источники frontend error codes | propagated |
+| `features/simulation-bt-agent/slices/dialog-session/requirements/backend.md` | описаны backend async facade без path `session_id`, session status endpoint, run storage, history pagination, `message=3000`, RAIN OpenAPI source и timeout/error-code policy | propagated |
 | `features/simulation-bt-agent/slices/bt-publication/slice.md` | обновлена цель slice под `risk_params`, `simulation_id`, `message.content` и `artifacts[]` результата RAIN run | propagated |
-| `features/simulation-bt-agent/slices/bt-publication/requirements/frontend.md` | обновлены inline action БТ, async run, чтение URL из `artifacts[]` и отсутствие отдельного `btUrl` | propagated |
-| `features/simulation-bt-agent/slices/bt-publication/requirements/backend.md` | обновлены проверка симуляции, сбор `risk_params`, вызов RAIN `POST /chat/runs`, чтение result/artifacts и retry policy | propagated |
+| `features/simulation-bt-agent/slices/bt-publication/requirements/frontend.md` | обновлены inline action БТ, async run, чтение URL из `artifacts[]`, отсутствие отдельного `btUrl` и источники frontend error codes | propagated |
+| `features/simulation-bt-agent/slices/bt-publication/requirements/backend.md` | обновлены проверка симуляции, сбор `risk_params`, ссылка на полный RAIN OpenAPI, вызов RAIN `POST /chat/runs`, чтение result/artifacts и retry/error-code policy | propagated |
 | `features/roles/slices/rbac/requirements/frontend.md` | при необходимости формализовать права на глобальное окно агента и действие по БТ | open |
 
 ## Affected baseline artifacts
@@ -133,17 +138,17 @@ Baseline target: `baseline/current/domain/`
 | Path | Impact | Sync status |
 |---|---|---|
 | `baseline/current/domain/contexts/research-and-execution.md` | отразить окно агента, async run и сценарий БТ | open |
-| `baseline/current/domain/business-rules.md` | новые правила UI-сессии, readiness block, run lock, `message=3000`, cursor-based history sync, ручного копирования URL и отсутствия автосохранения | open |
+| `baseline/current/domain/business-rules.md` | новые правила UI-сессии, readiness block, run lock, `message=3000`, latest-page refresh после terminal status, ручного копирования URL и отсутствия автосохранения | open |
 | `baseline/current/domain/contexts/identity-and-access.md` | канонизировать права на окно агента, действие по БТ и server-to-server OTT/mTLS | open |
-| `baseline/current/api/README.md` | описать frontend API АС КОДА без `session_id` в path, `known_sync_cursor/history_changed`, `sync_cursor`, `message=3000`, server-to-server RAIN async runs/history/result и health endpoints | open |
-| `baseline/current/ui/README.md` | зафиксировать status chip, blocked composer, async run/session polling, paginated history, cursor-based new-message indicator и inline action БТ | open |
+| `baseline/current/api/README.md` | описать frontend API АС КОДА без `session_id` в path, без признака изменения истории в status response, `message=3000`, `error.code` model, server-to-server RAIN async runs/history/result и health endpoints | open |
+| `baseline/current/ui/README.md` | зафиксировать status chip, blocked composer, async run/session polling, paginated history, latest-page refresh после terminal status, локальный new-message indicator и inline action БТ | open |
 
 ## Affected prototypes
 
 ### Scope prototypes
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/simulation-bt-agent/prototype.html` | требует синхронизации под async run/session polling, health status readiness block, paginated history, cursor-based new-message indicator, `message=3000` и `artifacts[]` результата RAIN run | defer-ok |
+| `features/simulation-bt-agent/prototype.html` | требует синхронизации под async run/session polling, health status readiness block, paginated history, локальный new-message indicator, `message=3000` и `artifacts[]` результата RAIN run | defer-ok |
 | `features/simulation-bt-agent/prototype-notes.md` | требует обновления заметок после новой интеграционной модели | defer-ok |
 | `features/simulation-bt-agent/planning/scope-prototype/prototype.html` | legacy scope prototype не используется как канонический артефакт для текущей feature | obsolete |
 

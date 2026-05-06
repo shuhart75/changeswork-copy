@@ -1,5 +1,5 @@
 @startuml
-title АС КОДА - RAIN: async REST, backend session, cursor sync
+title АС КОДА - RAIN: async REST, backend session, paginated history
 
 actor User as U
 participant "АС КОДА Frontend" as FE
@@ -18,8 +18,8 @@ RAIN --> BE: ready/not_ready
 BE --> FE: normalized status
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
-RAIN --> BE: items[], older_cursor,\nsync_cursor, history_version
-BE --> FE: items[], older_cursor,\nsync_cursor, has_more_before
+RAIN --> BE: items[], older_cursor,\nhas_more_before
+BE --> FE: items[], older_cursor,\nhas_more_before
 FE --> U: Панель открыта, status chip обновлён
 
 note over FE,RAIN
@@ -39,14 +39,10 @@ FE --> U: Показать ожидание, заблокировать ввод
 
 == Polling статуса сессии ==
 loop пока dialog_status queued/running
-  FE -> BE: GET /dialog/status?session_id=...\n&known_sync_cursor=...
+  FE -> BE: GET /dialog/status?session_id=...
   BE -> RAIN: GET /chat/runs/{run_id}
   RAIN --> BE: queued/running/terminal
-  alt known_sync_cursor передан
-    BE -> RAIN: GET /chat/sessions/{session_id}/messages?after=known_sync_cursor&limit=1
-    RAIN --> BE: items[] или пусто
-  end
-  BE --> FE: session_id,\ncan_send_message,\ndialog_status,\noptional history_changed
+  BE --> FE: session_id,\ncan_send_message,\ndialog_status
 end
 
 == Результат и синхронизация истории ==
@@ -58,13 +54,13 @@ end
 FE -> BE: GET /dialog/messages?session_id=...&limit=20
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20
 RAIN --> BE: latest items[], cursors,\nlast_message_seq, history_version
-BE --> FE: latest items[], older_cursor,\nsync_cursor, has_more_before
+BE --> FE: latest items[], older_cursor,\nhas_more_before
 
 == Догрузка старых сообщений ==
 U -> FE: Скролл вверх / загрузить ещё
 FE -> BE: GET /dialog/messages?session_id=...&limit=20&before=older_cursor
 BE -> RAIN: GET /chat/sessions/{session_id}/messages?limit=20&before=older_cursor
-RAIN --> BE: previous items[], older_cursor,\nsync_cursor
-BE --> FE: previous items[], older_cursor,\nsync_cursor, has_more_before
+RAIN --> BE: previous items[], older_cursor
+BE --> FE: previous items[], older_cursor,\nhas_more_before
 FE --> U: Добавить сообщения выше\nбез сброса scroll-position
 @enduml
