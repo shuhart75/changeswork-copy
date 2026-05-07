@@ -53,6 +53,25 @@
       "- обновить domain-impact.md и consistency-backlog.md при необходимости."
     ]
   },
+  "Workflow: Requirement Tail Cleanup Prompt": {
+    "scope": "markdown,plaintext",
+    "prefix": "wf-req-tails",
+    "body": [
+      "проверь хвосты требований",
+      "",
+      "Feature: ${1:feature-slug}",
+      "Что заменили: ${2:старый endpoint / field / status / label}",
+      "Новый вариант: ${3:новый endpoint / field / status / label}",
+      "",
+      "Нужно:",
+      "- сделать быстрый feature-local sweep;",
+      "- проверить `features/${1:feature-slug}/requirements.md`; ",
+      "- проверить slice cards и FE/BE detail packs, где повторяется это правило;",
+      "- проверить domain-impact.md и consistency-backlog.md, если они описывают старый вариант;",
+      "- использовать targeted search по старым названиям;",
+      "- не расширять проверку на весь репозиторий, если нет cross-feature/domain-wide признаков."
+    ]
+  },
   "Workflow: Scope Prototype Prompt": {
     "scope": "markdown,plaintext",
     "prefix": "wf-scope-proto",
@@ -125,6 +144,22 @@
       "- проверить affected prototypes и выставить sync status;",
       "- обновить .workflow/consistency-backlog.md;",
       "- явно перечислить, что исправлено, что отложено, что требует решения."
+    ]
+  },
+  "Workflow: Standalone PlantUML Export Prompt": {
+    "scope": "markdown,plaintext",
+    "prefix": "wf-puml-export",
+    "body": [
+      "собери puml без инклюдов",
+      "",
+      "Источник: ${1:planning/2026-Q2/gantt/actual-progress.puml}",
+      "Выходной файл: ${2:planning/2026-Q2/gantt/actual-progress-confluence.puml}",
+      "",
+      "Нужно:",
+      "- развернуть все `!include` в standalone PlantUML;",
+      "- сохранить результат отдельным export-файлом;",
+      "- не переписывать include-based source;",
+      "- оставить BEGIN INCLUDE / END INCLUDE markers для трассировки."
     ]
   },
   "Workflow: Domain Decision Prompt": {
