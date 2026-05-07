@@ -3,7 +3,7 @@
 Статус: **draft**
 Feature: `features/simulation-bt-agent/feature.md`
 Квартал: `2026-Q2`
-Дата обновления: `2026-05-06`
+Дата обновления: `2026-05-07`
 Шаблон: `.workflow/templates/requirements/feature-requirements.template.md`
 
 ## Оглавление
@@ -32,6 +32,9 @@ Feature: `features/simulation-bt-agent/feature.md`
 
 - Frontend АС КОДА не вызывает RAIN напрямую и не получает OTT.
 - Backend АС КОДА является `agent integration boundary`: авторизует пользователя, управляет UI-сессией АС КОДА, проксирует RAIN server-to-server по HTTPS/mTLS/OTT и скрывает внутренний контракт агента от браузера.
+- Под RAIN в этих требованиях для server-to-server интеграции понимается REST-фасад RAIN. АС КОДА интегрируется с фасадом, а не с внутренним агентом напрямую.
+- Ошибки интеграции делятся на ошибки фасада и ошибки агента. Ошибки фасада приходят как обычные HTTP/API errors до принятия run, например validation/authorization/conflict/temporary unavailable; ошибки агента приходят через status фасада как terminal `dialog_status=failed` или `dialog_status=timeout`.
+- Если фасад вернул `202 Accepted` на создание run, повторять `POST /chat/runs` нельзя: run уже принят, и АС КОДА дальше только poll-ит фасад по статусу. Retry имеет смысл только для retryable ошибок фасада/transport до принятия run; validation `400` и terminal статусы агента не являются основанием для retry.
 - RAIN по принятому целевому контракту предоставляет `GET /health/liveness`, `GET /health/readiness`, `POST /chat/runs`, `GET /chat/runs/{run_id}`, `GET /chat/runs/{run_id}/result`, `GET /chat/sessions/{session_id}/messages` и `GET /chat/messages/{message_id}`.
 - Terminal status run принадлежит RAIN. Backend АС КОДА не переводит RAIN run в terminal status, а читает статус RAIN, нормализует его для frontend и может краткоживуще кэшировать состояние для UI.
 - Frontend не работает с конкретным `run_id` и не получает объект текущего run в обычном UI-контракте. Backend АС КОДА отдаёт session-level view по `GET /dialog/status?session_id=...`, потому что в одной `session_id` допускается только один active run.
@@ -48,7 +51,9 @@ Feature: `features/simulation-bt-agent/feature.md`
 - Если ошибка возвращается HTTP error response, frontend берёт код из `response.body.error.code`.
 - Если ошибка связана с terminal status сессии, frontend берёт код из `DialogSessionView.error.code` в ответе `GET /dialog/status?session_id=...`.
 - Если ошибка выявлена до обращения к backend, frontend использует локальный код валидации из FE-правил и не имитирует backend/Rain-код.
-- Если источник ошибки RAIN, backend АС КОДА берёт исходный `RAIN ErrorInfo.code` или terminal `RunStatusResponse.error.code`, маппит его в безопасный `DialogError.code` и не раскрывает stack trace, OTT, внутренний URL или сырой технический текст RAIN.
+- Если источник ошибки RAIN-фасад, backend АС КОДА берёт код из HTTP/API error фасада и маппит его в безопасный `DialogError.code`.
+- Если источник ошибки агент, backend АС КОДА берёт terminal `RunStatusResponse.status/error.code` из polling фасада, маппит его в безопасный `DialogError.code` и не раскрывает stack trace, OTT, внутренний URL или сырой технический текст RAIN.
+- `failed` и `timeout` агента не возвращаются как HTTP error response `POST /dialog/message`; они доступны frontend только через `DialogSessionView.error` после polling `GET /dialog/status?session_id=...`.
 - Для пользователя показывается сообщение из таблиц frontend-требований; `error.code` используется для выбора сценария UI, telemetry и диагностики.
 
 | Сценарий | Код для frontend | Откуда frontend берёт код | Пользовательское сообщение |
@@ -60,9 +65,9 @@ Feature: `features/simulation-bt-agent/feature.md`
 | Уже есть active run | `run_in_progress` | `response.body.error.code` от `POST /dialog/message` | `Дождитесь ответа агента перед отправкой нового сообщения.` |
 | Пустое сообщение | `message_empty` | frontend local validation или `response.body.error.code` от `POST /dialog/message` | `Введите сообщение перед отправкой.` |
 | Сообщение длиннее `3000` символов | `message_too_long` | frontend local validation или `response.body.error.code` от `POST /dialog/message` | `Сообщение слишком длинное. Сократите текст перед отправкой.` |
-| Не удалось прочитать статус RAIN run | `rain_status_unavailable` | `response.body.error.code` от `GET /dialog/status` | `Не удалось обновить статус агента. Попробуйте ещё раз.` |
-| RAIN завершил run ошибкой | `agent_error` | `DialogSessionView.error.code`, нормализованный из `RAIN RunStatusResponse.error.code` | `Не удалось получить результат от агента. Попробуйте позже.` |
-| RAIN завершил run timeout | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error RAIN | `Агент долго не отвечает. Попробуйте перезапустить сессию или повторить позже.` |
+| Не удалось прочитать статус через RAIN-фасад | `rain_status_unavailable` | `response.body.error.code` от `GET /dialog/status` | `Не удалось обновить статус агента. Попробуйте ещё раз.` |
+| Агент завершил run ошибкой | `agent_error` | `DialogSessionView.error.code`, нормализованный из terminal status/error фасада | `Не удалось получить результат от агента. Попробуйте позже.` |
+| Агент завершил run timeout | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error фасада | `Агент долго не отвечает. Перезапустите сессию агента.` |
 | BT-сценарий недоступен для симуляции | `bt_context_not_available` | frontend context validation или `response.body.error.code` от `POST /dialog/message` | `Сформировать БТ можно только для завершённой симуляции, доступной к выводу в ПРОМ.` |
 | Нет риск-параметров для BT run | `bt_risk_params_missing` | `response.body.error.code` от `POST /dialog/message` | `Не удалось подготовить данные симуляции для БТ.` |
 
@@ -785,7 +790,7 @@ Planning story: `planning/stories/STORY-SIMULATION-BT-AGENT-002.md`
 **Бизнес-требования**
 
 - Цель: обеспечить устойчивый диалог с агентом внутри АС КОДА без долгого блокирующего браузерного REST-запроса.
-- Бизнес-правила: frontend отправляет сообщение в backend АС КОДА и получает быстрый `202 Accepted` с состоянием сессии; backend вызывает RAIN `POST /chat/runs` и сохраняет внутренний `agent_dialog_run_ref` для связи `session_id` с `run_id` RAIN; frontend polling-ом читает статус диалоговой сессии по `session_id`; новая отправка по той же сессии запрещена, пока у RAIN есть активный run; история диалога читается страницами через backend АС КОДА из RAIN.
+- Бизнес-правила: frontend отправляет сообщение в backend АС КОДА и получает быстрый `202 Accepted` с состоянием сессии; backend вызывает REST-фасад RAIN `POST /chat/runs` и сохраняет внутренний `agent_dialog_run_ref` для связи `session_id` с `run_id` RAIN; после `202 Accepted` retry создания run не выполняется, frontend/backend только poll-ят фасад по статусу; frontend polling-ом читает статус диалоговой сессии по `session_id`; новая отправка по той же сессии запрещена, пока у RAIN есть активный run; история диалога читается страницами через backend АС КОДА из RAIN.
 - Ограничения: frontend не вызывает RAIN напрямую; RAIN владеет run status и историей; для одного `session_id` в MVP допускается только один активный run; frontend не должен загружать всю длинную историю сразу.
 
 **Пользовательские требования к АС КОДА**
@@ -795,7 +800,7 @@ Planning story: `planning/stories/STORY-SIMULATION-BT-AGENT-002.md`
 - На время активного run поле ввода и отправка заблокированы, а пользователь видит состояние ожидания.
 - После ответа агента сообщение появляется в истории.
 - Если история длинная, пользователь видит последние сообщения и может догрузить более ранние.
-- После ошибки или timeout пользователь видит понятное сообщение и может перезапустить сессию.
+- После ошибки агента пользователь видит понятное сообщение. После timeout агента пользователь видит рекомендацию перезапустить сессию, то есть начать заново с новым `session_id`.
 
 **Критерии приемки**
 
@@ -809,7 +814,7 @@ Planning story: `planning/stories/STORY-SIMULATION-BT-AGENT-002.md`
 
 - **осн. сценарий 1** пользователь отправляет сообщение и получает ответ после polling.
 - **альт. сценарий 1.1** RAIN отвечает дольше обычного SLA, UI остаётся в состоянии ожидания.
-- **альт. сценарий 1.2** run завершается ошибкой или timeout, UI предлагает перезапуск.
+- **альт. сценарий 1.2** run завершается `failed` или `timeout`, полученными через status фасада; UI не повторяет run автоматически, при timeout предлагает перезапуск с новым `session_id`.
 - **осн. сценарий 2** пользователь догружает более ранние сообщения истории.
 
 **Sequence diagram**
@@ -908,7 +913,8 @@ FE --> U: Добавить сообщения выше\nбез сброса scro
 - не возвращать `history_changed` и не хранить состояние frontend history window на backend;
 - проксировать/нормализовать историю RAIN и отдавать её frontend порциями через cursor/limit;
 - применять server-side ограничение длины пользовательского `message` до `3000` символов и лимиты страниц истории;
-- не выполнять автоматический retry для операций, которые могли создать БТ, если нет идемпотентного ключа от RAIN.
+- выполнять retry только для retryable ошибок фасада/transport до принятия run; после `202 Accepted` не повторять `POST /chat/runs`, а только poll-ить фасад;
+- не выполнять автоматический retry для terminal `failed`/`timeout` агента; при agent timeout пользователь должен перезапустить сессию с новым `session_id`.
 
 Связанный детальный BE pack: `slices/dialog-session/requirements/backend.md`
 

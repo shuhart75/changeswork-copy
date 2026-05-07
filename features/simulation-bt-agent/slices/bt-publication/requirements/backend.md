@@ -4,7 +4,7 @@
 Feature: `simulation-bt-agent`
 Slice: `bt-publication`
 Область: `MVP`
-Дата обновления: `2026-05-05`
+Дата обновления: `2026-05-07`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Связь с feature-level документом
@@ -44,6 +44,7 @@ Slice: `bt-publication`
 - `DEC-2026-04-29-SIMULATION-BT-AGENT-007`
 - `DEC-2026-04-30-SIMULATION-BT-AGENT-009`
 - `DEC-2026-05-05-SIMULATION-BT-AGENT-010`
+- `DEC-2026-05-07-SIMULATION-BT-AGENT-011`
 
 ### Связанные артефакты
 
@@ -74,6 +75,8 @@ Slice: `bt-publication`
 - `BT run` — async run, связанный с режимом `bt_creation`.
 - `risk_params` — структура RAIN `CreateRunRequest` с `as_is` и `to_be`.
 - `BT artifact` — элемент `artifacts[]` результата RAIN run с `type=bt_page`, `url` и optional `title`.
+- `Ошибка фасада` — HTTP/API или transport ошибка REST-фасада RAIN до принятия run.
+- `Ошибка агента` — terminal `failed` или `timeout`, который фасад RAIN возвращает через status по уже принятому run.
 
 ## Бизнес-правила и системные ограничения
 
@@ -105,6 +108,13 @@ Slice: `bt-publication`
 - пользователь вручную копирует ссылку из окна агента;
 - отдельного события автоматического обновления симуляции нет.
 
+### BR-6. Retry BT run ограничен границей фасада
+- если REST-фасад RAIN вернул `202 Accepted`, BT run считается принятым, и backend больше не повторяет `POST /chat/runs`;
+- после `202 Accepted` backend только poll-ит фасад через `GET /chat/runs/{run_id}` и читает result при `succeeded`;
+- terminal `failed` и `timeout` являются ошибками агента, полученными через status фасада, и не приводят к автоматическому retry;
+- agent timeout не выставляется backend АС КОДА локально: он может прийти только от фасада через terminal status;
+- при agent timeout frontend получает рекомендацию перезапустить сессию с новым `session_id`.
+
 ## Границы MVP
 
 ### Входит в MVP
@@ -122,14 +132,13 @@ Slice: `bt-publication`
 - отдельный preparatory backend endpoint для черновика;
 - автоматическая запись URL БТ в Simulation;
 - отдельное поле `btUrl` во frontend API;
-- автоматический retry публикации БТ при timeout;
+- автоматический retry публикации БТ после `202 Accepted` или при terminal `failed`/`timeout` агента;
 - проверка уникальности названия БТ на стороне АС КОДА.
 
 ### Отложено после MVP
 
 - автоматическое сохранение `bt_page.url` в симуляцию;
-- идемпотентный ключ публикации;
-- статусный endpoint RAIN для проверки результата после timeout;
+- отдельный пользовательский сценарий повторной попытки после явного перезапуска сессии;
 - автоматическое сохранение выбранной ссылки в симуляцию.
 
 ## Пользовательские и системные сценарии
@@ -155,11 +164,12 @@ Slice: `bt-publication`
 3. Backend передаёт artifact `bt_page` с `url` и `title`, если он присутствует.
 4. Backend не обновляет данные симуляции.
 
-### Сценарий BE-4. Timeout после возможной публикации
-1. RAIN не ответил до hard timeout.
-2. Backend переводит run в `timeout`.
-3. Backend не выполняет автоматический retry, потому что неизвестно, была ли создана страница БТ.
-4. Пользователь получает ошибку и может вручную продолжить/проверить результат.
+### Сценарий BE-4. Agent timeout после принятого run
+1. REST-фасад RAIN ранее принял BT run и вернул `202 Accepted`.
+2. Backend poll-ит фасад через `GET /chat/runs/{run_id}`.
+3. Фасад возвращает terminal `timeout` агента.
+4. Backend нормализует `dialog_status=timeout` и не выполняет автоматический retry `POST /chat/runs`.
+5. Пользователь получает сообщение о timeout и может перезапустить сессию, начав заново с новым `session_id`.
 
 ## Функциональные требования
 
@@ -230,13 +240,14 @@ BT run использует общий async facade, но server-to-server paylo
 ### BE-FR-5. Retry публикации ограничен
 
 **Описание:**
-Поскольку создание БТ может иметь побочный эффект, backend не должен автоматически повторять запросы, результат которых неизвестен.
+Поскольку АС КОДА интегрируется с REST-фасадом RAIN, backend должен retry-ить только ошибки фасада до принятия run и не повторять run после `202 Accepted`.
 
 **Правила и ограничения:**
-- автоматический retry запрещён после отправки BT run в RAIN, если нет подтверждённой идемпотентности;
-- retry `3` из системных требований может применяться только к безопасным техническим операциям до фактической передачи в RAIN или к health-check, если это согласовано;
-- при timeout пользователю показывается неопределённый результат, а не автоматический повтор создания БТ;
-- для полноценного retry нужен идемпотентный ключ публикации или status endpoint RAIN.
+- retry допустим только для retryable ошибок фасада/transport до получения `202 Accepted`;
+- validation `400`, ошибки прав/контекста и business validation не retry-ятся;
+- после `202 Accepted` backend не повторяет `POST /chat/runs`, а только poll-ит фасад;
+- terminal `failed` и `timeout` агента не retry-ятся автоматически;
+- при terminal `timeout` пользователю показывается путь перезапуска сессии с новым `session_id`, а не повтор старого BT run.
 
 **Зависимости:**
 - SLA RAIN;
@@ -407,7 +418,7 @@ GET /chat/runs/7e1d4c3c-7ac0-41dd-a69d-7320f7f29a51/result HTTP/1.1
 - Внешние системы: RAIN, Confluence через RAIN, existing simulation detail API;
 - Асинхронные процессы: BT run выполняется через RAIN `POST /chat/runs`;
 - Вычисление статусов / derived fields: доступность BT-сценария, projection `artifacts[]`;
-- Идемпотентность / ретраи: автоматический retry после передачи BT run в RAIN запрещён без идемпотентности.
+- Идемпотентность / ретраи: retry возможен только для retryable ошибки фасада/transport до `202 Accepted`; после `202 Accepted` выполняется только polling фасада, terminal `failed`/`timeout` агента не retry-ятся.
 
 ## Ошибки и валидация
 
@@ -429,15 +440,15 @@ Frontend-facing ошибки возвращаются в `response.body.error.co
 | `400` | `bt_risk_params_missing` | backend mapping/validation of existing simulation detail API into RAIN `RiskParams` | нет риск-параметров для BT run | ошибка неполного контекста |
 | `403` | `simulation_access_denied` | backend authorization for simulation | пользователь не имеет доступа к симуляции | отказ доступа |
 | `404` | `simulation_not_found` | existing simulation detail API/backend lookup | симуляция не найдена | ошибка отсутствующей симуляции |
-| `200` | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error RAIN | RAIN не ответил до timeout | terminal status `timeout` |
-| `200` | `agent_error` | `DialogSessionView.error.code`, нормализованный из `RAIN RunStatusResponse.error.code` или `ErrorResponse.error.code` | ошибка RAIN | terminal status `failed` |
+| `200` | `generation_timeout` или `agent_timeout` | `DialogSessionView.error.code`, нормализованный из terminal status/error фасада | агент вернул terminal `timeout` | terminal status `timeout`, пользователь перезапускает сессию с новым `session_id` |
+| `200` | `agent_error` | `DialogSessionView.error.code`, нормализованный из terminal status/error фасада | агент вернул terminal `failed` | terminal status `failed`, без retry старого run |
 
 ## Миграция и обратная совместимость
 
 - Нужны ли миграции данных: нет для `Simulation`, да для хранения run/history, если ещё не создано.
 - Нужен ли backfill: нет.
 - Есть ли риски для текущего baseline: да, `btUrl` больше нельзя считать отдельным frontend/backend полем; используется `artifacts[]`.
-- Что должно попасть в release finalization: mapping `risk_params`, правило отсутствия автосохранения, ограничение retry, обработка `artifacts[]`.
+- Что должно попасть в release finalization: mapping `risk_params`, правило отсутствия автосохранения, разделение ошибок фасада/агента, ограничение retry после `202 Accepted`, обработка `artifacts[]`.
 
 ## Observability и аудит
 
@@ -462,9 +473,11 @@ Frontend-facing ошибки возвращаются в `response.body.error.co
 ### BE-AC-3. Timeout и retry
 - [ ] Timeout BT run не приводит к скрытому автоматическому повтору
 - [ ] Ошибка/timeout возвращаются frontend как terminal status
-- [ ] Для безопасного retry зафиксирован открытый вопрос идемпотентности RAIN
+- [ ] Retry допускается только для retryable ошибки фасада до `202 Accepted`
+- [ ] После `202 Accepted` backend только poll-ит фасад
+- [ ] При timeout агента пользователь получает рекомендацию начать с новым `session_id`
 
 ## Открытые вопросы и допущения
 
 - Нужно подтвердить полный mapping `risk_params` из existing simulation detail API в схему `RiskParams` из `agent_openapi_1.yaml`.
-- Нужно согласовать idempotency key для сценария создания БТ, иначе автоматический retry остаётся запрещённым.
+- Нужно согласовать перечень retryable ошибок фасада и параметры инфраструктурных timeout для `POST /chat/runs` и polling status.
