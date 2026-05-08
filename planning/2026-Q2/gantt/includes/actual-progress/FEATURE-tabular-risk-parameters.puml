@@ -6,9 +6,9 @@
 ' Story layer
 ' Story STORY-TABULAR-RISK-PARAMETERS-001: materialized, mapping=explicit
 [PLAN BE Backend табличных риск-параметров и интеграция с источниками/запуском симуляции] as [STORY_STORY_TABULAR_RISK_PARAMETERS_001] starts 2026/04/16
-[STORY_STORY_TABULAR_RISK_PARAMETERS_001] ends 2026/05/04
+[STORY_STORY_TABULAR_RISK_PARAMETERS_001] ends 2026/05/07
 [STORY_STORY_TABULAR_RISK_PARAMETERS_001] is colored in Gainsboro
-[STORY_STORY_TABULAR_RISK_PARAMETERS_001] is 67% completed
+[STORY_STORY_TABULAR_RISK_PARAMETERS_001] is 100% completed
 
 ' Story STORY-TABULAR-RISK-PARAMETERS-002: materialized, mapping=explicit
 [PLAN FE Frontend форма изменения табличных риск-параметров] as [STORY_STORY_TABULAR_RISK_PARAMETERS_002] starts 2026/04/20
@@ -17,27 +17,27 @@
 [STORY_STORY_TABULAR_RISK_PARAMETERS_002] is 86% completed
 
 ' Execution task layer
-[RSCON-2430 BE Табличные риск-параметры: API, БД, логика] as [TASK_RSCON_2430] on {BE2} lasts 3 days
-[TASK_RSCON_2430] starts 2026/04/17
+[RSCON-2430 BE Табличные риск-параметры: API, БД, логика] as [TASK_RSCON_2430] on {B2} starts 2026/04/17
+[TASK_RSCON_2430] ends 2026/04/20
 [TASK_RSCON_2430] is colored in LightBlue
 [TASK_RSCON_2430] is 100% completed
 
-[RSCON-2429 FE Переделка формы для изменения риск-параметров] as [TASK_RSCON_2429] on {FE1} lasts 10 days
-[TASK_RSCON_2429] starts 2026/04/20
+[RSCON-2429 FE Переделка формы для изменения риск-параметров] as [TASK_RSCON_2429] on {F1} starts 2026/04/20
+[TASK_RSCON_2429] ends 2026/04/27
 [TASK_RSCON_2429] is colored in LightCoral
 [TASK_RSCON_2429] is 100% completed
 
-[RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции] as [TASK_RSCON_2432] on {BE2} lasts 3 days
-[TASK_RSCON_2432] starts 2026/05/06
-[TASK_RSCON_2432] is colored in LightBlue
-[TASK_RSCON_2432] is 0% completed
-
-[RSCON-2452 BE Табличные риск-параметры - шедулер очистки файлов] as [TASK_RSCON_2452] on {FE2} lasts 3 days
-[TASK_RSCON_2452] starts 2026/04/29
+[RSCON-2452 BE Табличные риск-параметры - шедулер очистки файлов] as [TASK_RSCON_2452] on {F2} starts 2026/04/29
+[TASK_RSCON_2452] ends 2026/05/04
 [TASK_RSCON_2452] is colored in LightBlue
 [TASK_RSCON_2452] is 100% completed
 
-[QA Табличные риск-параметры] as [TASK_QA_TABULAR_RISK_PARAMETERS] on {Q1} lasts 4 days
-[TASK_QA_TABULAR_RISK_PARAMETERS] starts 2026/05/04
+[QA Табличные риск-параметры] as [TASK_QA_TABULAR_RISK_PARAMETERS] on {Q1} starts 2026/05/04
+[TASK_QA_TABULAR_RISK_PARAMETERS] ends 2026/05/07
 [TASK_QA_TABULAR_RISK_PARAMETERS] is colored in Gold
 [TASK_QA_TABULAR_RISK_PARAMETERS] is 50% completed
+
+[RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции] as [TASK_RSCON_2432] on {B2} starts 2026/05/06
+[TASK_RSCON_2432] ends 2026/05/07
+[TASK_RSCON_2432] is colored in LightBlue
+[TASK_RSCON_2432] is 100% completed

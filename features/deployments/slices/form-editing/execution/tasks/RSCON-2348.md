@@ -2,7 +2,7 @@
 
 Feature: `../../../feature.md`  
 Slice: `../../slice.md`  
-Дата обновления: `2026-04-23`
+Дата обновления: `2026-05-08`
 
 ## Jira
 RSCON-2348
@@ -24,14 +24,14 @@ TBD_FE
 - Finish: 2026-04-24
 
 ## Actual dates
-- Start:
-- Finish:
+- Start: 2026-04-29
+- Finish: 2026-05-06
 
 ## Status
-planned
+done
 
 ## Progress
-- `0%`
+- `100%`
 
 ## Description
 Фактическая backlog-задача для FE-формы внедрения в actualized gantt.
@@ -46,4 +46,4 @@ planned
 - `../../requirements/frontend.md`
 
 ## Notes
-На snapshot-диаграмме задача указана как `0% completed`.
+Обновлено по пользовательскому факту от `2026-05-08`: задача завершена `2026-05-06`.

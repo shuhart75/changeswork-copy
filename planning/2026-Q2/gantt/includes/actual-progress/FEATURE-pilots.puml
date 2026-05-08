@@ -6,27 +6,27 @@
 ' Story layer
 ' Story STORY-PILOTS-001: virtual, mapping=explicit
 [PLAN FE Workspace пилотов: артефакты и lifecycle approval] as [STORY_STORY_PILOTS_001] starts 2026/04/01
-[STORY_STORY_PILOTS_001] ends 2026/05/23
+[STORY_STORY_PILOTS_001] ends 2026/05/25
 [STORY_STORY_PILOTS_001] is colored in LightSteelBlue
 [STORY_STORY_PILOTS_001] is 55% completed
 
 ' Execution task layer
-[AN блок артефактов (FE): пилоты] as [TASK_AN_FE_PILOT_ART] on {A2} lasts 1 days
-[TASK_AN_FE_PILOT_ART] starts 2026/04/01
+[AN блок артефактов (FE): пилоты] as [TASK_AN_FE_PILOT_ART] on {A2} starts 2026/04/01
+[TASK_AN_FE_PILOT_ART] ends 2026/04/01
 [TASK_AN_FE_PILOT_ART] is colored in LightGreen
 [TASK_AN_FE_PILOT_ART] is 100% completed
 
-[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A3} lasts 1 days
-[TASK_AN_PILOT_LC_AP] starts 2026/04/01
+[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A3} starts 2026/04/01
+[TASK_AN_PILOT_LC_AP] ends 2026/04/01
 [TASK_AN_PILOT_LC_AP] is colored in LightGreen
 [TASK_AN_PILOT_LC_AP] is 100% completed
 
-[FE пилоты - блок артефакты + UI под ЖЦ] as [TASK_FE_PILOT_ART] on {F1} lasts 4 days
-[TASK_FE_PILOT_ART] starts 2026/04/06
+[FE пилоты - блок артефакты + UI под ЖЦ] as [TASK_FE_PILOT_ART] on {F1} starts 2026/04/06
+[TASK_FE_PILOT_ART] ends 2026/04/09
 [TASK_FE_PILOT_ART] is colored in LightCoral
 [TASK_FE_PILOT_ART] is 100% completed
 
-[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} lasts 5 days
-[TASK_BE_PILOT_LC_AP] starts 2026/05/19
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/05/19
+[TASK_BE_PILOT_LC_AP] ends 2026/05/25
 [TASK_BE_PILOT_LC_AP] is colored in LightBlue
 [TASK_BE_PILOT_LC_AP] is 0% completed

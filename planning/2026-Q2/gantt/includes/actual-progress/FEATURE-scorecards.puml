@@ -6,49 +6,61 @@
 ' Story layer
 ' Story STORY-SCORECARDS-001: materialized, mapping=inferred
 [PLAN BE Backend foundation, шаблоны и критичность скоркарт] as [STORY_STORY_SCORECARDS_001] starts 2026/04/03
-[STORY_STORY_SCORECARDS_001] ends 2026/04/10
+[STORY_STORY_SCORECARDS_001] ends 2026/05/08
 [STORY_STORY_SCORECARDS_001] is colored in Gainsboro
-[STORY_STORY_SCORECARDS_001] is 100% completed
+[STORY_STORY_SCORECARDS_001] is 91% completed
 
 ' Story STORY-SCORECARDS-002: materialized, mapping=inferred
 [PLAN FE Workspace скоркарты: вкладка, деталка, источники и использование] as [STORY_STORY_SCORECARDS_002] starts 2026/04/08
-[STORY_STORY_SCORECARDS_002] ends 2026/04/22
+[STORY_STORY_SCORECARDS_002] ends 2026/05/08
 [STORY_STORY_SCORECARDS_002] is colored in Gainsboro
-[STORY_STORY_SCORECARDS_002] is 95% completed
+[STORY_STORY_SCORECARDS_002] is 88% completed
 
 ' Story STORY-SCORECARDS-003: materialized, mapping=inferred
 [PLAN FE Создание, редактирование и привязка скоркарты] as [STORY_STORY_SCORECARDS_003] starts 2026/04/08
-[STORY_STORY_SCORECARDS_003] ends 2026/04/28
+[STORY_STORY_SCORECARDS_003] ends 2026/06/02
 [STORY_STORY_SCORECARDS_003] is colored in Gainsboro
-[STORY_STORY_SCORECARDS_003] is 73% completed
+[STORY_STORY_SCORECARDS_003] is 68% completed
 
 ' Execution task layer
-[RSCON-2343 BE Сущность скоркарты] as [TASK_RSCON_2343] on {B2} lasts 5 days
-[TASK_RSCON_2343] starts 2026/04/03
+[RSCON-2343 BE Сущность скоркарты] as [TASK_RSCON_2343] on {B2} starts 2026/04/03
+[TASK_RSCON_2343] ends 2026/04/09
 [TASK_RSCON_2343] is colored in LightBlue
 [TASK_RSCON_2343] is 100% completed
 
-[RSCON-2342 BE Оценка критичности + шаблоны для скоркарт] as [TASK_RSCON_2342] on {B3} lasts 4 days
-[TASK_RSCON_2342] starts 2026/04/07
+[RSCON-2342 BE Оценка критичности + шаблоны для скоркарт] as [TASK_RSCON_2342] on {B3} starts 2026/04/07
+[TASK_RSCON_2342] ends 2026/04/10
 [TASK_RSCON_2342] is colored in LightBlue
 [TASK_RSCON_2342] is 100% completed
 
-[RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт] as [TASK_RSCON_2340] on {F2} lasts 10 days
-[TASK_RSCON_2340] starts 2026/04/08
+[RSCON-2340 FE Создание скоркарты (вручную) + наполнение вкладки скоркарт] as [TASK_RSCON_2340] on {F2} starts 2026/04/08
+[TASK_RSCON_2340] ends 2026/04/21
 [TASK_RSCON_2340] is colored in LightCoral
 [TASK_RSCON_2340] is 100% completed
 
-[RSCON-2344 BE Привязка скоркарты] as [TASK_RSCON_2344] on {B2} lasts 1 days
-[TASK_RSCON_2344] starts 2026/04/10
+[RSCON-2344 BE Привязка скоркарты] as [TASK_RSCON_2344] on {B2} starts 2026/04/10
+[TASK_RSCON_2344] ends 2026/04/10
 [TASK_RSCON_2344] is colored in LightBlue
 [TASK_RSCON_2344] is 100% completed
 
-[RSCON-2341 FE Прикрепление существующей скоркарты] as [TASK_RSCON_2341] on {TBD_FE} lasts 4 days
-[TASK_RSCON_2341] starts 2026/04/23
-[TASK_RSCON_2341] is colored in LightCoral
-[TASK_RSCON_2341] is 0% completed
-
-[RSCON-2339 FE Удаление блока метрик. Новая вкладка скоркарт] as [TASK_RSCON_2339] on {BE1} lasts 1 days
-[TASK_RSCON_2339] starts 2026/05/04
+[RSCON-2339 FE Удаление блока метрик. Новая вкладка скоркарт] as [TASK_RSCON_2339] on {B1} starts 2026/05/04
+[TASK_RSCON_2339] ends 2026/05/04
 [TASK_RSCON_2339] is colored in LightCoral
 [TASK_RSCON_2339] is 50% completed
+
+[RSCON-2492 BE Корректировка скоркарт] as [TASK_RSCON_2492] on {B3} starts 2026/05/07
+[TASK_RSCON_2492] ends 2026/05/08
+[TASK_RSCON_2492] is colored in LightBlue
+[TASK_RSCON_2492] is 50% completed
+
+[RSCON-2491 FE Корректировка скоркарт] as [TASK_RSCON_2491] on {F2} starts 2026/05/07
+[TASK_RSCON_2491] ends 2026/05/08
+[TASK_RSCON_2491] is colored in LightCoral
+[TASK_RSCON_2491] is 50% completed
+
+[RSCON-2341 FE Прикрепление существующей скоркарты] as [TASK_RSCON_2341] on {F1} starts 2026/05/28
+[TASK_RSCON_2341] ends 2026/06/02
+[TASK_RSCON_2341] is colored in LightCoral
+[TASK_RSCON_2341] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2341
+' Auto-assigned F1 (auto from TBD_F): RSCON-2341

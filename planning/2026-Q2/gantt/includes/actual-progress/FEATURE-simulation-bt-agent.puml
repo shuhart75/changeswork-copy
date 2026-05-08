@@ -23,17 +23,17 @@
 [STORY_STORY_SIMULATION_BT_AGENT_003] is 16% completed
 
 ' Execution task layer
-[RSCON-2480 FE агент AI - БТ по симуляции] as [TASK_RSCON_2480] on {FE1} lasts 10 days
-[TASK_RSCON_2480] starts 2026/04/28
+[RSCON-2480 FE агент AI - БТ по симуляции] as [TASK_RSCON_2480] on {F1} starts 2026/04/28
+[TASK_RSCON_2480] ends 2026/05/13
 [TASK_RSCON_2480] is colored in LightCoral
 [TASK_RSCON_2480] is 30% completed
 
-[RSCON-2479 BE агент AI - БТ по симуляции] as [TASK_RSCON_2479] on {BE1} lasts 4 days
-[TASK_RSCON_2479] starts 2026/05/04
+[RSCON-2479 BE агент AI - БТ по симуляции] as [TASK_RSCON_2479] on {B1} starts 2026/05/04
+[TASK_RSCON_2479] ends 2026/05/07
 [TASK_RSCON_2479] is colored in LightBlue
 [TASK_RSCON_2479] is 0% completed
 
-[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} lasts 5 days
-[TASK_QA_SIM_BT_AGENT] starts 2026/05/14
+[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} starts 2026/05/14
+[TASK_QA_SIM_BT_AGENT] ends 2026/05/20
 [TASK_QA_SIM_BT_AGENT] is colored in Gold
 [TASK_QA_SIM_BT_AGENT] is 0% completed

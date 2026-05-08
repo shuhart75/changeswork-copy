@@ -2,12 +2,13 @@
 
 Feature: `../../feature.md`  
 Slice: `../slice.md`  
-Дата обновления: `2026-05-04`
+Дата обновления: `2026-05-08`
 
 ## Правила
 - Summary по возможности совпадает с Jira summary.
 - Этот файл является source of truth для execution-данных по данному slice.
 - Для `scorecards` фактический execution-слой уже переведён на реальные Jira-задачи `RSCON-*`.
+- Даты из пользовательских обновлений фиксируются абсолютными датами; `вчера` от `2026-05-08` = `2026-05-07`.
 
 ## Реестр задач
 
@@ -19,9 +20,13 @@ Slice: `../slice.md`
 | RSCON-2342 | RSCON-2342 BE Оценка критичности + шаблоны для скоркарт | real | BE | 4 | B3 | 2026-04-07 | 2026-04-10 | 2026-04-07 | 2026-04-10 | done | 100 | STORY-SCORECARDS-001 | `tasks/RSCON-2342.md` |
 | RSCON-2343 | RSCON-2343 BE Сущность скоркарты | real | BE | 5 | B2 | 2026-04-03 | 2026-04-09 | 2026-04-03 | 2026-04-09 | done | 100 | STORY-SCORECARDS-001 | `tasks/RSCON-2343.md` |
 | RSCON-2344 | RSCON-2344 BE Привязка скоркарты | real | BE | 1 | B2 | 2026-04-10 | 2026-04-10 | 2026-04-10 | 2026-04-10 | done | 100 | STORY-SCORECARDS-003 | `tasks/RSCON-2344.md` |
+| RSCON-2491 | RSCON-2491 FE Корректировка скоркарт | real | FE | 2 | F2 | 2026-05-07 | 2026-05-08 | 2026-05-07 |  | in_progress | 50 | STORY-SCORECARDS-002, STORY-SCORECARDS-003 | `tasks/RSCON-2491.md` |
+| RSCON-2492 | RSCON-2492 BE Корректировка скоркарт | real | BE | 2 | B3 | 2026-05-07 | 2026-05-08 | 2026-05-07 |  | in_progress | 50 | STORY-SCORECARDS-001, STORY-SCORECARDS-003 | `tasks/RSCON-2492.md` |
 
 ## Notes
 Импортировано из `mvp_gantt_chart_current_actualized_aggressive.puml`. Отдельная list page скоркарт в текущем MVP исключена, поэтому execution-слой привязан к workspace/detail/form/binding-сценариям.
+
+`RSCON-2491` и `RSCON-2492` добавлены по пользовательскому обновлению от `2026-05-08`: обе задачи начаты `2026-05-07`, находятся в работе и имеют прогресс `50%`.
 
 ## Legacy references
 - `planning/mvp/current/tasks/legacy/mvp_tasks_scorecard_detail_page.md`
