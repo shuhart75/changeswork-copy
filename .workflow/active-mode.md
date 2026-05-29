@@ -1,6 +1,6 @@
 # Active Mode
 
-mode: execution-update
+mode: requirements
 
 ## Mode File
-.workflow/modes/execution-update.md
+.workflow/modes/requirements.md

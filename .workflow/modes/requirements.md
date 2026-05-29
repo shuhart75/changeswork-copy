@@ -16,6 +16,22 @@ Produce or update living requirement packs from canonical baseline, source mater
 
 Use `.workflow/templates/requirements/` as the active project-local template source. Do not write requirement packs freeform when these templates exist.
 
+## Requirement format selection
+
+Before generating or substantially rewriting requirements, choose one format:
+
+- `new readable` / `новый лёгкий формат`: use `feature-requirements.readable.template.md`, `slice.readable.template.md`, `frontend.readable.template.md`, `backend.readable.template.md`.
+- `old detailed` / `старый подробный формат`: use `feature-requirements.template.md`, `slice.template.md`, `frontend.template.md`, `backend.template.md`.
+
+Selection rules:
+
+- If the user explicitly says `новый формат`, `лёгкий формат`, `как deployments`, `краткие срезы`, use the new readable templates.
+- If the user explicitly says `старый формат`, `подробный формат`, `как раньше`, use the old detailed templates.
+- If the user does not specify a format and the feature already has requirements, preserve the feature's current format.
+- If the user does not specify a format and this is a new feature, use the new readable format by default.
+- Do not mix formats inside one feature unless the user explicitly asks for a migration or a partial experiment.
+- Diagrams in either format must be PlantUML, not Mermaid.
+
 ## Main outputs
 
 - `features/*/requirements.md`
@@ -39,7 +55,7 @@ Use `.workflow/templates/requirements/` as the active project-local template sou
 4. Create or update `slices/*/requirements/frontend.md` and `slices/*/requirements/backend.md` as detailed annexes derived from the corresponding root section.
 5. Do not invent slice scope that is absent from the root feature document without editing the root feature document first.
 
-The root feature document must follow `.workflow/templates/requirements/feature-requirements.template.md`, which is based on the user's Confluence-compatible requirement page structure.
+The root feature document must follow the selected root template. The old detailed root template is `.workflow/templates/requirements/feature-requirements.template.md`; the new readable root template is `.workflow/templates/requirements/feature-requirements.readable.template.md`.
 
 ## Tail cleanup rule
 

@@ -8,7 +8,7 @@ Feature: `features/approvals/feature.md`
 Approval core и интеграция с жизненными циклами
 
 ## Description
-Реализовать backend-основу процесса согласования и утверждения: `ApprovalInstance`, этапы, назначения, решения, recall/reject, а также интеграционные обработчики, которые корректно переводят версии Pilot и Deployment по результатам approval/ratification.
+Реализовать backend-основу процесса согласования и утверждения: `ApprovalChain`, этапы, назначения, решения, recall/reject, а также интеграционные обработчики, которые корректно переводят версии Pilot и Deployment по результатам approval/ratification.
 
 ## Ideal scope
 Полный MVP-поток approval/ratification с per-item решениями, package-сценариями и сохранением истории решений для дальнейшего UI-отображения.

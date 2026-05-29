@@ -1,106 +1,60 @@
-# DB/API контракт внедрения (Frontend)
+# БД/API контракт внедрения (Фронтенд)
 
-Статус: **draft**  
-Feature: `deployments`  
-Slice: `db-api`  
-Область: `MVP`  
-Дата обновления: `2026-04-27`  
+Статус: **актуализировано после реализации**
+Фича: `deployments`
+Срез: `db-api`
+Область: `MVP`
+Дата обновления: `2026-05-22`
 Шаблон: `.workflow/templates/requirements/frontend.template.md`
 
-## Связь с feature-level документом
+## Цель среза
 
-- Главный контрольный документ: `../../requirements.md`
-- Этот файл детализирует раздел `Реализация для FRONTEND` для текущего slice.
+Зафиксировать, как фронт вызывает актуальный API Deployments без старых маршрутов во множественном числе и старых имён в snake_case.
 
-## Назначение пакета
+## Краткая памятка API для FE
 
-- Зафиксировать ожидания frontend к deployment API и payload structure.
-- Обеспечить единый контракт для list/form/detail/lifecycle screens.
-
-## Источники и трассировка
-
-### Основные источники
-
-- `../slice.md`
-- `../../requirements.md`
-- `../../feature.md`
-- `../../references.md`
-- `requirements/backend.md`
-
-### Связанные planning stories
-
-- `STORY-DEPLOYMENTS-005`
-
-## Контекст и бизнес-смысл
-
-### Цель
-
-Frontend должен опираться на стабильный API-контракт и не создавать собственные схемы данных для deployment scope.
-
-### Бизнес-контекст
-
-Этот slice не вводит отдельный UI-сценарий. Он обслуживает все остальные deployment screens.
-
-## Границы MVP
-
-### Входит в MVP
-
-- согласованный shape deployment payload;
-- правила чтения status, lineage, scorecards, related entities;
-- единое ожидание по ошибкам и валидации.
-
-### Не входит в MVP
-
-- произвольные клиентские адаптеры, меняющие смысл contract fields.
-
-## Пользовательские сценарии
-
-### Сценарий FE-1. Чтение deployment payload
-1. Frontend запрашивает deployment data.
-2. Получает единый payload.
-3. Использует его в list/detail/form screens.
-
-### Сценарий FE-2. Отправка mutation payload
-1. Frontend формирует запрос по contract.
-2. Backend валидирует payload.
-3. UI интерпретирует ответ и ошибки по согласованной схеме.
-
-## Функциональные требования
-
-### FE-FR-1. Stable payload contract
-
-**Описание:**
-Все deployment screens используют один согласованный shape данных.
-
-### FE-FR-2. Error contract consistency
-
-**Описание:**
-Frontend ожидает и обрабатывает ошибки по единой схеме.
-
-## Интеграция с Backend API
-
-| Метод и маршрут | Где используется | Что отправляем/читаем | Условия вызова | Примечание |
-|---|---|---|---|---|
-| deployment endpoints | все deployment screens | list/detail/form/lifecycle payloads | по screen flow | см. backend pack |
-
-## Валидация на frontend
-
-### Правила
-
-- payload строится только из согласованных полей;
-- неизвестные поля не должны отправляться в mutation requests.
-
-### Сообщения об ошибках
-
-| Ситуация | Сообщение | Где показываем |
+| UI-сценарий | Метод | Маршрут |
 |---|---|---|
-| невалидный ответ | `Не удалось обработать ответ сервера` | toast / error boundary |
-| ошибка валидации | `Данные внедрения заполнены некорректно` | форма / inline |
+| загрузить список | `POST` | `/api/v1/deployments?spaceCode={spaceCode}` |
+| создать | `POST` | `/api/v1/deployment` |
+| открыть карточку | `GET` | `/api/v1/deployment/{number}` |
+| открыть конкретную версию | `GET` | `/api/v1/deployment/id/{id}` |
+| сохранить поля | `PUT` | `/api/v1/deployment/{number}?id={id}` |
+| выполнить действие | `PUT` | `/api/v1/deployment/{number}/action?id={id}&action={action}` |
 
-## Критерии приемки
+## Соответствие DTO -> VM
 
-### FE-AC-1. Contract usage
-- [ ] Все deployment screens используют единый API-контракт
+```typescript
+type DeploymentStatus = 'NEW' | 'ON_APPROVAL' | 'REJECTED' | 'DEPLOYED' | 'ARCHIVED';
+type DeploymentMode = 'GENERAL' | 'SIMULATION_BASED';
+type DeploymentCriticality = 'HIGH' | 'LOW';
+type DeploymentAction = 'submitForApproval' | 'edit' | 'approve' | 'reject' | 'deploy' | 'toArchive';
 
-### FE-AC-2. Error handling
-- [ ] Ошибки API интерпретируются одинаково на связанных экранах
+interface DeploymentVm {
+  id: string;
+  number: string;
+  name?: string;
+  status: DeploymentStatus;
+  deploymentType?: DeploymentMode;
+  criticality?: DeploymentCriticality;
+  availableActions?: DeploymentAction[];
+  version?: number;
+  isLast?: boolean;
+}
+```
+
+## Важные несовместимости со старым текстом
+
+- Не использовать `GET /api/v1/deployments` для списка: в текущем OpenAPI список — `POST /api/v1/deployments`.
+- Не использовать `POST /api/v1/deployments` для создания: создание выполняется через `POST /api/v1/deployment`.
+- Не использовать `POST /api/v1/deployments/{id}/action`: действие — `PUT /api/v1/deployment/{number}/action?id=...&action=...`.
+- Не отправлять `scorecard_version_ids` и `artifacts` в запросы создания/обновления внедрения.
+- Не ждать `approvalInstance.status` как источник истины для статуса внедрения: в текущем DTO Deployments есть `status`.
+
+## Чеклист для тестирования среза
+
+- [ ] Все методы сервисного слоя FE используют маршруты из таблицы.
+- [ ] Имена действий в camelCase: `submitForApproval`, `toArchive`.
+- [ ] UI не отправляет snake_case `submit_for_approval`/`to_archive`.
+- [ ] Перечисление TypeScript не содержит старые статусы/действия.
+- [ ] Ошибка API не преобразуется в успешное локальное состояние.

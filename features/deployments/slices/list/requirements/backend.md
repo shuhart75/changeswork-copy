@@ -1,134 +1,70 @@
-# Список внедрений (Backend)
+# Список внедрений (Бэкенд)
 
-Статус: **draft**  
-Feature: `deployments`  
-Slice: `list`  
-Область: `MVP`  
-Дата обновления: `2026-04-27`  
+Статус: **актуализировано после реализации**
+Фича: `deployments`
+Срез: `list`
+Область: `MVP`
+Дата обновления: `2026-05-22`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
-## Связь с feature-level документом
+## Цель среза
 
-- Главный контрольный документ: `../../requirements.md`
-- Этот файл детализирует раздел `Реализация BACKEND` для текущего slice.
+Отдать фронту реестр внедрений с фильтрами, сортировкой, пагинацией и актуальными статусами.
 
-## Назначение пакета
+## Контракт API
 
-- Описать list API и правила выборки внедрений для пользовательского списка.
-- Согласовать поля списка со status model и product filtering.
+```yaml
+paths:
+  /api/v1/deployments:
+    parameters:
+      - name: spaceCode
+        in: query
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Deployments]
+      summary: Список внедрений
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GetDeploymentRegistry' }
+      responses:
+        '200':
+          description: OK
+```
 
-## Источники и трассировка
+## Запрос и ответ
 
-### Основные источники
+```json
+{
+  "pagination": { "page": 0, "size": 20 },
+  "sort": { "field": "createdDateTime", "direction": "DESC" },
+  "filter": {}
+}
+```
 
-- `../slice.md`
-- `../../requirements.md`
-- `../../feature.md`
-- `../../references.md`
-- `../requirements/frontend.md`
+Бэкенд возвращает `DeploymentRegistry.records[]` с полями `DeploymentRecord`: `id`, `number`, `name`, `deploymentType`, `status`, `criticality`, `authorEmployee`, `initialCreateDateTime`, `createdDateTime`, `deployedAt`.
 
-### Связанные planning stories
+## Правила
 
-- `STORY-DEPLOYMENTS-002`
+- `spaceCode` обязателен.
+- В список попадает последняя актуальная версия (`isLast=true`) каждого внедрения.
+- `ARCHIVED` по умолчанию можно скрывать только если это явно согласовано фильтром; иначе статус должен быть доступен для отображения.
+- Бэкенд не возвращает статусы вне перечисления `DeploymentStatus`.
+- Критичность рассчитывается бэкендом и приходит как `HIGH`/`LOW`.
 
-## Контекст и бизнес-смысл
+## Ошибки
 
-### Цель
+| Код | Когда |
+|---|---|
+| `400` | некорректное тело запроса, сортировка, фильтр или пагинация |
+| `500` | внутренняя ошибка |
 
-Backend должен возвращать список внедрений в виде, достаточном для list screen: status, criticality, author, creation/deployment dates и базовые identifying fields.
+## Чеклист для тестирования среза
 
-### Источник правды
-
-- deployment aggregate;
-- approval state для process-driven statuses.
-
-## Бизнес-правила и системные ограничения
-
-### BR-1. Источник process status
-- после отправки из `draft` list status определяется по `ApprovalInstance.status`;
-- конечные состояния `deployed` и `archived` отображаются отдельно.
-
-### BR-2. Product filtering
-- список должен поддерживать фильтрацию по продукту;
-- product visibility подчиняется RBAC rules.
-
-## Границы MVP
-
-### Входит в MVP
-
-- list endpoint;
-- product filter;
-- stable set of list fields;
-- сортировка и пагинация там, где они уже зафиксированы в фронтовом пакете.
-
-### Не входит в MVP
-
-- произвольная analytics-агрегация;
-- расширенные пользовательские представления вне detail packs.
-
-## Пользовательские и системные сценарии
-
-### Сценарий BE-1. Получение списка
-1. Клиент запрашивает deployments list.
-2. Backend собирает данные deployment и process status.
-3. Backend возвращает список с полями, достаточными для таблицы.
-
-### Сценарий BE-2. Применение фильтра
-1. Клиент передаёт product filter и другие допустимые параметры.
-2. Backend ограничивает выборку.
-3. Возвращается отфильтрованный набор.
-
-## Функциональные требования
-
-### BE-FR-1. List response contract
-
-**Описание:**
-List response содержит идентификатор, название, тип, статус, критичность, автора и даты.
-
-**Правила и ограничения:**
-- не допускается локальное frontend-вычисление процессного статуса;
-- поля должны быть стабильны для list screen.
-
-### BE-FR-2. Filtering and visibility
-
-**Описание:**
-List endpoint учитывает RBAC и product scope.
-
-## Модель данных
-
-### Основные сущности и поля
-
-| Сущность / таблица | Поле | Тип | Обязательность | Описание |
-|---|---|---|---|---|
-| `deployment` | `id`, `name`, `product_id`, `created_at`, `deployed_at` | domain | да | базовые list fields |
-| `approval_instance` | `status` | process | нет | источник process status после submit |
-
-## API-контракт
-
-### Эндпоинты
-
-| Метод и маршрут | Назначение | Кто вызывает | Примечание |
-|---|---|---|---|
-| `GET /api/v1/deployments` | список внедрений | frontend list screen | поддерживает фильтрацию |
-
-## Ошибки и валидация
-
-### Валидационные правила
-
-- неподдерживаемые filter params отклоняются;
-- недопустимый доступ ограничивает набор данных или возвращает ошибку доступа.
-
-### Ошибки API
-
-| Код/сценарий | Условие | Ответ |
-|---|---|---|
-| `400` | невалидный фильтр | сообщение о невалидных параметрах |
-| `403` | нет доступа к scope | ошибка доступа |
-
-## Критерии приемки
-
-### BE-AC-1. Stable list contract
-- [ ] List endpoint возвращает поля, достаточные для таблицы внедрений
-
-### BE-AC-2. Status and filter logic
-- [ ] Process status и product filtering рассчитываются на backend
+- [ ] Без `spaceCode` запрос отклоняется.
+- [ ] Ответ содержит только актуальные версии внедрений.
+- [ ] Фильтр/сортировка/пагинация работают вместе.
+- [ ] В ответе нет `draft`, `ratified`, `cancelled`.
+- [ ] Для `NEW`, `ON_APPROVAL`, `REJECTED`, `DEPLOYED`, `ARCHIVED` возвращается корректная строка перечисления.

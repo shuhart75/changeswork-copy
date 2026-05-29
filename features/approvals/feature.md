@@ -1,46 +1,80 @@
-# FEATURE-APPROVALS — Согласования
+# FEATURE-APPROVALS — Согласования через SberDocs
 
-Статус: **импортировано из legacy-проекта**  
-Квартал: `2026-Q2`  
-Дата обновления: `2026-04-23`
+Статус: **в работе / scope updated**
+Квартал: `2026-Q2`
+Дата обновления: `2026-05-27`
 
 ## Цель
-Собрать в одной feature процесс согласования и утверждения, а также UI страницы "Согласования" для назначенных участников процесса.
+
+Минимизировать собственную разработку согласований в АС КОДА: хранить версии брифа и участников отправки, создавать DOCX-документ для SberDocs и дальше отображать read-only статус и on-demand историю из SberDocs.
 
 ## Контекст
-Feature импортирована из `changesWork`. В legacy-материалах логика процесса и UI страницы были описаны отдельными task-документами и requirement packs.
+
+Feature была импортирована из `changesWork` как native approval/ratification workflow. Новое решение `DEC-2026-05-25-APPROVALS-SBERDOCS-001` supersedes native модель: согласующие и подписант принимают решения в SberDocs, а АС КОДА остаётся контуром подготовки и мониторинга.
 
 ## Ideal scope
-- единый backend-процесс approval/ratification;
-- интеграция с жизненными циклами Pilot и Deployment;
-- страница "Согласования" с отдельными и пакетными сценариями;
-- история решений и комментариев по item и package.
+
+- подготовка JSON документа, поля `Доп. эффекты`, подписанта и получателей в АС КОДА с версионированием `ApprovalChain`;
+- генерация DOCX через backend DOCX Renderer из документной части JSON без скоркарты и `Доп. эффекты`, передача DOCX как основного документа;
+- предпросмотр и отправка HTML-письма на `av@av.ru` из JSON документа, скоркарты, `Доп. эффекты` и значимых участников из SberDocs approval sheet;
+- создание документа в SberDocs: `summary`, `senderList`, `recipientList`, `author` = методолог-отправитель, `additionalAuthorList[]` = ПРМ-соавтор; согласующие настраиваются в SberDocs и локально не хранятся;
+- синхронизация статуса документа и on-demand получение листа согласования из SberDocs;
+- справочник значимых подписантов/согласовантов и включение в письмо всех участников из справочника, успевших согласовать к моменту отправки;
+- ручная отправка уведомления методологом после submit с отключением последующей автоматической отправки;
+- определение перехода к подписанию по `documentState = ON_APPROVAL`, подтверждение активной задачи `APPROVAL/IN_WORK` и автоматическая отправка HTML-письма на `av@av.ru`, если ручной отправки не было;
+- получение актуального DOCX-документа из SberDocs после согласования;
+- отображение `systemNumber`, ссылки, статуса и истории на host screens;
+- аудит отправки и синхронизации.
 
 ## MVP scope
-- core backend процесса approval/ratification;
-- интеграция с жизненными циклами Pilot/Deployment;
-- approvals page для individual и package ratification сценариев.
+
+- локальный `ApprovalChain` с `new`-версией брифа и участников отправки до SberDocs;
+- новая версия `ApprovalChain` при изменении брифа, подписанта, получателей до отправки или после ошибки создания SberDocs-документа без `documentId`; после создания SberDocs-документа raw `ON_DELETING`/`DELETED` переводит цепочку в `cancelled`, а не в `new`;
+- health-check SberDocs перед submit/polling/on-demand history;
+- email-уведомление поддержки АС[СТ, РСП, КОДА, СРО] при провале health-check SberDocs или unknown/unexpected SberDocs status;
+- submit в SberDocs через backend;
+- `restrictions.actions` не передаются, редактирование документа/маршрута остаётся штатной возможностью SberDocs;
+- polling `document-job` и `document state`; approval sheet читается отдельным методом;
+- HTML-письмо на `av@av.ru`: вручную по кнопке методолога после submit либо автоматически при `documentState = ON_APPROVAL` и активной задаче `APPROVAL/IN_WORK`, если ручной отправки не было;
+- справочник значимых участников для включения в письмо по данным `approval-sheet`;
+- получение актуального DOCX из SberDocs через backend после согласования;
+- маппинг SberDocs statuses в статусы АС КОДА;
+- read-only status и on-demand history на host screen;
+- блокировка действий доменного элемента на всё время существования связанного `ApprovalChain`, кроме будущих явно описанных исключений;
+- отзыв/редактирование документа выполняется в SberDocs автором/соавтором, кнопки отзыва в АС КОДА MVP нет.
 
 ## Что исключено из MVP
-- развитие поиска и сортировки сверх описанного в requirement docs;
-- расширенные пользовательские фильтры и доп. пользовательские представления.
+
+- отдельная страница `Согласования`;
+- собственные действия `approve`, `reject`, `ratify`, `sign` в АС КОДА;
+- локальный `ApprovalChain` как workflow engine;
+- редактирование уже созданного SberDocs-документа из интерфейса АС КОДА;
+- package flow и массовые решения;
+- собственная реализация ЭП/КЭП.
 
 ## Входные материалы
+
 - `references.md`
-- `planning/MIGRATION_NOTES.md`
+- `requirements.md`
+- `slices/core-process/requirements/frontend.md`
 - `slices/core-process/requirements/backend.md`
-- `slices/page/requirements/frontend.md`
-- `slices/page/requirements/backend.md`
+- `context/source-materials/change-requests/sberdocs-approvals/`
 
 ## Planning stories
-- `planning/stories/STORY-APPROVALS-001.md`
-- `planning/stories/STORY-APPROVALS-002.md`
+
+- `planning/stories/STORY-APPROVALS-001.md` — требует planning-синхронизации под SberDocs.
+- `planning/stories/STORY-APPROVALS-002.md` — legacy page story, исключена из MVP и требует planning-синхронизации.
 
 ## Риски и зависимости
-- feature зависит от согласованной ролевой модели и жизненных циклов Pilot/Deployment;
-- package-сценарии частично пересекаются с feature `packages` и требуют аккуратной границы ответственности.
+
+- зависимость от SLA и доступности SberDocs; health-check должен вернуть `LIVING` перед критическими запросами, а при провале backend уведомляет поддержку АС[СТ, РСП, КОДА, СРО];
+- нужны согласованные профили `type`, `kind`, `externalDocumentSource`;
+- признак К2 не устанавливается через API; пользователь должен установить К2 в интерфейсе SberDocs после создания документа;
+- нужно согласовать mapping неизвестных `documentState/taskState` значений;
+- baseline, deployments wording, planning stories и прототипы синхронизируются отдельными задачами.
 
 ## Решение по кварталу
-- [x] берём в квартал
+
+- [x] берём в квартал как SberDocs integration scope
 - [ ] переносим
 - [ ] дробим дополнительно

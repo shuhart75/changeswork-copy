@@ -1,0 +1,5370 @@
+	openapi: 3.0.3
+tags:
+  - name: public
+info:
+  title: public_agw_mtls
+  description: |2-
+     Публичный REST API АС SberDocs с авторизацией OpenId для:
+     - операции по добавлению нового документа в Системе
+     - запроса  статуса операции добавления документа в Системе
+     - редактирования карточки существующего документа в Системе
+     - запроса статуса документа в Системе
+     - запроса истории согласования документа в Системе
+     - запроса статуса версии документа в Системе
+     - запроса файлов документа в Системе
+     - запроса файлов документа в Системе в архиве ZIP
+     - запроса файлов подписи для версии документа
+     - отправка файлов подписи документа в Системе указанной версии
+     - отказ от подписания файлов документа в Системе указанной версии
+     - получение сертификата пользователя по BiCrypt_ID
+     - проверка сертификата пользователя по BiCrypt_ID
+     - проверка работоспособности сервиса
+     - запроса на изменение информации о регистрации документа
+     - запроса на получение информации о защищенных файлах версии документа
+     - запроса на получение потокового контента вложения документа, зашифрованного на указанного пользователя
+     - запроса на получение статуса документа в Системе по задаче
+     - запрос на добавление отчета об исполнении документа/поручения на этапе ЖЦ Исполнение
+  version: 3.14.0
+  contact:
+    name: Углецов Артемий
+    email: ugletsov.a.a@sberbank.ru
+servers:
+  - url: '/v3'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      environment:
+        enum:
+          - tls.sberdocs.sigma.sbrf.ru
+          - mtls.sberdocs.sigma.sbrf.ru
+          - tls.ift.sberdocs.sigma.sbrf.ru
+          - mtls.ift.sberdocs.sigma.sbrf.ru
+          - tls.psi.sberdocs.sigma.sbrf.ru
+          - mtls.psi.sberdocs.sigma.sbrf.ru
+          - dev.sberdocs.sigma.sbrf.ru
+        default: sberdocs.sigma.sbrf.ru
+paths:
+  /public/Gateway/attachment/{fileId}/encrypted-for-employee-content:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+      - $ref: '#/components/parameters/X-PersonnelNumber'
+    get:
+      tags:
+        - public
+      summary: Метод потокового получения контента вложения, зашифрованного для сотрудника
+      description: Метод потокового получения контента вложения, зашифрованного на переданного в параметре метода сотрудника
+      operationId: getEncryptedForEmployeeContent
+      parameters:
+        - name: taskId
+          in: query
+          required: true
+          description: Идентификатор задачи
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор задачи. По задаче определяется документ, к которому относится файл
+        - name: fileId
+          in: path
+          required: true
+          description: Идентификатор файла, контент которого получается
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор файла, контент которого получается
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: some file content
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document-job:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод создания задания по добавлению нового документа в Системе
+      description: Задание по добавлению нового документа c атрибутами (шапка документа, маршрут, приложения, параграфы текста документа без форматирования)
+      operationId: sendDocumentCreationJob
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentJobRequest'
+        description: Запрос для задания по добавлению нового документа
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentJobResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document-job/{jobId}/state:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: Идентификатор задания на создание документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор задания на создание документа
+            maxLength: 36
+      summary: Метод получения статуса задания по добавлению нового документа в Системе
+      description: Получение статуса задания по добавлению нового документа в Системе
+      operationId: getDocumentJobState
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentJobStateResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/document-header:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    put:
+      tags:
+        - public
+      summary: Метод редактирования карточки документа в Системе
+      description: Редактирование карточки документа в Системе. Создается новая мажорная версия документа
+      operationId: documentHeaderEdit
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа в Системе
+          schema:
+            type: string
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentEditedRequest'
+        description: Запрос с отредактированными атрибутами карточки документа
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/state:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения статуса документа в Системе
+      description: Получение статуса документа в Системе
+      operationId: getDocumentState
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentStateResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/version-state:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения статуса версии документа в Системе
+      description: Получение статуса версии документа в Системе.
+      operationId: getDocumentVersionState
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+        - name: versionId
+          in: query
+          required: true
+          description: Идентификатор версии документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор версии документа
+            maxLength: 36
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersionStateResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/document-files:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения файлов документа в Системе
+      description: Метод получения файлов документа опеределеной версии (файл основного документа, файлы приложений к документу, файлы подписи)
+      operationId: getDocumentFiles
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор документа
+        - name: versionId
+          in: query
+          required: false
+          description: Идентификатор версии документа для формирования списка файлов. Если поле не заполнено, то запрашиватеся последняя актуальная версия файлов.
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор версии документа для формирования списка файлов.
+            maxLength: 36
+        - name: fileTypes
+          in: query
+          required: false
+          description: Список запрашиваемых типов файлов (файл основного документа, приложения к документу). Если пусто то передается все.
+          schema:
+            type: array
+            maxItems: 10
+            uniqueItems: true
+            description: Список запрашиваемых типов файлов (файл основного документа, приложения к документу).
+            items:
+              $ref: '#/components/schemas/FileType'
+        - name: includeSignature
+          in: query
+          required: true
+          example: false
+          description: Признак необходимости выгрузить файлы подписи к файлу, если они есть. true - требуются файлы попдиси, false - нет. Значение по умолчанию false
+          schema:
+            type: boolean
+            description: Признак необходимости выгрузить файлы подписи к файлу, если они есть
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFilesResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/document-files-archive:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения файлов документа в Системе в архиве ZIP
+      description: Метод получения файлов документа опеределеной версии (файл основного документа, файлы приложений к документу, файлы подписи) архивом ZIP
+      operationId: getDocumentFilesArchive
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+        - name: versionId
+          in: query
+          required: false
+          description: Идентификатор версии документа для формирования списка файлов. Если поле не заполнено, то запрашиватеся последняя актуальная версия файлов.
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор версии документа для формирования списка файлов.
+            maxLength: 36
+        - name: fileTypes
+          in: query
+          required: false
+          description: Список запрашиваемых типов файлов (файл основного документа, приложения к документу). Если пусто, то передаются все файлы
+          schema:
+            type: array
+            maxItems: 10
+            uniqueItems: true
+            description: Список запрашиваемых типов файлов
+            items:
+              $ref: '#/components/schemas/FileType'
+        - name: includeSignature
+          in: query
+          example: false
+          required: true
+          description: Признак необходимости выгрузить файлы подписи к файлу, если они есть. true - требуются файлы подписи, false - нет. Значение по умолчанию false
+          schema:
+            type: boolean
+            description: Признак необходимости выгрузить файлы подписи к файлу
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentFilesArchiveResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/signature-files:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения файлов подписи к документу в Системе
+      description: Метод получения только файлов подписи к документу (основной документ, приложения) опеределеной версии
+      operationId: getSignatureFiles
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+        - in: query
+          required: false
+          name: versionId
+          description: Идентификатор версии документа для формирования списка файлов. Если поле не заполнено, то запрашиватеся последняя актуальная версия файлов.
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор версии документа для формирования списка файлов
+            maxLength: 36
+        - name: fileTypes
+          in: query
+          required: false
+          description: Список запрашиваемых типов файлов (файл основного документа, приложения к документу) для которых надо вернуть подпись. Если пусто , то перадаются подписи для файлов всех типов.
+          schema:
+            type: array
+            maxItems: 10
+            uniqueItems: true
+            description: Список запрашиваемых типов файлов (файл основного документа, приложения к документу)
+            items:
+              $ref: '#/components/schemas/FileType'
+        - name: signatureStandarts
+          in: query
+          required: false
+          schema:
+            type: array
+            maxItems: 10
+            uniqueItems: true
+            description: Фильтр - список стандартов для сформированной подписи. Если пусто, то подписи всех стандартов
+            items:
+              type: string
+              description: Стандарт сформированной подписи. CADES_BES или CADES_T
+              maxLength: 50
+              pattern: ^[A-Z-_]*$
+              example: CADES_BES
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureFilesResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/files-version-signing:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод подписания файлов документа определенной версии в Системе
+      description: Метод подписания файлов документа (основной документ, приложения) определеной версии
+      operationId: signingFilesVersion
+      deprecated: true
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilesVersionSigningRequest'
+        description: Запрос на добавление файлов подписи к документу
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/files-version-reject:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод принятия отрицательного решения по версии файлов к документу
+      description: Метод подписания файлов документа (основной документ, приложения) определеной версии
+      operationId: rejectFilesVersion
+      deprecated: true
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilesVersionRejectRequest'
+        description: Запрос по отклонению версии файлов документа
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/registration-info:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    put:
+      tags:
+        - public
+      summary: Метод редактирования информации о регистрации в документе
+      description: Метод редактирования информации о регистрации в документе
+      operationId: editingRegistrationInfoOnDocument
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationInfoOnDocumentRequest'
+        description: Запрос на редактирование информации о регистрации в документе
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/document/{documentId}/actual-info:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения информации о документе
+      description: Метод получения информации об актуальной версии документа
+      operationId: getDocumentActualInfo
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Идентификатор документа
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentActualInfoResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/task/{taskId}/protected-files-info:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+      - $ref: '#/components/parameters/X-PersonnelNumber'
+    get:
+      tags:
+        - public
+      summary: Получение данных о защищенных файлах документа(версии документа)
+      description: "Получение информации о защищенных файлах  версии документаи относящейся к указаннной задаче. 
+      Для каждого файла возвращаются метаданные зашифрованного файла (даже если в действительности, в данный момент файлы не зашифрованы), в качестве размера файлов указывается размер незашифрованного файла.  
+      Также возвращаются тип вложения (основной файл документа - DOCUMENT или приложение -ATTACHMENT) и строка ссылки на файл. Строка ссылки на файл позволяет получить зашифрованный контент файла из Системы."
+      operationId: getProtectedFilesInfo
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Идентификатор задачи
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор задачи
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProtectedFilesInfoResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/task/{taskId}/state:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения статуса документа в Системе по задаче
+      description: Получение статуса документа в Системе по задаче
+      operationId: getDocumentByTaskState
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Идентификатор задачи
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор задачи
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentByTaskStateResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/task/{taskId}/signatures-files-send:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод передачи подписей для файлов документа по заданию в Системе
+      description: Метод передачи подписей для файлов документа (основной документ, приложения) по заданию
+      operationId: sendSignaturesFiles
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Идентификатор задачи
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор задачи
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignatureFilesSendRequest'
+        description: Запрос на передачу подписей к файлам документа по заданию
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/task/{taskId}/signing-files-rejection:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод отказа в подписании файлов документа по заданию
+      description: Метод отказа в подписании файлов документа (основной документ, приложения) по заданию
+      operationId: signingFilesRejection
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Идентификатор задачи
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            maxLength: 36
+            description: Идентификатор задачи
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigningFilesRejectionRequest'
+        description: Запрос по отклонению файлов задания по документу
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+
+  /public/Gateway/task/{taskId}/execution-report-text:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Заполнение отчета об исполнении задания
+      operationId: editExecutionReportText
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            example: 329b66b1-1124-437a-b195-d316bc1a32bb
+          description: Идентификатор задания
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutionReportTextRequest'
+      responses:
+        '200':
+          description: Отчет успешно сохранен
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+
+  /public/Gateway/certificate-by-bcrypt-id:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения сертификата пользователя по идентификатору Бикрипт
+      description: Метод получения сертификата пользователя по идентификатору Бикрипт
+      operationId: getCertificateByBiCrypt_ID
+      parameters:
+        - name: BiCrypt_ID
+          in: query
+          required: true
+          description: Идентификатор Бикрипт. Данные в кодировке base64
+          schema:
+            type: string
+            maxLength: 255
+            example: 00ca2103
+            pattern: ^(.)*$
+            description: Идентификатор Бикрипт.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificatesResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/certificate-verify-by-bcrypt-id:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод проверки статуса сертификата пользователя по идентификатору Бикрипт
+      description: Метод проверки статуса сертификата пользователя по идентификатору Бикрипт
+      operationId: getCertificateVerifyByBiCrypt_ID
+      parameters:
+        - name: BiCrypt_ID
+          in: query
+          required: true
+          description: Идентификатор Бикрипт. Данные в кодировке base64
+          schema:
+            type: string
+            maxLength: 255
+            example: 00ca2103
+            pattern: ^(.)*$
+            description: Идентификатор Бикрипт
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateVerifyResponse'
+  /public/Gateway/health-check:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+    get:
+      tags:
+        - public
+      summary: Метод проверки работоспособности сервиса public-gateway в Системе
+      description: Метод проверки работоспособности сервиса public-gateway в Системе
+      operationId: getHealthCheck
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+  /public/Gateway/approval-sheet/{approvalSheetId}:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    get:
+      tags:
+        - public
+      summary: Метод получения листа согласования в Системе
+      description: Метод получения листа согласования в Системе
+      operationId: getApprovalSheet
+      parameters:
+        - name: approvalSheetId
+          in: path
+          required: true
+          description: Идентификатор маршрут согласования
+          schema:
+            type: string
+            example: 16fd2706-8baf-433b-82eb-8c7fada847da
+            pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+            description: Идентификатор документа
+            maxLength: 36
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalSheetResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '404':
+          description: Not found
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+
+  /public/Gateway/system-objects-search:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод получения объектов Системы с использованием расширенного поиска
+      description: Поиск объектов Системы по заданному фильтру и выдача результатов поиска
+      operationId: getFilteredObjects
+      parameters:
+        - name: limit
+          in: query
+          description: Количество записей в результате поиска
+          example: 16
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 10
+            maximum: 1000
+          required: false
+        - name: page
+          in: query
+          description: Номер текущей станицы (нумерация начинается с 1)
+          example: 1
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 1000
+            default: 1
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+        description: Запрос объектов Системы, удовлетворяющих параметрам поиска
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+
+  /public/Gateway/task/user-tasks:
+    parameters:
+      - $ref: '#/components/parameters/RqUID'
+      - $ref: '#/components/parameters/Tenant'
+    post:
+      tags:
+        - public
+      summary: Метод получения списка заданий пользователя
+      description: Метод получения списка заданий пользователя по табельному номеру сотрудника, типу и статусу задания
+      operationId: getTasksUser
+      parameters:
+        - name: limit
+          in: query
+          description: Количество записей в результате поиска
+          example: 16
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 10
+            maximum: 1000
+          required: false
+        - name: page
+          in: query
+          description: Номер текущей станицы (нумерация начинается с 1)
+          example: 1
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 1000
+            default: 1
+          required: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TasksRequest'
+        description: Запрос объектов Системы, удовлетворяющих параметрам поиска
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: Ответ в случае успеха
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                maxLength: 36
+              example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksResponse'
+        '400':
+          description: Bad request
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '401':
+          description: Unauthorized
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '403':
+          description: Forbidden
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+        '500':
+          description: Internal Server Error
+          headers:
+            RqUID:
+              schema:
+                type: string
+                pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+                example: 329b66b1-1124-437a-b195-d316bc1a32bb
+              description: Уникальный идентификатор запроса
+components:
+  schemas:
+    TenantCode:
+      title: Код организации
+      description: Код организации
+      type: string
+      maxLength: 255
+      enum:
+        - SBERBANK
+      example: SBERBANK
+      x-tags:
+        - enum
+    DocumentTypeCode:
+      title: Код типа документа
+      description: Код типа документа INTERNAL - внутренний документ, OUTGOING - исходящий документ, INCOMING - входящий документ
+      type: string
+      maxLength: 255
+      enum:
+        - INTERNAL
+        - OUTGOING
+        - INCOMING
+      example: INTERNAL
+      x-tags:
+        - enum
+    DocumentKindCode:
+      title: Код вида документа
+      description: Код вида документа (&lt;code&gt;[Справочник](https://confluence.sberbank.ru/pages/viewpage.action?pageId=5967974497)&lt;/code&gt;)
+      type: string
+      maxLength: 255
+      enum:
+        - ACT
+        - ALBUM_OF_TARIFFS
+        - GENERAL_ATTORNEY
+        - ATTORNEY
+        - ATTORNEY_TO_THIRD_PARTIES
+        - NOMENCLATURE_OF_CASES
+        - REGULATORY_DOCUMENT
+        - ORD_REGULATORY_DOCUMENT
+        - MEMO
+        - LIST
+        - LIST_OF_ORDERS
+        - ACTION_PLAN
+        - RESOLUTION_OF_THE_BOARD
+        - ORDER_OF_ORGANIZATIONAL_STRUCTURE
+        - ORDER_FOR_MAIN_ACTIVITY
+        - ORDER_OF_DZO
+        - PROTOCOL
+        - ORDER
+        - DIVISION_ORDER
+        - DISPOSAL_OF_FUNCTIONAL_UNIT
+        - ORDER_OF_BUSINESS_DESCRIPTION
+        - AGILE_ORDER
+        - DECISION
+        - USERS_GUIDE
+        - MEMORANDUM
+        - SERVICE_LEVEL_AGREEMENT
+        - SCHEME
+        - STATEMENT_INTERNAL
+        - NOTIFICATION_INTERNAL
+        - STATEMENT
+        - NOTIFICATION
+        - REPORT
+        - LETTER
+        - REFERENCE
+        - MCHD
+        - PROCESS_DECRIPTION
+        - PROCESS_DECRIPTION_WITH_CHANGES
+        - INTERNAL_REGIONAL_ALBUM_OF_TARIFFS
+        - INTERNAL_OBJECT_PASSPORT
+        - INTERNAL_GROUP_DIVISION_ORDER
+        - INTERNAL_DECISION_OF_CORPINVEST_BUSINESS
+        - INTERNAL_DECISION_OF_RETAIL_BUSINESS
+        - INTERNAL_TECHNOLOGY_STANDART
+        - INTERNAL_PROCESS_DESCRIPTION
+        - INTERNAL_ORDER_OF_SECONDMENT
+        - INTERNAL_PRESENTATION
+        - INTERNAL_REGULATIONS_ON_DIVISION
+        - OUTGOING_LETTER
+        - OUTGOING_OFFICIAL_LETTER
+        - OUTGOING_RESPONSE_LETTER
+        - OUTGOING_RESPONSE
+        - OUTGOING_REPORT
+        - OUTGOING_NOTICE
+        - OUTGOING_NOTIFICATION
+        - OUTGOING_STATEMENT
+        - OUTGOING_REFERENCE
+        - OUTGOING_ATTORNEY
+        - OUTGOING_REPT
+        - OUTGOING_GOVERNMENT_REPT
+        - OUTGOING_REPORT_ON_EXECUTION_RESOLUTIONS_OF_PRESIDENT_OF_RUSSIA
+        - OUTGOING_OTHER_DOCUMENT_KINDS
+        - INCOMING_ACT
+        - INCOMING_COURT_APPEAL
+        - INCOMING_APPEAL
+        - INCOMING_INQUIRY
+        - INCOMING_STATEMENT
+        - INCOMING_NOTIFICATION
+        - INCOMING_STATEMENT_OF_CLAIM
+        - INCOMING_PERFOMANCE_LIST
+        - INCOMING_A_COMPLAINT
+        - INCOMING_LETTER
+        - INCOMING_ASSIGNMENT
+        - INCOMING_GOVERNMENT_ASSIGNMENT
+        - INCOMING_DECREE
+        - INCOMING_REPRESENTATION
+        - INCOMING_CLAIM
+        - INCOMING_PROTOCOL
+        - INCOMING_DEFINITION
+        - INCOMING_APPEAL_TO
+        - INCOMING_REVIEW
+        - INCOMING_DECISION
+        - INCOMING_TELEGRAM
+        - INCOMING_REQUIREMENT
+        - INCOMING_REFERENCE
+        - INCOMING_AGENDA
+        - INCOMING_COURT_ORDER
+        - INCOMING_NOTIFY
+        - INCOMING_PETITION
+        - MCHD_MANUALLY_UPLOADED_FROM_EXT_RES
+        - MCHD_AUTOMATIC_UPLOADED
+        - LIST_OF_CLIENT_PATHS
+      example: MEMORANDUM
+      x-tags:
+        - enum
+    DocumentUrgencyCode:
+      title: Код срочности документа
+      description: Код срочности документа (&lt;code&gt;[Справочник](https://confluence.sberbank.ru/pages/viewpage.action?pageId=5967974846)&lt;/code&gt;)
+      type: string
+      maxLength: 255
+      pattern: ^[0-9A-Z_]*$
+      enum:
+        - URGENTLY
+        - NOT_URGENTLY
+      example: URGENTLY
+      x-tags:
+        - enum
+    DocumentJobState:
+      title: Статус задания создания нового документа
+      type: string
+      maxLength: 255
+      pattern: ^[0-9A-Z_]*$
+      description: |2-
+         Статус задания создания нового документа
+         Описание статусов:
+         _ ACCEPTED - запрос операции прошел валидацию , но не были отправлены запросы на создание документа
+         - IN_WORK - отпралены один или несколько запросов по созданию документа, но получены не все ответы
+         - FAILED - один или несколько запросов на создание документа потерпели неудачу, терминальный статус
+         - COMPLETED - все запросы по созданию документа отработали успешно, терминальный статус
+         - VALIDATION_CHECK - проверка атрибутов документа завершилась успешно
+         - VALIDATION_ERROR - ошибка проверки атрибутов документа
+         Описание возможных переходов:
+         * ACCEPTED - запрос прошел валидацию,  иначе ошибка HTTP
+         * ACCEPTED - IN_WORK - отправлен как минимум 1 запрос на создание документа
+         * ACCEPTED - FAILED - *- не удалось отправить как минимум один запрос на создание документа в течении N времени за X попыток
+         * IN_WORK - FAILED - *  - получили как минимум одну ошибку по запросу на создание документа
+         * IN_WORK - COMPLETED - * - операция по созданию документа выполнена успешно, получен documentId
+
+      enum:
+        - ACCEPTED
+        - IN_WORK
+        - FAILED
+        - COMPLETED
+        - VALIDATION_CHECK
+        - VALIDATION_ERROR
+      example: IN_WORK
+      x-tags:
+        - enum
+    EmployeeExternal:
+      title: Внешний идентификатор сотрудника в организации
+      type: object
+      description: Внешний идентификатор сотрудника в организации
+      additionalProperties: false
+      properties:
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        isWorkingState:
+          type: boolean
+          description: Признак того, что сотрудник работает в Организации на момент отправки данных. true - сотрудник работает
+          example: true
+        tenant:
+          $ref: '#/components/schemas/TenantCode'
+      required:
+        - externalId
+        - tenant
+    DocumentRecipient:
+      title: Получатель документа
+      type: object
+      description: Получетель документа. Иденфтиктор сотрудника и признак Копия
+      additionalProperties: false
+      properties:
+        copy:
+          type: boolean
+          description: Признак того, что сотрудник будет стоять в копии. true - значит сотрудник стоит в копии
+          example: true
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        isWorkingState:
+          type: boolean
+          description: Признак того, что сотрудник работает в Организации на момент отправки данных. true - сотрудник работает
+          example: true
+        tenant:
+          $ref: '#/components/schemas/TenantCode'
+      required:
+        - copy
+        - externalId
+        - tenant
+    DocumentItem:
+      title: Часть документа
+      description: Часть документа. Текст абзаца документа без форматирования.
+      type: object
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 2000
+          minLength: 0
+          description: Текст абзаца документа
+          example: Мама мыла раму.
+        sortOrder:
+          type: number
+          description: Порядок сортировки абзаца в документе.
+          format: double
+          minimum: 1
+          maximum: 4294967296
+          example: 1.5
+      required:
+        - text
+        - sortOrder
+    Executor:
+      title: Исполнитель в маршруте согласования
+      description: Исполнитель в маршруте согласования. Последовательное согласованиею
+      type: object
+      additionalProperties: false
+      properties:
+        sortOrder:
+          type: integer
+          description: Порядок сортировки согласующего в маршруте. Порядок согласования.
+          format: int32
+          minimum: 1
+          example: 4
+          maximum: 2147483647
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        isWorkingState:
+          type: boolean
+          description: Признак того, что сотрудник работает в Организации на момент отправки данных. true - сотрудник работает
+          example: true
+        tenant:
+          $ref: '#/components/schemas/TenantCode'
+      required:
+        - sortOrder
+        - externalId
+        - tenant
+    AgreementRoute:
+      title: Маршрут согласования
+      description: Маршрут согласования. Список сотрудников, согласующих документ. Совроводиетльный текст. Маршрут только последовательный.
+      type: object
+      additionalProperties: false
+      properties:
+        accompanyingAgreementText:
+          type: string
+          pattern: ^(.)*$
+          description: Сопроводительный текст согласования
+          maxLength: 1000
+          example: Сопроводительный текст согласования
+        accompanyingApprovalText:
+          type: string
+          pattern: ^(.)*$
+          description: Сопроводительный текст утвержения
+          example: Сопроводительный текст утвержения
+          maxLength: 1000
+        executorList:
+          type: array
+          description: Список согласущих сотрудников
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Executor'
+      required:
+        - executorList
+    FileMeta:
+      title: Мета описание файла документа, приложения, подписи
+      type: object
+      description: Файл документа, приложения, подписи. Мета описание файла.
+      additionalProperties: false
+      properties:
+        fileName:
+          type: string
+          description: Полное наименование файла приложения
+          example: Документ.docx
+          maxLength: 1000
+          pattern: ^(.)*$
+        extension:
+          $ref: '#/components/schemas/FileExtension'
+        actualSizeBytes:
+          type: integer
+          format: int64
+          description: Размер файла вложения (в байтах). Максимальный размер файла в формате Base64 не более 10 Мб
+          example: 512
+          minimum: 4
+          maximum: 2147483647
+        signatureFiles:
+          type: array
+          description: Список файлов подписи к файлу
+          maxItems: 3
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/SignatureFile'
+      required:
+        - fileName
+        - extension
+        - actualSizeBytes
+    ArchiveContentFile:
+      title: Описание файла внутри архива
+      type: object
+      description: Описание файла внутри архива документа, приложения
+      additionalProperties: false
+      properties:
+        fileName:
+          type: string
+          description: Полное наименование файла приложения
+          example: Документ.docx
+          maxLength: 1000
+          pattern: ^(.)*$
+        extension:
+          $ref: '#/components/schemas/FileExtension'
+        actualSizeBytes:
+          type: integer
+          format: int64
+          description: Размер файла вложения (в байтах). Максимальный размер файла в формате Base64 не более 10 Мб
+          example: 512
+          minimum: 4
+          maximum: 2147483647
+        signatureFiles:
+          type: array
+          description: Список файлов подписи к файлу
+          maxItems: 3
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/SignatureFile'
+        fileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор файла
+          example: c53336ba-b079-478a-b81e-1746753450ec
+        fileType:
+          $ref: '#/components/schemas/FileType'
+      required:
+        - fileId
+        - fileName
+        - extension
+        - actualSizeBytes
+        - fileType
+    FileState:
+      title: Статус файла к документу в SberDocs
+      description: Статус приложения к документу
+      type: object
+      additionalProperties: false
+      properties:
+        fileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор файла
+          example: c53336ba-b079-478a-b81e-1746753450ec
+        fileType:
+          $ref: '#/components/schemas/FileType'
+        state:
+          type: string
+          pattern: ^[A-Z_]*$
+          maxLength: 100
+          description: Код статуса файла (&lt;code&gt;[Подробнее](https://confluence.sberbank.ru/display/CSEODO/State+Machine)&lt;/code&gt;)
+          example: DELETED
+      required:
+        - fileId
+        - fileType
+        - state
+    SourceSystemCode:
+      title: Код системы источника
+      type: string
+      description: Код системы источника документа
+      enum:
+        - SENAT # АС Сенат
+        - MRE # АС МЧД
+        - HORACE # АС "Гораций"
+        - SBERCOST # АС Фиори
+        - SBER_ORM # Управление операционным риском
+        - PPRB_CM_FL # АС ППРБ Кредитная машина ФЛ для ФП Риск Параметры
+        - ESP #АС Единая система проектирования (ARIS)
+      example: SENAT
+      x-tags:
+        - enum
+    FileExtension:
+      title: Код расширения для файла
+      description: Расширение файла
+      type: string
+      enum:
+        - PDF
+        - PPDF
+        - JPEG
+        - PJPEG
+        - JPG
+        - PJPG
+        - TIF
+        - PTIF
+        - TIFF
+        - PTIFF
+        - DOCX
+        - XLSX
+        - PPTX
+        - ZIP
+        - XML
+        - PGIF
+        - PBMP
+        - PPNG
+        - PXML
+        - PTXT
+        - PNG
+        - TXT
+        - GIF
+        - BMP
+        - EML
+      example: PDF
+      x-tags:
+        - enum
+    ServerError:
+      title: Ошибка
+      type: object
+      description: Ошибка обработки запроса на сервере
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          description: Непосредственный сервис источник ошибки
+          example: ms-document-adapter
+          pattern: ^(.)*$
+          maxLength: 1000
+        errorCode:
+          type: string
+          description: Код ошибки
+          pattern: ^(.)*$
+          maxLength: 100
+          example: fatal
+        errorStacktrace:
+          type: string
+          pattern: ^(.)*$
+          description: Детальное описание ошибки от серевера
+          example: org.springframework.web.HttpRequestMethodNotSupportedException
+          maxLength: 1000
+        userMessage:
+          type: string
+          pattern: ^(.)*$
+          description: Бизнес описание ошибки
+          maxLength: 1000
+          example: Request method 'GET' not supported
+      required:
+        - errorCode
+        - userMessage
+        - source
+    DocumentJobRequest:
+      title: Запрос задания на создание нового документа
+      type: object
+      description: Запрос задания на создание нового документа
+      additionalProperties: false
+      properties:
+        externalDocumentId:
+          type: string
+          description: Уникальный идентификатор, номер документа во внешней АС Банка
+          example: №2056/кр-22
+          pattern: ^(.)*$
+          maxLength: 100
+        type:
+          $ref: '#/components/schemas/DocumentTypeCode'
+        kind:
+          $ref: '#/components/schemas/DocumentKindCode'
+        urgency:
+          $ref: '#/components/schemas/DocumentUrgencyCode'
+        senderList:
+          type: array
+          description: Подписанты документа или отправители документа. Не более 3 сотрудников. Автоматически попадают в маршрут согласования как подписанты
+          uniqueItems: true
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+        recipientList:
+          type: array
+          description: Получатели документа после регистарции на этапе исполнения. Максимальное количество 1000 сотрудников.
+          uniqueItems: true
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/DocumentRecipient'
+        additionalAuthorList:
+          type: array
+          description: Список дополнительных авторов документа, но не более 2 сотрудников.
+          uniqueItems: true
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+        author:
+          $ref: '#/components/schemas/EmployeeExternal'
+        summary:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 500
+          description: Краткое содержание документа
+          example: Утверждение
+        documentItemList:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список частей документа
+          items:
+            $ref: '#/components/schemas/DocumentItem'
+        route:
+          $ref: '#/components/schemas/AgreementRoute'
+        attachmentList:
+          type: array
+          description: Список файлов приложений. До 100 файлов. Сововкупный максимальный объем файлов обсуждается отдельно с каждым поставщиком.
+          uniqueItems: true
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/FileContent'
+        documentFile:
+          $ref: '#/components/schemas/FileContent'
+        hasSignatureDetached:
+          type: boolean
+          description: Признак наличия открепленной подписи у файла основного документа. true - есть одна или несколько открепленных подписей
+          example: true
+        hasRmsProtected:
+          type: boolean
+          description: Признак наличия RMS шифрования. true - файл зашифрован RMS.
+          example: true
+        externalDocumentSource:
+          $ref: '#/components/schemas/SourceSystemCode'
+        committee:
+          type: string
+          description: Код отношения к коллегиальному органу
+          maxLength: 255
+          example: COMMITTEE_GROUP_RISK
+          pattern: ^[A-Z0-9_].*$
+        registration:
+          $ref: '#/components/schemas/Registration'
+        restrictions:
+          $ref: '#/components/schemas/Restrictions'
+      required:
+        - externalDocumentId
+        - type
+        - kind
+        - senderList
+        - recipientList
+        - author
+        - summary
+        - hasSignatureDetached
+        - hasRmsProtected
+        - externalDocumentSource
+    DocumentEditedRequest:
+      title: Запрос на редактирование документа
+      type: object
+      description: Запрос на редактирование документа
+      additionalProperties: false
+      properties:
+        externalDocumentId:
+          type: string
+          description: Уникальный идентификатор, номер документа во внешеней АС Банка
+          example: №2056/кр-22
+          pattern: ^(.)*$
+          maxLength: 100
+        urgency:
+          $ref: '#/components/schemas/DocumentUrgencyCode'
+        senderList:
+          type: array
+          description: Подписанты документа или отправители документа. Не более 3 сотрудников. Автоматически попадают в маршрут согласования как подписанты
+          uniqueItems: true
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+        recipientList:
+          type: array
+          description: Получатели документа после регистарции на этапе исполнения. Максимальное количество 1000 сотрудников.
+          uniqueItems: true
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/DocumentRecipient'
+        additionalAuthorList:
+          type: array
+          description: Список дополнительных авторов документа, но не более 2 сотрудников.
+          uniqueItems: true
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+        author:
+          $ref: '#/components/schemas/EmployeeExternal'
+        summary:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 500
+          description: Краткое содержание документа
+          example: Утверждение
+        documentItemList:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список частей документа
+          items:
+            $ref: '#/components/schemas/DocumentItem'
+        route:
+          $ref: '#/components/schemas/AgreementRoute'
+        attachmentList:
+          type: array
+          description: Список файлов приложений. До 100 файлов. Сововкупный максимальный объем файлов обсуждается отдельно с каждым поставщиком.
+          uniqueItems: true
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/FileContent'
+        documentFile:
+          $ref: '#/components/schemas/FileContent'
+        hasSignatureDetached:
+          type: boolean
+          description: Признак наличия открепленной подписи у файла основного документа. true - есть одна или несколько открепленных подписей
+          example: true
+        hasRmsProtected:
+          type: boolean
+          description: Признак наличия RMS шифрования. true - файл зашифрован RMS.
+          example: true
+        externalDocumentSource:
+          $ref: '#/components/schemas/SourceSystemCode'
+        committee:
+          type: string
+          description: Код отношения к коллегиальному органу
+          maxLength: 255
+          example: COMMITTEE_GROUP_RISK
+          pattern: ^[A-Z0-9_].*$
+        restrictions:
+          $ref: '#/components/schemas/Restrictions'
+      required:
+        - externalDocumentId
+        - senderList
+        - recipientList
+        - author
+        - summary
+        - hasSignatureDetached
+        - hasRmsProtected
+        - externalDocumentSource
+    DocumentFile:
+      title: Файл документа.
+      type: object
+      description: Файл документа или приложения и при наличии список подписей файла
+      additionalProperties: false
+      properties:
+        fileMeta:
+          $ref: '#/components/schemas/FileMeta'
+        content:
+          type: string
+          description: Строка контента с содержимым файла в формате base64
+          example: sdfsdfsfdf34534t4tfdsdfhdfhfgdsgsdfsdfsdf==
+          minLength: 0
+          maxLength: 52428800
+          pattern: ^(.)*$
+        fileType:
+          $ref: '#/components/schemas/FileType'
+        fileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор файла
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          maxLength: 36
+      required:
+        - fileType
+        - fileMeta
+        - fileId
+        - content
+    FileContent:
+      title: Файл документа с содержимым
+      type: object
+      description: Файл документа с содержимым
+      additionalProperties: false
+      properties:
+        file:
+          $ref: '#/components/schemas/FileMeta'
+        content:
+          type: string
+          maxLength: 52428800
+          pattern: ^(.)*$
+          description: Строка контента с содержимым файла в формате base64
+          example: sdfsdfsfdf34534t4tfdsdfhdfhfgdsgsdfsdfsdf==
+          minLength: 0
+        fileType:
+          $ref: '#/components/schemas/FileType'
+      required:
+        - fileType
+        - file
+    SignatureFile:
+      title: Файл подписи
+      type: object
+      description: Файл подписи и мета описание файла который подписали.
+      additionalProperties: false
+      properties:
+        fileName:
+          type: string
+          description: Наименование файла подписи
+          example: Документ.docx.sig
+          maxLength: 1000
+          pattern: ^(.)*$
+        extension:
+          type: string
+          description: Расширение файла подписи
+          example: SIG
+          maxLength: 1000
+          pattern: ^[A-Z0-9].*$
+        actualSizeBytes:
+          type: integer
+          format: int64
+          description: Размер файла подписи (в байтах)
+          example: 512
+          minimum: 4
+          maximum: 2147483647
+        isQualified:
+          type: boolean
+          description: Признак, является ли подпись квалифицированной (УКЭП) или нет (УНЭП). true - подпись сформирована при помощи квалифицированного сертификата
+          example: true
+        signatureStandart:
+          type: string
+          description: Стандарт сформированной подписи. CADES_BES или CADES_T
+          pattern: ^[A-Z-_]*$
+          maxLength: 255
+          example: CADES_BES
+        signatureForFileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          description: Идентификатор файла в Системе для которого передается подпись
+          maxLength: 36
+        signatureForFileName:
+          type: string
+          description: Наименование файла который подписали
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Документ.docx
+        content:
+          type: string
+          description: Содержиое файла подписи в кодировке base64
+          example: jsdofgjsou3un53i935nf934n2984r==
+          maxLength: 52428800
+          pattern: ^(.)*$
+        signer:
+          type: string
+          description: Фамилия Имя Отчество подписанта
+          example: Иванов Сергей Аркадьевич
+          pattern: ^(.)*$
+          maxLength: 500
+        sortOrder:
+          type: integer
+          description: Порядок подписания файла.
+          format: int32
+          minimum: 1
+          maximum: 3
+          example: 2
+      required:
+        - fileName
+        - isQualified
+        - signatureStandart
+        - signatureForFileName
+        - content
+        - signer
+    CmsFileContent:
+      title: Контейнер с файлом подписи в формате CMS
+      type: object
+      description: Контейнер с файлом подписи в формате CMS
+      additionalProperties: false
+      properties:
+        signatureForFileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          description: Идентификатор файла в Системе для которого передается подпись
+          maxLength: 36
+        signatureForFileName:
+          type: string
+          description: Наименование файла который подписали
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Документ.docx
+        cmsContent:
+          type: string
+          description: Содержиое подписи формата CMS в кодировке base64
+          example: jsdofgjsou3un53i935nf934n2984r==
+          maxLength: 52428800
+          pattern: ^(.)*$
+          minLength: 0
+        signFormat:
+          $ref: '#/components/schemas/SignFormat'
+        isDetached:
+          type: boolean
+          description: Признак отсоединенной подписи. false – присоединенная подпись. Значение по умолчанию true
+          example: true
+      required:
+        - signatureForFileId
+        - signatureForFileName
+        - cmsContent
+        - signFormat
+        - isDetached
+    SignFormat:
+      title: SignFormat
+      type: string
+      description: Формат подписи
+      enum:
+        - CADES_T
+        - CADES_BES
+        - UNDEFINED_WITH_STAMP
+        - UNDEFINED_WITHOUT_STAMP
+        - UNDEFINED
+      example: CADES_T
+      x-tags:
+        - enum
+    ArchiveFile:
+      title: Файл с архивом
+      type: object
+      description: Архив с файлами и мета описанием содержания архива
+      additionalProperties: false
+      properties:
+        fileName:
+          type: string
+          description: Наименование архива с файлами документа
+          example: Документ.ZIP
+          maxLength: 1000
+          pattern: ^(.)*$
+        extension:
+          $ref: '#/components/schemas/FileExtension'
+        actualSizeBytes:
+          type: integer
+          format: int64
+          description: Размер файла вложения (в байтах). Максимальный размер файла в формате Base64 не более 10 Мб
+          example: 512
+          minimum: 4
+          maximum: 2147483647
+        content:
+          type: string
+          maxLength: 52428800
+          pattern: ^(.)*$
+          description: Строка контента с содержимым файла архива в формате base64
+          example: sdfsdfsfdf34534t4tfdsdfhdfhfgdsgsdfsdfsdf==
+          minLength: 0
+        archiveContents:
+          type: array
+          maxItems: 100
+          description: Содержимое архива
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ArchiveContentFile'
+      required:
+        - fileName
+        - extension
+        - content
+        - archiveContents
+    FileType:
+      title: Тип файла к документу в SberDocs
+      type: string
+      description: Тип файла к документу в SberDocs
+      maxLength: 255
+      pattern: ^[0-9A-Z_]*$
+      enum:
+        - DOCUMENT
+        - ATTACHMENT
+      example: DOCUMENT
+      x-tags:
+        - enum
+    DocumentJobResponse:
+      title: Ответ на запрос задания по созданию нового документа
+      type: object
+      description: Ответ на запрос задания по созданию нового документа
+      additionalProperties: false
+      properties:
+        externalDocumentId:
+          type: string
+          pattern: ^(.)*$
+          description: Уникальный идентификатор, номер документа во внешеней АС Банка
+          example: №2056/кр-22
+          maxLength: 100
+        jobId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор задания по добавлению нового доукмента
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          maxLength: 36
+        jobState:
+          $ref: '#/components/schemas/DocumentJobState'
+        descriptionMessage:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          description: Сообщение с описанием статуса в случае ошибки или в процессе обработки. Отправляется когда jobState in (IN_WORK, FAILED)
+          example: Ошибка создания документа, табельный номер автора документа отсутствует в Системе.
+        documentId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор нового документа в Системе. Отправляется когда jobState in (IN_WORK, COMPLETED)
+          example: c53336ba-b079-478a-b81e-1746753450ec
+        systemNumber:
+          type: string
+          pattern: ^(.)*$
+          description: Номер документа в Системе. Уникальный бизнес-идентификатор документа в организации-tenant. Отправляется когда jobState == COMPLETED
+          example: Сн-ЦА/1-21
+          maxLength: 255
+        tenant:
+          $ref: '#/components/schemas/TenantCode'
+      required:
+        - jobId
+        - externalDocumentId
+        - jobState
+    DocumentJobStateResponse:
+      title: Ответ на запрос статуса задания по созданию нового документа
+      type: object
+      description: Ответ на запрос статуса задания по созданию нового документа
+      additionalProperties: false
+      properties:
+        jobState:
+          $ref: '#/components/schemas/DocumentJobState'
+        descriptionMessage:
+          type: string
+          maxLength: 1000
+          description: Сообщение с описанием статуса в случае ошибки или в процессе обработки. Отправляется когда jobState in (IN_WORK, FAILED)
+          example: Ошибка создания документа, табельный номер автора документа отсутствует в Системе.
+          pattern: ^(.)*$
+        externalDocumentId:
+          type: string
+          description: Уникальный идентификатор, номер документа во внешеней АС Банка
+          example: №2056/кр-22
+          pattern: ^(.)*$
+          maxLength: 255
+        documentId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор нового документа в Системе. Отправляется когда jobState in (IN_WORK, COMPLETED)
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          maxLength: 36
+        systemNumber:
+          type: string
+          description: Номер документа в Системе. Уникальный бизнес-идентификатор документа в организации-tenant. Отправляется когда jobState == COMPLETED
+          example: Сн-ЦА/1-21
+          maxLength: 255
+          pattern: ^(.)*$
+        tenant:
+          type: string
+          maxLength: 255
+          description: Код оршанизации, например SBERBANK
+          example: SBERBANK
+          pattern: ^[A-Z_]*$
+        documentExternalUrl:
+          type: string
+          description: Ссылка на документ для открытия в сегменте sigma
+          example: https://sberdocs.sberbank.ru/document/c53336ba-b079-478a-b81e-1746753450ec
+          pattern: ^(.)*$
+          maxLength: 1000
+        documentInternalUrl:
+          type: string
+          description: Ссылка на документ для открытия в сегменте alpha/omega
+          example: https://sberdocs.ca.sberbank.ru/document/c53336ba-b079-478a-b81e-1746753450ec
+          pattern: ^(.)*$
+          maxLength: 1000
+        fileList:
+          type: array
+          description: Список идентификаторов приложений к документу. Отправляется когда jobState == COMPLETED и был добавлен файл приложения
+          uniqueItems: true
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/FileState'
+      required:
+        - jobState
+        - externalDocumentId
+    DocumentStateResponse:
+      title: Ответ со статусом документа
+      type: object
+      description: Ответ со статусом документа и приложений
+      additionalProperties: false
+      properties:
+        documentState:
+          type: string
+          description: Код статуса документа в SberDocs. Описание (&lt;code&gt; [Описание и переходы](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6498167231)&lt;/code&gt;)
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+          example: DRAFT
+        systemNumber:
+          type: string
+          description: Номер документа в Системе. Уникальный бизнес-идентификатор документа в организации-tenant. Отправляется когда jobState == COMPLETED
+          example: Сн-ЦА/1-21
+          pattern: ^(.)*$
+          maxLength: 255
+        stateName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          description: Бизнес-описание статуса документа. Колонка "Бизнес-состояние" смотри описание (&lt;code&gt; [Описание и переходы](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6498167231)&lt;/code&gt;)
+          example: Согласование
+        documentVersionsState:
+          description: Статус версий документа при согласовании/подписании документа
+          deprecated: true
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/DocumentVersionState'
+        approvalSheetId:
+          description: Идентификатор маршрута согласования
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          maxLength: 36
+      required:
+        - documentState
+        - systemNumber
+    DocumentByTaskStateResponse:
+      title: Ответ со статусом документа по задаче
+      type: object
+      description: Ответ со статусом документа и приложений по задаче
+      additionalProperties: false
+      properties:
+        documentState:
+          type: string
+          description: Код статуса документа в SberDocs. Описание (&lt;code&gt; [Описание и переходы](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6498167231)&lt;/code&gt;)
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+          example: DRAFT
+        systemNumber:
+          type: string
+          description: Номер документа в Системе. Уникальный бизнес-идентификатор документа в организации-tenant. Отправляется когда jobState == COMPLETED
+          example: Сн-ЦА/1-21
+          pattern: ^(.)*$
+          maxLength: 255
+        stateName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          description: Бизнес-описание статуса документа. Колонка "Бизнес-состояние" смотри описание (&lt;code&gt; [Описание и переходы](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6498167231)&lt;/code&gt;)
+          example: Согласование
+        documentVersionsState:
+          description: Статус версий документа при согласовании/подписании документа
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/DocumentVersionState'
+        approvalSheetId:
+          description: Идентификатор маршрута согласования
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          maxLength: 36
+      required:
+        - documentState
+        - systemNumber
+        - documentVersionsState
+    DocumentVersionState:
+      title: Статус версии документа/задания по документу
+      description: Статус версии документа/задания по документу с указанием исполнителя
+      type: object
+      additionalProperties: false
+      properties:
+        state:
+          type: string
+          description: Код статуса версии документа - задания по документу. (&lt;code&gt;[Подробнее](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6893110242)&lt;/code&gt;)
+          example: IN_WORK
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+        stateName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          description: Бизнес описание статуа документа. Колонка "Бизнес-состояние" на странице (&lt;code&gt;[Подробнее](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6893110242)&lt;/code&gt;)
+          example: На распределении
+        canSigning:
+          type: boolean
+          description: Признак возможности подписать документ данной версии документа. true - подписание допустимо, false - нет
+          example: true
+        taskId:
+          type: string
+          description: Идентификатор задания по версии документа
+          example: 3bd27c92-5eb6-4b8e-a67d-493a4935702a
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          maxLength: 36
+        taskType:
+          type: string
+          description: Тип задания AGREEMENT - Задание на согласование, APPROVAL - задание на подписание, EXECUTION - задание на исполнение, EXECUTION_BY_POINT - задание на исполнение по пункту,    ASSIGNMENT_POINT - задание на исполнение по пункту инициативного поручения, AGREEMENT_DECISION - задание на автора документа для принятия решения
+          maxLength: 255
+          example: APPROVAL
+          pattern: ^[A-Z_]*$
+        executorName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Фамилия Имя Отчество (полностью) испонителя
+          example: Спиридонов Андрей Владимирович
+        executorExternalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе - исполнитель по документу, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        reason:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 5000
+          description: Комментарий исполнителя - причина, по которой пользователь отклонил документ. Заполняется если state = REJECTED
+          example: Содеражтельная часть основного документа не соответвует материалам в приложениях к документу
+      required:
+        - state
+        - canSigning
+        - taskId
+        - executorName
+        - executorExternalId
+        - taskType
+    DocumentVersionStateResponse:
+      title: Ответ со статусом версии документа
+      type: object
+      description: Ответ со статусом версии документа - статус задания по документу
+      additionalProperties: false
+      properties:
+        documentVersionState:
+          $ref: '#/components/schemas/DocumentVersionState'
+      required:
+        - documentVersionState
+    DocumentActualInfoResponse:
+      title: Ответ с информацией об актуальной версии документа
+      type: object
+      description: Ответ с информацией о документе (актуальной версии)
+      additionalProperties: false
+      properties:
+        documentId:
+          type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Идентификатор документа
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        versionId:
+          type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Идентификатор версии документа
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        typeCode:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 30
+          description: Код типа документа
+          example: INTERNAL
+        typeName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 200
+          description: Тип документа
+          example: Внутренний документ
+        kindCode:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 30
+          description: Код вида документа
+          example: MEMORANDUM
+        kindName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 200
+          description: Вид документа
+          example: Служебная записка
+        documentCreatedAt:
+          type: string
+          example: '2025-01-15T01:30:15.01Z'
+          description: Дата и время создания документа
+          format: date-time
+        systemNumber:
+          type: string
+          description: Номер документа в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Сн-ЦА/1-21
+        registerNumber:
+          nullable: true
+          type: string
+          description: Регистрационный номер документа в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Сн-ЦА/1-21
+        privacyList:
+          type: array
+          description: Список видов информации документа.
+          uniqueItems: true
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocumentPrivacy'
+        summary:
+          type: string
+          description: Краткое содержание документа
+          maxLength: 5000
+          pattern: ^(.)*$
+          example: Служебная записка по проекту ...
+        documentState:
+          type: string
+          description: Код статуса документа в SberDocs. Описание (&lt;code&gt; [Описание и переходы](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6498167231)&lt;/code&gt;)
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+          example: DRAFT
+        AiRetelling:
+          $ref: '#/components/schemas/AiRetelling'
+      required:
+        - documentId
+        - versionId
+        - typeName
+        - typeCode
+        - kindName
+        - kindCode
+        - documentCreatedAt
+        - systemNumber
+        - registerNumber
+        - privacyList
+        - summary
+        - documentState
+        - AiRetelling
+    AiRetelling:
+      title: Данные о пересказе
+      type: object
+      description: Данные о пересказе
+      nullable: true
+      additionalProperties: false
+      properties:
+        isSucceeded:
+          type: boolean
+          description: Признак успеха получения пересказа документа
+          example: true
+        aiRetelling:
+          type: string
+          pattern: ^(.|\n|\t|\s)*$
+          maxLength: 5000
+          description: Текст пересказ документа сформированный AI или описание проблемы получения пересказа (при isSucceeded = false )
+          example: Документ описывает процесс ...
+      required:
+        - isSucceeded
+        - aiRetelling
+    DocumentFilesResponse:
+      title: Ответ с данными о файлах документа
+      type: object
+      description: Ответ с данными о файлах документа
+      additionalProperties: false
+      properties:
+        hasRmsProtected:
+          type: boolean
+          description: Признак того, что файлы документа (основной документ и приложения к документу) передаются под защитой SberIRM. true - файлы зашифрованы, false - файлы без шифрации
+          example: true
+        documentFiles:
+          type: array
+          description: Список запрашиваемых файлов документа
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/DocumentFile'
+        documentHeader:
+          $ref: '#/components/schemas/DocumentHeader'
+      required:
+        - hasRmsProtected
+        - documentFiles
+        - documentHeader
+    DocumentFilesArchiveResponse:
+      title: Ответ с данными о файлах документа в архиве
+      type: object
+      description: Ответ с данными о файлах документа  в архиве ZIP
+      additionalProperties: false
+      properties:
+        hasRmsProtected:
+          type: boolean
+          description: Признак того, что файлы документа (основной документ и приложения к документу) передаются под защитой SberIRM. true - файлы зашифрованы, false - файлы без шифрации
+          example: true
+        archiveFile:
+          $ref: '#/components/schemas/ArchiveFile'
+        documentHeader:
+          $ref: '#/components/schemas/DocumentHeader'
+      required:
+        - hasRmsProtected
+        - archiveFile
+    SignatureFilesResponse:
+      title: Ответ с данными о файлах подписи к документу
+      type: object
+      description: Ответ с данными о файлах документа
+      additionalProperties: false
+      properties:
+        signatureFiles:
+          type: array
+          description: Значение заполняется если в параметрах запроса указано onlySignature = true для выбранных типов файлов fileTypes, при любых значениях includeSignature, mustZipArchive
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/SignatureFile'
+        documentHeader:
+          $ref: '#/components/schemas/DocumentHeader'
+      required:
+        - signatureFiles
+        - documentHeader
+    ProtectedFilesInfoResponse:
+      title: Ответ с информацией по зашифрованным файлам задачи
+      type: object
+      description: Ответ с метаинформацией по зашифрованным файлам задачи
+      additionalProperties: false
+      properties:
+        systemNumber:
+          type: string
+          description: Номер документа в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Сн-ЦА/1-21
+        kindName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Наименование вида документа
+          example: Решение комитета по рискам...
+        content:
+          type: array
+          description: Список файлов
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ProtectedFileInfo'
+    ProtectedFileInfo:
+      title: Информация по зашифрованному файлу документа
+      type: object
+      additionalProperties: false
+      properties:
+        fileName:
+          type: string
+          description: Название файла в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Документ
+        extension:
+          $ref: '#/components/schemas/FileExtension'
+        actualSizeBytes:
+          type: integer
+          format: int64
+          description: Размер файла вложения (в байтах). Максимальный размер файла в формате Base64 не более 10 Мб
+          example: 512
+          minimum: 1
+          maximum: 2147483647
+        fileType:
+          $ref: '#/components/schemas/FileType'
+        fileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: c53336ba-b079-478a-b81e-1746753450ec
+          description: Идентификатор файла в Системе
+          maxLength: 36
+        link:
+          type: string
+          description: Ссылка на файл в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: /public/Gateway/attachment/{fileId}/encrypted-for-employee-content?taskId={taskId}
+      required:
+        - fileType
+        - fileName
+        - extension
+        - fileId
+        - link
+    FilesVersionSigningRequest:
+      title: Запрос на подписание файлов документа
+      type: object
+      description: Запрос на подписание файлов документа определенной версии
+      additionalProperties: false
+      properties:
+        versionId:
+          type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Идентификатор версии документа
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        cmsFilesContent:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          minItems: 1
+          description: Список файлов подписей
+          items:
+            $ref: '#/components/schemas/CmsFileContent'
+      required:
+        - cmsFilesContent
+        - versionId
+    FilesVersionRejectRequest:
+      title: Запрос по отклонению версии файлов документа
+      type: object
+      description: Запрос по отклонению версии файлов документа
+      additionalProperties: false
+      properties:
+        versionId:
+          type: string
+          pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          description: Идентификатор версии документа
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        reason:
+          type: string
+          description: Текст причины отклонения
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Документ отклонен
+        decisions:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список решений по файлам
+          items:
+            $ref: '#/components/schemas/FileRejectDecision'
+      required:
+        - versionId
+    SignatureFilesSendRequest:
+      title: Запрос на отправку файлов подписей для файлов документа по заданию
+      type: object
+      description: Запрос на отправку файлов подписей для файлов документа по заданию
+      additionalProperties: false
+      properties:
+        cmsFilesContent:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          minItems: 1
+          description: Список файлов подписей
+          items:
+            $ref: '#/components/schemas/CmsFileContent'
+      required:
+        - cmsFilesContent
+    SigningFilesRejectionRequest:
+      title: Запрос на отказ в подписаниии файлов документа по заданию
+      type: object
+      description: Запрос на отказ в подписаниии файлов документа по заданию
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          description: Текст причины отклонения
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Документ отклонен
+        decisions:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список решений по файлам
+          items:
+            $ref: '#/components/schemas/FileRejectDecision'
+    FileRejectDecision:
+      title: Решение по отклонению файла
+      type: object
+      description: Решение по отклонению файла при принятии решения
+      additionalProperties: false
+      properties:
+        fileId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Уникальный идентификатор файла в Системе
+          example: 4411af33-67a4-434d-a5c5-b1b1bc08b5b7
+          maxLength: 36
+        decisionComment:
+          type: string
+          description: Комментарий пользователя по факту отклонения файла
+          maxLength: 2000
+          example: Требуется учесть правки
+          pattern: ^(.)*$
+      required:
+        - fileId
+    Certificate:
+      type: object
+      title: Сертификат пользователя
+      description: Сертификат пользователя
+      additionalProperties: false
+      properties:
+        certType:
+          type: string
+          description: Тип сертификата
+          example: X509
+          pattern: ^(.)*$
+          maxLength: 255
+        certificate:
+          type: string
+          description: Сертификат, закодированный в base64
+          pattern: ^(.)*$
+          maxLength: 2147483640
+          example: 0JrQsNGA0YLQuNC90LrQsCDQtNC70Y8g0LfQsNCz0YDRg9C30LrQuCDQsiDQtNC+0LrRg9C80LXQvdGC
+        qualifiedType:
+          type: string
+          description: Данные о квалифицированности сертификата
+          example: NotQualified
+          pattern: ^(.)*$
+          maxLength: 255
+        fullName:
+          type: string
+          description: ФИО владельца сертификата полностью
+          example: Иванов Иван Иванович
+          pattern: ^(.)*$
+          maxLength: 255
+        started:
+          description: Дата начала действия сертификата
+          example: '2021-04-20'
+          type: string
+          pattern: ^[0-9-]*$
+          maxLength: 10
+        ended:
+          description: Дата окончания действия сертификата
+          example: '2021-04-20'
+          type: string
+          pattern: ^[0-9-]*$
+          maxLength: 10
+        position:
+          type: string
+          description: Должность владельца сертификата
+          example: Менеджер
+          pattern: ^(.)*$
+          maxLength: 500
+        bicryptKeyIdent:
+          type: string
+          description: Идентификатор Бикрипт
+          example: 00ca2103
+          pattern: ^(.)*$
+          maxLength: 255
+      required:
+        - certType
+        - certificate
+        - fullName
+        - started
+        - ended
+    CertificatesResponse:
+      type: object
+      title: Ответ с данными о сертификатах пользователя
+      description: Ответ с данными о сертификатах пользователя
+      additionalProperties: false
+      properties:
+        list:
+          type: array
+          description: Сертификаты
+          minItems: 1
+          maxItems: 100
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Certificate'
+        certStatus:
+          type: string
+          description: Статус сертификата
+          example: Good
+          pattern: ^(.)*$
+          maxLength: 255
+        cryptoNet:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          description: Список криптосетей в которых доступно подписание
+          items:
+            type: string
+            description: Криптосеть подписания
+            maxLength: 255
+            pattern: ^(.)*$
+            example: SBTJ 014
+        errorCode:
+          type: string
+          description: Код ошибки
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: ERR-10010
+        userMessage:
+          type: string
+          description: Сообщение, которое выводится пользователю
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: Сообщение пользователю
+      required:
+        - list
+    DocumentHeader:
+      type: object
+      title: Атрибуты карточки документа
+      description: Основные атрибуты карточки документа
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        kind:
+          $ref: '#/components/schemas/DocumentKind'
+        urgency:
+          $ref: '#/components/schemas/DocumentUrgencyCode'
+        privacyList:
+          type: array
+          description: Список видов информации документа.
+          uniqueItems: true
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocumentPrivacy'
+        summary:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 500
+          description: Краткое содержание документа
+          example: Утверждение
+        documentNumberList:
+          type: array
+          description: Список номеров документа
+          maxItems: 2
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/DocumentNumber'
+      required:
+        - type
+        - kind
+        - summary
+        - documentNumberList
+    DocumentNumber:
+      title: Номер документа
+      type: object
+      description: Структура системного или регистрационного номеров
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          pattern: ^[A-Z_]*$
+          example: SYSTEM
+          description: Код нумерации системный - SYSTEM; регистрационный - REGISTRATION
+          maxLength: 25
+        number:
+          type: string
+          description: Номер документа
+          example: Сн-ЦА/1-21
+          pattern: ^(.)*$
+          maxLength: 100
+        createdAt:
+          type: string
+          description: Дата и время выдачи номера
+          example: '2017-01-15T01:30:15.01Z'
+          format: date-time
+          maxLength: 255
+      required:
+        - code
+        - number
+    DocumentType:
+      title: Тип документа
+      type: object
+      description: Тип документа в SberDocs
+      additionalProperties: false
+      properties:
+        code:
+          $ref: '#/components/schemas/DocumentTypeCode'
+        name:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Наименование типа документа
+          example: Внутренний документ
+      required:
+        - code
+    DocumentKind:
+      title: Вид документа
+      type: object
+      description: Вид документа в SberDocs
+      additionalProperties: false
+      properties:
+        code:
+          $ref: '#/components/schemas/DocumentKindCode'
+        name:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Наименование вида документа
+          example: Служебная записка
+      required:
+        - code
+    DocumentPrivacy:
+      title: Вид информации документа
+      type: object
+      description: Вид информации документа в SberDocs
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Наименование вида информации документа
+          example: Банковская тайна
+        abbreviation:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 25
+          description: Аббревиатура вида информации в документе
+          example: ДВИ
+    CertificateVerifyResponse:
+      type: object
+      title: Ответ с результатом проверки сертификата по идентификатору BiCrypt_ID
+      description: Ответ с результатом проверки сертификата по идентификатору BiCrypt_ID
+      additionalProperties: false
+      properties:
+        certStatus:
+          type: string
+          description: Статус сертификата
+          example: Good
+          pattern: ^(.)*$
+          maxLength: 255
+        errorCode:
+          type: string
+          description: Код ошибки
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: ERR-10010
+        userMessage:
+          type: string
+          description: Сообщение, которое выводится пользователю
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: Сообщение пользователю
+      required:
+        - certStatus
+    HealthCheckResponse:
+      type: object
+      title: Ответ с результатом работоспособности сервиса public-gateway
+      description: Ответ с результатом работоспособности сервиса public-gateway
+      additionalProperties: false
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthCheckStatus'
+        message:
+          type: string
+          description: Сообщение о состоянии сервиса
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: Превышен лимит подлючений
+    HealthCheckStatus:
+      title: Статус  работоспособности сервиса
+      description: Статус  работоспособности сервиса
+      type: string
+      maxLength: 255
+      pattern: ^[0-9A-Z_]*$
+      enum:
+        - LIVING
+        - ACCESS_RESTRICTED
+        - NOT_READY_WRITE
+        - DEGRADED
+    RegistrationInfoOnDocumentRequest:
+      type: object
+      title: Запрос на редактирование информации о регистрации в документе
+      description: Запрос на редактирование информации о регистрации в документе. Передается или номер подразделения, или список регистраторов
+      additionalProperties: false
+      properties:
+        indexNumber:
+          type: string
+          description: Делопроизводительный индекс подразделения регистрации
+          example: ВВБ-1-1
+          pattern: ^(.)*$
+          maxLength: 255
+        registrarList:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          description: Список сотрудников регистраторов документа
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+    ApprovalSheetNode:
+      title: Узел листа согласования
+      description: Узел листа согласования
+      type: object
+      additionalProperties: false
+      properties:
+        executorName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Фамилия Имя Отчество (полностью) испонителя
+          example: Спиридонов Андрей Владимирович
+        executorExternalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе - исполнитель по документу, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        taskState:
+          type: string
+          description: Код статуса версии документа - задания по документу. (&lt;code&gt;[Подробнее](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6893110242)&lt;/code&gt;)
+          example: IN_WORK
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+        taskStateName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          description: Бизнес описание статуа документа. Колонка "Бизнес-состояние" на странице (&lt;code&gt;[Подробнее](https://confluence.sberbank.ru/pages/viewpage.action?pageId=6893110242)&lt;/code&gt;)
+          example: На распределении
+        comment:
+          type: string
+          description: Замечания по согласования
+          pattern: ^(.)*$
+          maxLength: 2000
+          example: Требуется поправить текст документа.
+        isChanged:
+          type: boolean
+          description: Признак изменения версии, true - изменения есть
+          example: true
+        taskId:
+          type: string
+          description: Идентификатор задания по версии документа
+          example: 3bd27c92-5eb6-4b8e-a67d-493a4935702a
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          maxLength: 36
+        taskType:
+          type: string
+          description: Тип задания AGREEMENT - Задание на согласование, APPROVAL - задание на подписание, EXECUTION - задание на исполнение, EXECUTION_BY_POINT - задание на исполнение по пункту,    ASSIGNMENT_POINT - задание на исполнение по пункту инициативного поручения, AGREEMENT_DECISION - задание на автора документа для принятия решения
+          maxLength: 255
+          example: APPROVAL
+          pattern: ^[A-Z_]*$
+        updatedAt:
+          type: string
+          example: '2017-01-15T01:30:15.01Z'
+          format: date-time
+          description: Дата и время изменения статуса задания
+          maxLength: 255
+        decisionAt:
+          type: string
+          description: Дата и время исполнения задания по версии документа
+          example: '2017-01-15T01:30:15.01Z'
+          format: date-time
+          maxLength: 255
+      required:
+        - executorName
+        - executorExternalId
+        - taskState
+        - taskType
+    ApprovalSheetResponse:
+      title: Ответ с данными о листе согласования
+      description: Последние 100 актуальных записей из актуального маршрута согласования при наличии
+      type: object
+      additionalProperties: false
+      properties:
+        nodeList:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список узлов/задач, включенных в лист согласования
+          items:
+            $ref: '#/components/schemas/ApprovalSheetNode'
+      required:
+        - nodeList
+    Registration:
+      title: Регистарция
+      type: object
+      description: Информация о месте регистрации документа. Определяется или по номеру подразделения регистрации или по табельному регистратора.
+      additionalProperties: false
+      properties:
+        indexNumber:
+          deprecated: true
+          type: string
+          description: Делопроизводительный индекс подразделения регистрации
+          example: ВВБ-1-1
+          pattern: ^(.)*$
+          maxLength: 255
+        registrarList:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          description: Список сотрудников регистраторов документа
+          items:
+            $ref: '#/components/schemas/EmployeeExternal'
+    Restrictions:
+      title: Ограничения на действия с документом
+      type: object
+      description: Перечень ограничений на действия с документом в АС SberDocs. Значение свойств actions, systemRoles, participants читаются через логическое И
+      additionalProperties: false
+      properties:
+        actions:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            description: Список действий с документом, которые требуется запретить. Список доуступных действий публикуется в confluence
+            pattern: ^[A-Z_]*$
+            example: CAN_EDIT_INTERNAL_DOCUMENT_BODY
+            maxLength: 50
+        systemRoles:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            description: Список системных ролей пользователя в АС SberDocs для которых требуется запретить actions. Если пусто, то  значит для всех ролей. Список системных ролей публикуется в confluence
+            pattern: ^[A-Z_]*$
+            example: EXECUTOR
+            maxLength: 50
+        participants:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            description: Список участников документа в АС SberDocs для которых требуется запретить actions. Если пусто, то  значит для всех участников документа. Список участников документа публикуется в confluence
+            pattern: ^[A-Z_]*$
+            example: APPROVAL_TASK_EXECUTOR
+            maxLength: 50
+      required:
+        - actions
+
+    SearchRequest:
+      type: object
+      title: SearchRequest
+      description: Запрос на поиск объектов Системы
+      additionalProperties: false
+      properties:
+        documentTypes:
+          type: array
+          maxItems: 10
+          description: Тип документа
+          items:
+            $ref: '#/components/schemas/DocumentTypeCode'
+        documentKinds:
+          type: array
+          maxItems: 100
+          description: Вид документа
+          items:
+            $ref: '#/components/schemas/DocumentKindCode'
+        documentStages:
+          type: array
+          maxItems: 20
+          description: Бизнес-стадии документа
+          items:
+            $ref: '#/components/schemas/DocumentStageCode'
+        indexNumberList:
+          type: array
+          maxItems: 100
+          description: Делопроизводительный индекс подразделения регистрации
+          items:
+            type: string
+            example: ВВБ-1-1
+            pattern: ^(.)*$
+            maxLength: 255
+        documentUrgency:
+          $ref: '#/components/schemas/DocumentUrgencyCode'
+        documentNumber:
+          type: string
+          description: Регистрационный номер или Системный номер (поиск по частичному соответствию)
+          pattern: ^(.)*$
+          maxLength: 25
+          example: Сн-ЦА/1-21
+        documentCreateDateFrom:
+          type: string
+          description: От даты создания документа
+          maxLength: 25
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          example: '2020-01-01'
+        documentCreateDateTo:
+          type: string
+          description: По дату создания документа
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          maxLength: 25
+          example: '2020-01-01'
+        registrationDateFrom:
+          type: string
+          description: От даты регистрации документа
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          maxLength: 25
+          example: '2020-01-01'
+        registrationDateTo:
+          type: string
+          description: По дату регистрации документа
+          maxLength: 25
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          example: '2020-01-01'
+        summary:
+          description: Краткое содержание (поиск по полному соответствию)
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: О создании закупки под проектирование
+        section:
+          type: string
+          description: Основной текст документа (поиск по полному соответствию)
+          pattern: ^(.)*$
+          example: Протоколы оперативных и тематических совещаний
+          maxLength: 255
+        attachmentFilename:
+          type: string
+          description: Имя файла приложения (поиск по полному соответствию)
+          pattern: ^(.)*$
+          example: attachment.txt
+          maxLength: 255
+        attachmentContent:
+          type: string
+          description: Контент файла приложения (поиск по полному соответствию)
+          pattern: ^(.)*$
+          example: Поручения выдаются руководителям Банка
+          maxLength: 255
+        commentContent:
+          type: string
+          description: Текст комментария (поиск по полному соответствию)
+          pattern: ^(.)*$
+          example: Выполнено и снято с контроля
+          maxLength: 255
+        authors:
+          type: array
+          description: Исполнители (авторы)
+          maxItems: 3
+          items:
+            type: string
+            description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер
+            example: 003234
+            pattern: ^(.)*$
+            maxLength: 255
+        senders:
+          type: array
+          description: Отправители (утверждающие)
+          maxItems: 3
+          items:
+            type: string
+            description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер
+            example: 003234
+            pattern: ^(.)*$
+            maxLength: 255
+        recipients:
+          description: Получатели
+          type: array
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/RecipientSearch'
+        addressee:
+          type: string
+          description: Адресат (поиск по подстроке - по наименованию, инн, огрн, огрнип)
+          example: Уют
+          pattern: ^(.)*$
+          maxLength: 1000
+        signer:
+          type: string
+          description: Подписант адресата (корреспондента) (поиск по частичному соответствию)
+          example: Иванов
+          pattern: ^(.)*$
+          maxLength: 1000
+        documentPrivacyList:
+          type: array
+          description: Список видов информации документа
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocumentPrivacyCode'
+        correspondent:
+          type: string
+          description: Корреспондент (поиск по подстроке - по наименованию, инн, огрн, огрнип)
+          example: Правительство
+          pattern: ^(.)*$
+          maxLength: 1000
+        text:
+          type: string
+          description: Текст для поиска
+          pattern: ^(.)*$
+          minLength: 1
+          example: Уют
+          maxLength: 255
+        searchBeginDate:
+          type: string
+          description: Дата последнего изменения объекта поиска, начиная с которой ищем
+          maxLength: 25
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          example: '2020-01-01'
+        outgoingDocumentNumber:
+          type: string
+          description: Исходящий номер документа при выборе типа документа "Входящий" (поиск по частичному соответствию)
+          maxLength: 100
+          pattern: ^(.)*$
+        pointRegistrationNumber:
+          type: string
+          description: Регистрационный номер пункта (поиск по частичному соответствию)
+          maxLength: 255
+          pattern: ^(.)*$
+        barcode:
+          type: string
+          description: Штрих-код (поиск по частичному соответствию)
+          maxLength: 100
+          pattern: ^(.)*$
+        dashedMailId:
+          type: string
+          description: Штриховый почтовый идентификатор (ШПИ) (поиск по частичному соответствию)
+          maxLength: 50
+          pattern: ^(.)*$
+        objectType:
+          type: string
+          enum:
+            - ALL
+            - DOCUMENT
+            - COMMENT
+            - ASSIGNMENT
+          description: Тип объекта для поиска
+          example: DOCUMENT
+        agreementOrganizationUnitIds:
+          type: array
+          description: Список внешних идентификаторов подразделений согласования документа
+          uniqueItems: true
+          maxItems: 100
+          items:
+            type: string
+            description: Внешний идентификатор подразделения согласования документа
+            example: 012397451
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_-]{0,50}$
+    DocumentPrivacyCode:
+      title: Код вида информации документа
+      description: Код вида информации(&lt;code&gt;[Справочник](https://confluence.sberbank.ru/pages/viewpage.action?pageId=7798727591)&lt;/code&gt;)
+      type: string
+      enum:
+        - FOR_OFFICIAL_USE
+        - TRADE_SECRET
+        - OTHER_PROTECTED_INFO
+        - BANK_CARD_DATA
+        - BANK_SECRET
+        - PERSONAL_BANK_CLIENTS_DATA
+        - PERSONAL_BANK_OTHER_PERSONS_DATA
+        - PERSONAL_BANK_LEGAL_ENTITIES
+        - PERSONAL_BANK_EMPLOYEES_DATA
+        - FOR_INTERNAL_USE
+      example: FOR_OFFICIAL_USE
+    RecipientSearch:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentRecipientType'
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          pattern: ^(.)*$
+          maxLength: 255
+          example: r-003234
+        name:
+          type: string
+          description: Наименование списка рассылки или организации
+          pattern: ^(.)*$
+          example: Руководство банка
+          maxLength: 255
+    DocumentRecipientType:
+      type: string
+      description: |
+        Тип операции над списком рассылки:
+          EMPLOYEE - Сотрудник
+          MAILING_LIST - Список рассылки
+          ORGANIZATION_UNIT - Организация
+      enum:
+        - EMPLOYEE
+        - MAILING_LIST
+        - ORGANIZATION_UNIT
+
+    SearchResponse:
+      title: Ответ на запрос поиска объектов Системы, удовлетворяющих заданным условиям
+      type: object
+      additionalProperties: false
+      properties:
+        list:
+          type: array
+          maxItems: 1000
+          description: Массив с результатами поиска по номеру страницы
+          items:
+            $ref: '#/components/schemas/SearchObject'
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы
+          example: 10
+          maximum: 2147483641
+          minimum: 0
+        limit:
+          type: integer
+          format: int32
+          description: Количество записей на странице
+          example: 16
+          maximum: 1000
+          minimum: 0
+        total:
+          type: integer
+          format: int32
+          description: Количество записей в результате поиска (всего)
+          example: 15
+          maximum: 100000
+          minimum: 0
+      required:
+        - list
+        - page
+        - limit
+        - total
+
+    SearchObject:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/DocumentContext'
+        - $ref: '#/components/schemas/AssignmentContext'
+
+    DocumentContext:
+      title: DocumentContext
+      type: object
+      description: Модель данных документа, который нашли в результате поиска
+      additionalProperties: false
+      properties:
+        objectType:
+          $ref: '#/components/schemas/SearchObjectType'
+        documentId:
+          type: string
+          description: Уникальный идентификатор документа
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        versionId:
+          type: string
+          description: Уникальный идентификатор версии документа
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          maxLength: 36
+        documentNumbers:
+          type: array
+          description: Массив номеров документа
+          maxItems: 2
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                pattern: ^[A-Z_]*$
+                example: SYSTEM
+                description: Код нумерации системный - SYSTEM; регистрационный - REGISTRATION
+                maxLength: 25
+              number:
+                type: string
+                description: Номер документа
+                pattern: ^(.)*$
+                example: Сн-ЦА/1-21
+                maxLength: 25
+              createdAt:
+                type: string
+                description: Дата и время выдачи номера
+                example: '2017-01-15T01:30:15.01Z'
+                format: date-time
+        documentType:
+          type: string
+          description: Наименование типа документа
+          pattern: ^(.)*$
+          example: Внутренниий документ
+          maxLength: 255
+        documentKind:
+          type: string
+          description: Наименование вида документа
+          pattern: ^(.)*$
+          example: Служебная записка
+          maxLength: 255
+        documentUrgency:
+          type: string
+          description: Наименование срочности документа
+          pattern: ^(.)*$
+          example: Срочно
+          maxLength: 255
+        documentPrivacyList:
+          description: Массив видов информации в документе
+          type: array
+          maxItems: 100
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/DocumentPrivacy'
+        documentSummary:
+          type: string
+          description: Краткое содержание документа
+          pattern: ^(.)*$
+          maxLength: 20000
+          example: О запросе информации списанного оборудования в подразделении
+        documentCreatedAt:
+          type: string
+          example: '2017-01-15T01:30:15.01Z'
+          description: Дата и время создания документа
+          format: date-time
+        documentUpdatedAt:
+          type: string
+          example: '2017-01-15T01:30:15.01Z'
+          description: Дата и время последнего изменения документа
+          format: date-time
+        documentAuthorList:
+          type: array
+          description: Список авторов и со-авторов
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/EmployeeObject'
+        documentSenderList:
+          type: array
+          maxItems: 3
+          description: 'Список сотрудников поля От '
+          items:
+            $ref: '#/components/schemas/EmployeeObject'
+        documentRecipientList:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            $ref: '#/components/schemas/Recipient'
+        documentRecipientsCount:
+          type: integer
+          format: int32
+          description: Количество получателей
+          example: 10
+          minimum: 0
+          maximum: 300000
+        detectionArea:
+          type: string
+          description: Часть документа где обнаружен вхождение
+          enum:
+            - DOCUMENT
+            - COMMENT
+            - ATTACHMENT
+        documentStage:
+          $ref: '#/components/schemas/DocumentStageCode'
+        addresseeList:
+          type: array
+          maxItems: 1000
+          items:
+            type: string
+            description: Наименование получателя
+            maxLength: 255
+            pattern: ^(.)*$
+        correspondent:
+          type: string
+          description: Наименование получателя
+          maxLength: 255
+          pattern: ^(.)*$
+      required:
+        - documentId
+        - objectType
+        - documentNumbers
+        - documentType
+        - documentKind
+        - documentPrivacyList
+        - documentSummary
+        - documentCreatedAt
+        - documentUpdatedAt
+        - documentAuthorList
+
+    AssignmentContext:
+      title: AssignmentContext
+      type: object
+      description: Модель данных личного поручения, которое нашли в резульатате поиска
+      properties:
+        objectType:
+          $ref: '#/components/schemas/SearchObjectType'
+        assignmentId:
+          type: string
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          description: Идентификатор инициативного поручения
+          maxLength: 36
+        state:
+          $ref: '#/components/schemas/AssignmentStateCode'
+        createdAt:
+          type: string
+          format: date-time
+          description: Дата и время создания инициативного поручения
+        author:
+          $ref: '#/components/schemas/EmployeeObject'
+        systemNumber:
+          type: string
+          description: Системный номер
+          pattern: ^(.)*$
+          maxLength: 255
+        summary:
+          type: string
+          description: Краткое описание ИП (текст главного пункта ИП)
+          pattern: ^(.)*$
+          maxLength: 1000
+        executors:
+          type: array
+          maxItems: 1000
+          description: Список сотрудников исполнителей пунктов
+          items:
+            $ref: '#/components/schemas/EmployeeObject'
+        totalExecutorsCount:
+          type: integer
+          format: int32
+          description: Количество сотрудников исполнителей пунктов
+          maximum: 300000
+          minimum: 0
+          example: 10
+      required:
+        - assignmentId
+        - author
+        - state
+        - createdAt
+        - objectType
+    DocumentStageCode:
+      type: string
+      title: DocumentStageCode
+      description: Бизнес-стадии документа
+      enum:
+        - PREPARING
+        - AGREEMENT
+        - SIGNING
+        - AGREEMENT_PREPARING
+        - REGISTRATION
+        - EXECUTION
+        - EXECUTED
+        - REGISTERED
+        - SENT_TO_ADDRESSEE
+        - ON_DELETION
+        - DELETED
+        - CANCELLED
+        - REJECTED
+        - REVOKED
+    AssignmentStateCode:
+      title: AssignmentStateCode
+      type: string
+      description: Статус инициативного поручения
+      enum:
+        - PREPARING_FOR_CREATION
+        - DRAFT
+        - PREPARED
+        - ON_APPROVAL
+        - ON_APPROVAL_DRAFT
+        - TRANSITION_TO_APPROVAL
+        - APPROVED
+        - COMPLETED
+        - FIXED
+        - CANCELLED
+    SearchObjectType:
+      title: SearchObjectType
+      type: string
+      description: Код объекта поиска
+      enum:
+        - DOCUMENT
+        - ASSIGNMENT
+    EmployeeObject:
+      title: EmployeeObject
+      type: object
+      description: Минимальный набор данных о сотруднике
+      additionalProperties: false
+      properties:
+        givenName:
+          type: string
+          description: Имя сотрудника
+          pattern: ^(.)*$
+          example: Иван
+          maxLength: 255
+        familyName:
+          type: string
+          description: Фамилия сотрудника
+          pattern: ^(.)*$
+          example: Иванов
+          maxLength: 255
+        middleName:
+          type: string
+          description: Отчество сотрудника
+          pattern: ^(.)*$
+          example: Сергеевич
+          maxLength: 255
+        employeeInitials:
+          type: string
+          description: Инициалы сотрудника
+          pattern: ^(.)*$
+          maxLength: 10
+          example: И.С.
+        positionName:
+          type: string
+          description: Наименование должности сотрудника
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Управляющий начальник директора НУИНУ
+        organizationName:
+          type: string
+          description: 'Составное наименование организации, в которой работает сотрудник, включает в себя наименование вышестоящей головной организации и наименования всех нижестоящих подразделений организации, разделение между элементами запятая + аббревиатура территории'
+          pattern: ^(.)*$
+          maxLength: 255
+          example: ' Департамент ИТ блока Сервисы и безопасности, Управление развития технологий Департамента управления делами, Группа сопровождения, ЦА'
+        tenant:
+          $ref: '#/components/schemas/TenantCode'
+        territoryAbbreviation:
+          type: string
+          description: Аббревиатура территории
+          pattern: ^(.)*$
+          maxLength: 255
+          example: ЦА
+        isWorkingState:
+          type: boolean
+          description: Признак того, что сотрудник работает в Организации на момент отправки данных. true - сотрудник работает
+          example: true
+        gender:
+          $ref: '#/components/schemas/EmployeeGenderCode'
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        fullName:
+          type: string
+          description: ФИО Пользователя, в формате Фамилия Имя Отчество
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Иванов Иван Иванович
+      required:
+        - givenName
+        - familyName
+        - positionName
+        - organizationName
+    EmployeeGenderCode:
+      title: EmployeeGenderCode
+      description: Пол сотрудника
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+    Recipient:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/RecipientEmployeeObject'
+        - $ref: '#/components/schemas/RecipientMailingListObject'
+        - $ref: '#/components/schemas/RecipientOrganizationUnitObject'
+
+    RecipientEmployeeObject:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RecipientObject'
+      properties:
+        recipient:
+          $ref: '#/components/schemas/EmployeeObject'
+      required:
+        - recipient
+    RecipientMailingListObject:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RecipientObject'
+      properties:
+        recipient:
+          $ref: '#/components/schemas/MailingListObject'
+      required:
+        - recipient
+    RecipientOrganizationUnitObject:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RecipientObject'
+      properties:
+        recipient:
+          $ref: '#/components/schemas/OrganizationUnitObject'
+      required:
+        - recipient
+    RecipientObject:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentRecipientType'
+        mode:
+          $ref: '#/components/schemas/DocumentRecipientMode'
+        copy:
+          type: boolean
+          deprecated: true
+          description: Признак основного получателя или копии
+      required:
+        - type
+    DocumentRecipientMode:
+      title: Способ указания получателя
+      description: Способ указания получателя (адресат, копия, скрытый)
+      type: string
+      enum:
+        - DIRECT
+        - COPY
+        - HIDDEN
+      example: DIRECT
+    MailingListObject:
+      type: object
+      description: Модель списка рассылки
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: Наименование списка рассылки
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Руководство банка
+      required:
+        - name
+    OrganizationUnitObject:
+      type: object
+      description: Модель подразделения
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: Наименование подразделения
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Департамент управления делами
+        parentOrganizationUnitName:
+          type: string
+          description: Наименование родительского подразделения
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Департамент управления делами
+        territoryAbbreviation:
+          type: string
+          description: Наименование территории
+          pattern: ^(.)*$
+          maxLength: 255
+          example: ЦА
+        manager:
+          $ref: '#/components/schemas/EmployeeObject'
+      required:
+        - name
+
+    TasksRequest:
+      title: TaskRequest
+      type: object
+      description: Запрос на получение списка заданий пользователя, выбранного типа и статуса
+      additionalProperties: false
+      properties:
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        taskTypes:
+          description: Массив с выбранными типами заданий. При выборе нескольких типов происходит объединение результатов. Отсутствие параметра означает выбор всех типов заданий
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 255
+            example: APPROVAL
+            pattern: ^[A-Z_]*$
+            description: |-
+              Типы заданий
+              AGREEMENT - Задание на согласование,
+              APPROVAL - задание на подписание,
+              EXECUTION - задание на исполнение,
+              EXECUTION_BY_POINT - задание на исполнение по пункту,
+              ASSIGNMENT_POINT - задание на исполнение по пункту инициативного поручения,
+              AGREEMENT_DECISION - задание на автора документа для принятия решения,
+              ASSIGNMENT_DECISION - задание на автора ИП для принятия решения,
+              APPROVAL_RESOLUTION - задание на доп. согласование на стадии подписания,
+              AGREEMENT_RESOLUTION - задание на доп. согласование на стадии согласования
+        taskStatesList:
+          type: array
+          description: Список статусов заданий
+          maxItems: 100
+          uniqueItems: true
+          items:
+            type: string
+            description: Статус задания определенного типа
+            pattern: ^(.)*$
+            maxLength: 255
+            example: IN_WORK
+        completed:
+          type: boolean
+          description: Признак завершенного задания. true - завершено.
+          example: false
+        taskCreateDateFrom:
+          type: string
+          description: От даты создания задания
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          example: '2020-01-01'
+        taskCreateDateTo:
+          type: string
+          description: По дату создания задания
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          example: '2020-01-01'
+        sort:
+          type: string
+          maxLength: 255
+          example: 'createdAt:(ASC|DESC)+'
+          description: Правила сортировки результата
+          pattern: ^(.)*$
+      required:
+        - externalId
+    TasksResponse:
+      title: TasksResponse
+      type: object
+      description: Ответ со списком заданий пользователя, соответствующих запросу
+      additionalProperties: false
+      properties:
+        list:
+          type: array
+          uniqueItems: true
+          maxItems: 100
+          description: Список заданий пользователя
+          items:
+            $ref: '#/components/schemas/Task'
+        page:
+          type: integer
+          format: int32
+          description: Номер текущей страницы
+          example: 10
+          maximum: 2147483641
+          minimum: 0
+        limit:
+          type: integer
+          format: int32
+          description: Количество записей на странице
+          example: 16
+          maximum: 1000
+          minimum: 0
+        total:
+          type: integer
+          format: int32
+          description: Количество записей в результате поиска (всего)
+          example: 15
+          maximum: 100000
+          minimum: 0
+      required:
+        - list
+        - page
+        - limit
+        - total
+    Task:
+      title: Task
+      type: object
+      description: Модель задания
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          description: Идентификатор задания
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          maxLength: 36
+        executor:
+          $ref: '#/components/schemas/EmployeeShortInfo'
+        taskText:
+          type: string
+          description: Текст задания
+          example: Текст
+          pattern: ^(.)*$
+          maxLength: 500
+        author:
+          $ref: '#/components/schemas/EmployeeObject'
+        taskType:
+          type: string
+          description: Тип задания
+          maxLength: 100
+          example: APPROVAL
+          pattern: ^[A-Z_]*$
+        taskTypeName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Бизнес-описание типа задания
+          example: Задание на согласование
+        createdAt:
+          type: string
+          description: Дата и время создания задания
+          format: date-time
+          example: '2017-01-15T01:30:15.01Z'
+        taskState:
+          type: string
+          description: Состояние задания
+          example: IN_WORK
+          maxLength: 100
+          pattern: ^[A-Z_]*$
+        taskStateName:
+          type: string
+          pattern: ^(.)*$
+          maxLength: 255
+          description: Бизнес-описание статуса задания
+          example: На распределении
+        responsible:
+          type: boolean
+          description: Признак ответственного исполнителя (true - ответственный)
+          example: true
+        rootObjectId:
+          type: string
+          description: Идентификатор связанной сущности (документа или ИП)
+          example: 16fd2706-8baf-433b-82eb-8c7fada847da
+          pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+          maxLength: 36
+        rootObjectCode:
+          type: string
+          description: Код связанной сущности. DOCUMENT - Документ, ASSIGNMENT - ИП
+          example: ASSIGNMENT
+          pattern: ^[A-Z_]*$
+          maxLength: 100
+        rootObjectNumber:
+          type: string
+          description: Системный номер связанной сущности
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Сн-ЦА/1-21
+        summary:
+          description: Краткое описание связанной сущности
+          type: string
+          pattern: ^(.)*$
+          maxLength: 1000
+          example: О создании закупки под проектирование
+        documentType:
+          type: string
+          description: Наименование типа документа
+          pattern: ^(.)*$
+          example: Внутренниий документ
+          maxLength: 255
+        documentKind:
+          type: string
+          description: Наименование вида документа
+          pattern: ^(.)*$
+          example: Служебная записка
+          maxLength: 255
+        documentRegisterNumber:
+          type: string
+          description: Регистрационный номер документа в Системе
+          maxLength: 2000
+          pattern: ^(.)*$
+          example: Сн-ЦА/1-21
+        rootObjectRegisteredAt:
+          type: string
+          example: '2020-01-01'
+          pattern: ^\d{2,4}-\d{2,4}-\d{2,4}$
+          description: Дата регистрации документа или дата утверждения инициативного поручения
+        completed:
+          type: boolean
+          description: Признак завершенного задания. true - завершено.
+          example: false
+      required:
+        - id
+        - executor
+        - taskText
+        - author
+        - taskType
+        - taskTypeName
+        - createdAt
+        - taskState
+        - taskStateName
+        - responsible
+        - rootObjectId
+        - rootObjectCode
+        - rootObjectNumber
+        - completed
+    EmployeeShortInfo:
+      title: EmployeeShortInfo
+      type: object
+      description: Краткая информация о сотруднике
+      additionalProperties: false
+      properties:
+        externalId:
+          type: string
+          description: Идентификатор сотрудника в учетной системе, для tenantCode - SBERBANK это табельный номер.
+          example: r-003234
+          pattern: ^(.)*$
+          maxLength: 255
+        fullName:
+          type: string
+          description: ФИО Пользователя, в формате Фамилия Имя Отчество
+          pattern: ^(.)*$
+          maxLength: 255
+          example: Иванов Иван Иванович
+      required:
+        - externalId
+        - fullName
+
+    ExecutionReportTextRequest:
+      type: object
+      description: Запрос на редактирование текста отчета
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          maxLength: 100000
+          pattern: ^(.*|\n)*.*$
+          description: Текст отчета в формате base64 (добавляется новым абзацем)
+          example: dGVzdCBkYXRh
+      required:
+        - text
+  parameters:
+    RqUID:
+      name: RqUID
+      in: header
+      schema:
+        type: string
+        pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+        example: 329b66b1-1124-437a-b195-d316bc1a32bb
+        description: Уникальный идентификатор запроса
+        maxLength: 36
+      description: Уникальный идентификатор запроса
+      required: true
+    Tenant:
+      name: TenantCode
+      in: header
+      schema:
+        $ref: '#/components/schemas/TenantCode'
+      description: Код Организации
+      required: true
+    X-PersonnelNumber:
+      name: X-personnelNumber
+      in: header
+      required: true
+      description: Табельный номер сотрудника (employee_actual.external_id)
+      schema:
+        type: string
+        pattern: ^[A-Za-z0-9_]+$
+        maxLength: 255
+        example: 123123
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Авторизационный токен

@@ -1,30 +1,42 @@
-# Slice — Жизненный цикл внедрения
+# Срез — Жизненный цикл внедрения
 
-Статус: **импортировано из legacy-проекта**  
-Feature: `features/deployments/feature.md`  
-Порядок в feature requirements: `05`  
-Дата обновления: `2026-04-27`
+Статус: **актуализировано после реализации**
+Фича: `features/deployments/feature.md`
+Порядок в требованиях фичи: `05`
+Дата обновления: `2026-05-22`
 
 ## Назначение
-Зафиксировать lifecycle ограничения и действия для внедрения.
 
-## Связанные planning stories
+Зафиксировать машину состояний NEW/ON_APPROVAL/DEPLOYED/REJECTED/ARCHIVED и действия.
+
+## Что важно после актуализации
+
+- Главный источник бизнес-правил: `../../requirements.md`.
+- Срез должен оставаться коротким: только границы среза, ссылки, проверяемые правила и фокус тестирования.
+- Старые формулировки про `draft` и утверждение заменены на текущую машину состояний.
+
+## Связанные плановые истории
+
 - `STORY-DEPLOYMENTS-005`
 
-## Источники
-- `../../references.md`
-- `../../requirements.md`
-- `context/source-materials/current-system/requirements/`
-- `context/source-materials/current-system/screenshots/`
-- `context/source-materials/change-requests/`
-
 ## Пакеты требований
+
 - `../../requirements.md`
 - `requirements/frontend.md`
 - `requirements/backend.md`
 
 ## Связанные прототипы
-- `delivery-prototype/prototype.html`
 
-## Связанные execution-артефакты
+- `delivery-prototype/prototype.html`
+- `delivery-prototype/notes.md`
+
+## Фокус тестирования среза
+
+- Проверить успешный сценарий.
+- Проверить пустые состояния.
+- Проверить ошибки бэкенда и недоступные действия.
+- Проверить отсутствие старых терминов/маршрутов в поведении этого среза.
+
+## Связанные артефакты исполнения
+
 - `execution/tasks.md`

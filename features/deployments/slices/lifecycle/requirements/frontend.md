@@ -1,119 +1,65 @@
-# Жизненный цикл внедрения (Frontend)
+# Жизненный цикл внедрения (Фронтенд)
 
-Статус: **draft**  
-Feature: `deployments`  
-Slice: `lifecycle`  
-Область: `MVP`  
-Дата обновления: `2026-04-27`  
+Статус: **актуализировано после реализации**
+Фича: `deployments`
+Срез: `lifecycle`
+Область: `MVP`
+Дата обновления: `2026-05-22`
 Шаблон: `.workflow/templates/requirements/frontend.template.md`
 
-## Связь с feature-level документом
+## Цель среза
 
-- Главный контрольный документ: `../../requirements.md`
-- Этот файл детализирует раздел `Реализация для FRONTEND` для текущего slice.
+Показать пользователю только те действия ЖЦ, которые реально поддержаны бэкендом.
 
-## Назначение пакета
+## Машина состояний для UI
 
-- Зафиксировать UI-правила отображения status и lifecycle actions для deployment.
-- Синхронизировать UI с backend process and lifecycle model.
+```plantuml
+@startuml
+[*] --> NEW
+NEW --> ON_APPROVAL : submitForApproval
+NEW --> NEW : edit
+ON_APPROVAL --> NEW : edit
+ON_APPROVAL --> DEPLOYED : approve
+ON_APPROVAL --> REJECTED : reject
+DEPLOYED --> ARCHIVED : toArchive
+@enduml
+```
 
-## Источники и трассировка
+## Что UI должен забыть из старой модели
 
-### Основные источники
+| Старое | Новое |
+|---|---|
+| `draft` | `NEW` |
+| `recall` | не является обязательным действием внедрений |
+| `start_ratification` | не используется в текущем теге `Deployments` |
+| `approved`/`ratified` как статусы внедрения | не входят в `DeploymentStatus` |
+| `cancelled` | не входит в `DeploymentStatus` |
 
-- `../slice.md`
-- `../../requirements.md`
-- `../../feature.md`
-- `../../references.md`
-- `requirements/backend.md`
+## Действия
 
-### Связанные planning stories
-
-- `STORY-DEPLOYMENTS-005`
-
-## Контекст и бизнес-смысл
-
-### Цель
-
-Пользователь должен видеть текущее lifecycle-состояние внедрения и вызывать только допустимые действия.
-
-### Пользователи и роли
-
-- автор внедрения;
-- участники approval flow;
-- `admin`.
-
-## Границы MVP
-
-### Входит в MVP
-
-- отображение status;
-- lifecycle buttons;
-- блокировка недопустимых действий;
-- UX вокруг submit/recall/deploy/archive/rollback там, где это допускается.
-
-### Не входит в MVP
-
-- локальная frontend state machine, отличная от backend.
-
-## Пользовательские сценарии
-
-### Сценарий FE-1. Просмотр lifecycle state
-1. Пользователь открывает deployment host screen.
-2. UI показывает текущий status.
-3. UI вычисляет доступные actions по backend state и ролям.
-
-### Сценарий FE-2. Запуск lifecycle action
-1. Пользователь выбирает допустимое действие.
-2. UI отправляет запрос в backend.
-3. После ответа status и actions обновляются.
-
-## UI-состав и навигация
-
-### Экран/состояние 1. Lifecycle action area
-
-- Назначение: показать status и actions.
-- Откуда открывается: из detail/form host screens.
-- Куда ведёт: к lifecycle endpoints и смежным dialogs.
-- Что видно пользователю: status badge, actions, reasons/errors.
-- Какие действия доступны: зависят от status и роли.
-
-## Функциональные требования
-
-### FE-FR-1. Display by source-of-truth
-
-**Описание:**
-UI показывает lifecycle state по backend данным без локального переопределения.
-
-### FE-FR-2. Action gating
-
-**Описание:**
-Недопустимые действия скрываются или disabled.
-
-## Интеграция с Backend API
-
-| Метод и маршрут | Где используется | Что отправляем/читаем | Условия вызова | Примечание |
-|---|---|---|---|---|
-| lifecycle endpoints из backend pack | detail/form host screens | action payload и status | только в допустимом status | source-of-truth на backend |
-
-## Валидация на frontend
-
-### Правила
-
-- нельзя вызвать lifecycle action повторно во время pending state;
-- rollback требует причину, если это закреплено backend contract.
-
-### Сообщения об ошибках
-
-| Ситуация | Сообщение | Где показываем |
+| Действие | Когда показывать | Маршрут |
 |---|---|---|
-| недопустимое действие | `Действие недоступно в текущем статусе` | action area |
-| ошибка backend | `Не удалось изменить статус внедрения` | toast / inline |
+| `edit` | если бэкенд/роль разрешили редактирование | открыть форму редактирования, затем `PUT /api/v1/deployment/{number}?id=...` |
+| `edit` | `ON_APPROVAL`, если бэкенд/роль разрешили редактирование | открыть форму редактирования; сохранение возвращает статус `NEW` |
+| `submitForApproval` | `NEW` и есть права | `PUT .../action?action=submitForApproval` |
+| `approve` | `ON_APPROVAL` и пользователь может согласовать | `PUT .../action?action=approve` |
+| `reject` | `ON_APPROVAL` и пользователь может отклонить | `PUT .../action?action=reject` |
+| `deploy` | только если бэкенд вернул действие | `PUT .../action?action=deploy` |
+| `toArchive` | `DEPLOYED` или другое разрешённое бэкендом состояние | `PUT .../action?action=toArchive` |
 
-## Критерии приемки
+## Правила поведения UI
 
-### FE-AC-1. Correct action set
-- [ ] На экране доступны только допустимые lifecycle actions
+- На время запроса кнопка недоступна, повторный клик блокируется.
+- После успешного действия карточка перезагружается или обновляется из ответа.
+- Если бэкенд вернул `409`, показываем `Действие недоступно в текущем статусе`.
+- FE не пересчитывает переходы сам; таблица выше нужна для отображения и тестов, источник истины — бэкенд.
 
-### FE-AC-2. Status sync
-- [ ] UI не расходится с backend status model
+## Чеклист для тестирования среза
+
+- [ ] `submitForApproval` переводит `NEW` в `ON_APPROVAL`.
+- [ ] `approve` из `ON_APPROVAL` переводит в `DEPLOYED` по текущей реализации.
+- [ ] `reject` из `ON_APPROVAL` переводит в `REJECTED`.
+- [ ] `toArchive` из `DEPLOYED` переводит в `ARCHIVED`.
+- [ ] `edit` из `NEW` сохраняет статус `NEW`; `edit` из `ON_APPROVAL` после сохранения возвращает статус `NEW`.
+- [ ] Для `REJECTED` и `ARCHIVED` нет кнопок редактирования/повторной отправки.
+- [ ] Старые кнопки `Отозвать`, `Отправить на утверждение` не появляются, если бэкенд их не возвращает.

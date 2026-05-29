@@ -138,7 +138,12 @@ Store story/task links in markdown, not as visual PlantUML dependencies.
 - Requirements are living markdown artifacts until release fixation.
 - Write requirements by the project-local template in `.workflow/templates/requirements/`, not freeform.
 - Start from `features/<feature>/requirements.md` as the primary feature-level requirement page and only place where feature requirements are authored from scratch.
-- Build that page by `.workflow/templates/requirements/feature-requirements.template.md`, preserving the Confluence-style structure used by the user template.
+- Build that page by the selected project-local requirements format:
+  - new readable format: `.workflow/templates/requirements/feature-requirements.readable.template.md` plus `*.readable.template.md` slice/FE/BE packs;
+  - old detailed format: `.workflow/templates/requirements/feature-requirements.template.md` plus the original slice/FE/BE templates.
+- If the user names the format, obey it. If the feature already exists and the user does not name a format, preserve the current feature format. For a new feature without an explicit choice, use the new readable format.
+- Do not mix new and old requirement formats inside one feature unless the user explicitly asks for a migration or comparison.
+- Requirement diagrams must be PlantUML; do not introduce Mermaid blocks.
 - Derive slice cards and FE/BE detail packs from the corresponding sections of the root feature requirements.
 - If a slice artifact exposes a missing rule or contradiction, update `features/<feature>/requirements.md` first and only then re-derive the slice artifact.
 - Keep business requirements, system requirements, acceptance criteria, API contracts and examples traceable to source materials.
