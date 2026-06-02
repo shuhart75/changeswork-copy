@@ -3,7 +3,7 @@
 Статус: **в работе**
 Feature: `features/approvals/feature.md`
 Квартал: `2026-Q2`
-Дата обновления: `2026-05-27`
+Дата обновления: `2026-06-01`
 Шаблон: `.workflow/templates/requirements/feature-requirements.template.md`
 Decision ID: `DEC-2026-05-25-APPROVALS-SBERDOCS-001`
 
@@ -15,8 +15,8 @@ Decision ID: `DEC-2026-05-25-APPROVALS-SBERDOCS-001`
 
 - Назначение feature: заменить собственный процесс approval/ratification в АС КОДА на минимальную интеграцию со SberDocs.
 - Что уже есть в baseline/current: карточки доменных сущностей, статусы внедрений, интеграционные принципы и ранее описанный внутренний approval flow.
-- Какая дельта добавляется этой feature: АС КОДА готовит бриф и участников для создания SberDocs-документа, отправляет документ в SberDocs, хранит локальную `new`-версию до отправки, дальше синхронизирует статус из SberDocs API, а историю читает по запросу.
-- Что исключается из текущего scope: отдельная страница `Согласования`, собственные решения `approve/reject/ratify` в АС КОДА, package flow, собственный `ApprovalChain` как workflow-движок.
+- Какая дельта добавляется этой feature: АС КОДА готовит бриф и участников отправки для создания SberDocs-документа, отправляет документ в SberDocs, хранит локальную `new`-версию до отправки, дальше синхронизирует статус из SberDocs API, читает историю по запросу и скачивает актуальный DOCX.
+- Что исключается из текущего scope: отдельная страница `Согласования`, собственные решения `approve/reject/ratify` в АС КОДА, package flow, собственный `ApprovalChain` как workflow-движок, ручная отправка письма.
 - Какие slice входят в контрольный документ: `core-process`; slice `page` сохранён только как отменённый legacy-след и не создаёт разработки.
 
 ## Источники и принятое решение
@@ -24,13 +24,13 @@ Decision ID: `DEC-2026-05-25-APPROVALS-SBERDOCS-001`
 | Источник | Как используется |
 |---|---|
 | `context/source-materials/change-requests/sberdocs-approvals/Цепочка_согласования_Сравнение_подходов.md` | Решение выбрать подход интеграции: АС КОДА готовит бриф и участников создания документа, согласование выполняется и донастраивается в SberDocs, статус читается по API. |
-| `context/source-materials/change-requests/sberdocs-approvals/сбердокс.yaml` | Технический контракт SberDocs: health-check, создание document job, polling job state, polling document state, получение листа согласования. |
-| `context/source-materials/change-requests/sberdocs-approvals/Бриф для утверждения.md` | Актуальные требования к форме документа, предпросмотру письма, скоркарте, полю `Доп. эффекты` и моменту отправки email. |
-| `context/source-materials/change-requests/sberdocs-approvals/StateMachine_внутреннего_документа.md` | Актуальная state machine внутреннего документа SberDocs; используется для маппинга `documentState` и определения перехода к подписанию через `ON_APPROVAL`. |
+| `context/source-materials/change-requests/sberdocs-approvals/сбердокс.yaml` | Технический контракт SberDocs: health-check, создание document job, polling job state, polling document state, получение листа согласования, получение актуального документа. |
+| `context/source-materials/change-requests/sberdocs-approvals/Бриф для утверждения.md` | Актуальные требования к форме документа, предпросмотру письма, скоркарте, полю `Доп. эффекты`, моменту отправки email и ответу backend на submit. |
+| `context/source-materials/change-requests/sberdocs-approvals/StateMachine_внутреннего_документа.md` | Актуальная state machine внутреннего документа SberDocs; используется для маппинга `documentState` и определения перехода к подписанию. |
 | `context/source-materials/change-requests/sberdocs-approvals/Бриф_для_утверждения.md` | Legacy-версия требований к брифу; заменена актуальным файлом `Бриф для утверждения.md`. |
-| `context/source-materials/change-requests/sberdocs-approvals/Маршруты_согласований.md` | Правила ручного задания маршрута до решения о выносе workflow в SberDocs. |
-| `context/source-materials/change-requests/sberdocs-approvals/Согласование_Релизов_Риск_параметров.md` | Пример интеграции со SberDocs: `document-job`, `document-job/{jobId}/state`, `document/{documentId}/state`, `systemNumber`. |
-| `context/source-materials/change-requests/sberdocs-approvals/meeting.txt` | Расшифровка встречи 2026-05-25; источник решений по формату документа, участникам отправки в SberDocs, К2, автору/соавтору, отзыву в SberDocs и повторной отправке. |
+| `context/source-materials/change-requests/sberdocs-approvals/Маршруты_согласований.md` | Исходная модель локального маршрута; используется только как legacy-контекст после отказа от native workflow. |
+| `context/source-materials/change-requests/sberdocs-approvals/Согласование_Релизов_Риск_параметров.md` | Пример интеграции со SberDocs: `document-job`, `document-job/{jobId}/state`, `document/{documentId}/state`, `approval-sheet/{approvalSheetId}`, `systemNumber`. |
+| `context/source-materials/change-requests/sberdocs-approvals/meeting.txt` | Расшифровка встречи 2026-05-25; источник решений по формату документа, участникам отправки, К2, автору/соавтору, отзыву в SberDocs и повторной отправке. |
 
 ## Порядок slice для контроля
 
@@ -45,53 +45,35 @@ title Согласование через SberDocs: общий процесс MV
 
 start
 :Пользователь заполняет\nбриф, подписанта и получателей в АС КОДА;
-:АС КОДА сохраняет new\nApprovalChainVersion;
-if (Бриф, подписант или получатели изменены?) then (да)
-  :Создать/обновить new-версию\nс audit-событием;
+:АС КОДА сохраняет\nnew ApprovalChainVersion;
+if (Бриф или участники изменены?) then (да)
+:Создать новую локальную версию\nи записать audit-событие;
 endif
 :Передать документную часть JSON\nв DOCX Renderer;
-:Получить DOCX без скоркарты\nи без доп. эффектов,\nзакодировать bytes в base64;
-:Проверить SberDocs\nhealth-check = LIVING;
-if (health-check = LIVING?) then (да)
-  :Создать SberDocs document job\nс documentFile, summary,\nsenderList, recipientList,\nauthor/additionalAuthorList;
-else (нет)
-  :Оставить версию в new;\nуведомить поддержку АС[СТ, РСП, КОДА, СРО];
-  stop
-endif
-
-if (document-job завершился?) then (COMPLETED)
-  :Сохранить documentId, systemNumber\nи перейти в on_approval;
-  repeat
-    :Polling document/state;
-    :Сохранить status snapshot\nи approvalSheetId;
-    if (Методолог отправил\nуведомление вручную?) then (да)
-      :Прочитать approval-sheet;\nвыделить значимых согласовантов\nпо справочнику;
-      :Отправить HTML-письмо\nна av@av.ru;\nпоставить manual marker;
+:Получить DOCX и закодировать\nbytes в base64;
+:Создать document-job\nс documentFile, summary, signer, recipients, author и co-author;
+:Дождаться COMPLETED\nпо document-job/{jobId}/state;
+:Сохранить documentId, systemNumber,\ndocumentUrl и перейти в on_approval;
+repeat
+  :Polling document/state;
+  :Обновить raw/mapped status;
+  if (documentState = ON_APPROVAL?) then (да)
+    :Прочитать approval-sheet;
+    if (Есть APPROVAL + IN_WORK\nи письмо ещё не отправлено?) then (да)
+      :Определить актуального подписанта\nпо active task;
+      :Сформировать HTML-письмо\nиз JSON, скоркарты и Доп. эффектов;
+      :Отправить письмо один раз;
     endif
-    if (documentState = ON_APPROVAL?) then (да)
-      :По approval-sheet найти\nAPPROVAL + IN_WORK;
-      if (manual marker есть?) then (да)
-        :Автоматическое письмо\nне отправлять;
-      else (нет)
-        :Выделить всех значимых согласовантов\nпо справочнику;
-        :Сформировать HTML-письмо\nиз JSON + скоркарты + доп. эффектов\nи отправить на av@av.ru один раз;
-      endif
-    endif
-  repeat while (статус не terminal?) is (да)
-  if (результат положительный?) then (да)
-    :Показать approved\nи разрешить дальнейший host lifecycle;
-  elseif (documentState = REJECTED?) then (да)
-    :Показать on_approval + raw REJECTED;\nпредложить перейти в SberDocs\nдля правок и повторной отправки;
-  elseif (documentState = ON_DELETING\nили DELETED?) then (да)
-    :Перевести локальную цепочку\nв cancelled;
-  else (нет)
-    :Показать cancelled / unknown;
-    :Для unknown/unmapped\nуведомить поддержку АС[СТ, РСП, КОДА, СРО];
-    :Комментарии загрузить\nотдельным методом истории;
   endif
-else (FAILED / VALIDATION_ERROR)
-  :Показать ошибку SberDocs;
-  :Исправить new-версию или создать новую\nи отправить новую job;
+repeat while (статус не terminal?) is (да)
+if (documentState в approved-group?) then (да)
+  :Показать approved;
+elseif (documentState = REJECTED?) then (да)
+  :Показать on_approval\nи предложить перейти в SberDocs;
+elseif (documentState = ON_DELETING\nили DELETED?) then (да)
+  :Перевести локальную цепочку\nв cancelled;
+else (нет)
+  :Показать last known status\nи уведомить поддержку при unknown status;
 endif
 stop
 @enduml
@@ -111,21 +93,15 @@ participant "Scorecard API" as Score
 participant "Email HTML Renderer" as MailRender
 participant "DOCX Renderer" as Docx
 participant "SberDocs API" as SD
+participant "Employee Directory" as Dir
 participant "Mail service" as Mail
 
 User -> FE : Открыть блок согласования
 FE -> BE : GET /approval-chains/{targetType}/{targetId}
-BE --> FE : signer, saved JSON,\nstatus snapshot
-
-alt документ не создан и подписант назначен
-  User -> FE : Создать документ
-  FE -> BE : PUT /new-version\nJSON документа + Доп. эффекты
-  BE -> DB : save ApprovalChainVersion\nstatus = new
-  BE --> FE : saved
-end
+BE --> FE : signer, saved JSON, status snapshot
 
 opt предпросмотр письма
-  FE -> BE : POST /notification-preview\ncurrent JSON + Доп. эффекты
+  FE -> BE : POST /notification-preview
   BE -> Score : read scorecard metrics
   Score --> BE : scorecard
   BE -> MailRender : JSON + scorecard + Доп. эффекты
@@ -135,57 +111,37 @@ end
 
 User -> FE : Отправить на утверждение
 FE -> BE : POST /submit-to-sberdocs
-BE -> DB : lock saved JSON
-BE -> Docx : document JSON only\nбез scorecard и Доп. эффектов
+BE -> Docx : document JSON only
 Docx --> BE : DOCX bytes
-BE -> BE : base64(DOCX)
-BE -> SD : GET /health-check
-alt status = LIVING
-  SD --> BE : LIVING
-  BE -> SD : POST /document-job\nDOCX + summary + signer + recipients + authors
-  SD --> BE : jobId
-  BE -> DB : status = sending_to_sberdocs
-  BE --> FE : accepted / status
-else status != LIVING / error / timeout
-  SD --> BE : health error
-  BE -> DB : save health event\nstatus remains new
-  BE -> Mail : notify support\nАС[СТ, РСП, КОДА, СРО]
-  BE --> FE : SberDocs unavailable
-end
-
-loop polling
+BE -> SD : POST /document-job
+SD --> BE : jobId
+loop until COMPLETED
   BE -> SD : GET /document-job/{jobId}/state
   SD --> BE : jobState, documentId, systemNumber
+end
+BE -> DB : save documentId, systemNumber, documentUrl, status
+BE --> FE : documentId, systemNumber, documentUrl, status
+
+loop background sync
   BE -> SD : GET /document/{documentId}/state
   SD --> BE : documentState, stateName, approvalSheetId
   BE -> DB : save raw/mapped status
   alt documentState = ON_APPROVAL
     BE -> SD : GET /approval-sheet/{approvalSheetId}
-    SD --> BE : taskType=APPROVAL,\ntaskState=IN_WORK,\nhistory
-    BE -> DB : read significant signers\nreference dictionary
+    SD --> BE : task list + comments
+    BE -> BE : find taskType=APPROVAL and taskState=IN_WORK
+    BE -> Dir : resolve email by executorExternalId
+    Dir --> BE : signer email
     BE -> Score : read scorecard metrics
     Score --> BE : scorecard
-    BE -> MailRender : saved JSON + scorecard\n+ Доп. эффекты + significant list
+    BE -> MailRender : saved JSON + scorecard + Доп. эффекты
     MailRender --> BE : HTML
-    BE -> Mail : send once to av@av.ru
-    BE -> DB : save notification marker
+    BE -> Mail : send once to signer
+    BE -> DB : save signer_notification marker
   end
 end
 
-opt методолог отправляет уведомление вручную после submit
-  User -> FE : Отправить уведомление
-  FE -> BE : POST /send-notification
-  BE -> SD : GET /approval-sheet/{approvalSheetId}
-  SD --> BE : history
-  BE -> DB : read significant signers\nreference dictionary
-  BE -> MailRender : saved JSON + scorecard\n+ Доп. эффекты + significant list
-  MailRender --> BE : HTML
-  BE -> Mail : send to av@av.ru
-  BE -> DB : notificationMode = manual\nauto disabled
-  BE --> FE : sent
-end
-
-FE -> BE : GET /approval-sheet\non demand
+FE -> BE : GET /approval-sheet
 BE -> SD : GET /approval-sheet/{approvalSheetId}
 SD --> BE : history + comments
 BE --> FE : normalized history
@@ -200,159 +156,104 @@ Slice card: `slices/core-process/slice.md`
 Детализация FE: `slices/core-process/requirements/frontend.md`
 Детализация BE: `slices/core-process/requirements/backend.md`
 Прототип: `slices/core-process/delivery-prototype/prototype.html`
-Planning story: `planning/stories/STORY-APPROVALS-001.md` — требуется отдельная planning-синхронизация, текущий режим правит только requirements.
+Planning story: `planning/stories/STORY-APPROVALS-001.md` — требует отдельной planning-синхронизации.
 
-**Бизнес-требования**
+### Бизнес-требования
 
-- Цель: минимизировать собственную разработку approval workflow и использовать SberDocs как систему исполнения согласования/утверждения.
-- АС КОДА остаётся местом подготовки: пользователь заполняет/проверяет бриф, выбирает подписанта/получателей и подтверждает отправку.
-- Бриф передаётся в SberDocs как основной документ (`documentFile`) в формате DOCX, не как приложение; краткое содержание документа передаётся в `DocumentJobRequest.summary`.
-- Документный DOCX содержит только поля формы документа: адресат, наименование, цель, периметр применения, основные правила/изменения, риски и заключение Антифрод; номер документа присваивает SberDocs, ручного ввода номера в форме нет.
-- Скоркарта и поле `Доп. эффекты` не попадают в DOCX-документ SberDocs: они сохраняются в локальном JSON и используются только для предпросмотра и итогового HTML-письма на адрес `av@av.ru`.
-- В `ApprovalChainVersion` сохраняются только участники, реально передаваемые в SberDocs: подписант, получатели, автор и соавтор; согласующие и этапы согласования локально не хранятся и в SberDocs не передаются.
-- В SberDocs при создании документа передаются только подписант/утверждающий (`senderList`), получатели (`recipientList`), автор (`author`) и соавтор (`additionalAuthorList[]`).
-- После успешной отправки АС КОДА хранит identifiers/status snapshot SberDocs (`jobId`, `documentId`, `systemNumber`, `approvalSheetId`) и ссылку, построенную по шаблону, но не хранит историю согласования локально и не исполняет маршрут как workflow-источник истины.
-- Локальный `ApprovalChain` хранит версии брифа и участников отправки: любое изменение брифа, подписанта или получателей создаёт новую версию; после отправки версия становится read-only и не редактирует SberDocs-документ.
-- Пока у доменного элемента существует связанный `ApprovalChain`, действия с самим доменным элементом в АС КОДА запрещены; вместо них пользователь переходит по ссылке в SberDocs и выполняет правки/решения там.
-- Бриф хранится как JSON; backend DOCX Renderer принимает документную часть JSON, генерирует DOCX, а интеграционный backend передаёт DOCX как основной `documentFile` в base64.
-- Backend формирует HTML-письмо-уведомление из сохранённого JSON, read-only скоркарты с метриками, поля `Доп. эффекты` и перечня значимых согласовантов из SberDocs approval sheet; frontend может запросить предпросмотр базового HTML до отправки.
-- Backend ведёт справочник значимых подписантов/согласовантов. Если участник из справочника появляется в истории согласования SberDocs и успел принять участие в согласовании, он включается в HTML-письмо; в письмо включаются все такие участники, найденные на момент отправки.
-- Уведомление всегда отправляется на единый адрес `av@av.ru`, а не фактическому подписанту SberDocs.
-- Статус документа и итоговое решение читаются из SberDocs API; поимённая история участников и комментарии не хранятся локально и читаются через approval sheet отдельным методом при открытии раздела истории.
-- Отдельные пакеты и отдельная страница назначений в АС КОДА исключаются из MVP.
+- Согласование и подписание выполняются в SberDocs, а не в АС КОДА.
+- АС КОДА должна позволять подготовить документ, сохранить драфт и отправить его в SberDocs с минимальным новым UI и backend scope.
+- Любое изменение брифа, подписанта или получателей до отправки создаёт новую локальную версию `ApprovalChain`.
+- После создания документа в SberDocs пользователь больше не редактирует его из АС КОДА; он переходит по ссылке в SberDocs и делает изменения там.
+- Поле `Доп. эффекты` и скоркарта участвуют только в письме и его preview, но не в основном документе SberDocs.
+- История согласования и комментарии не хранятся в АС КОДА и подтягиваются отдельным методом по запросу.
 
-**Пользовательские требования к АС КОДА**
+### Системные требования
 
-- Пользователь на host screen доменной сущности видит вкладку/блок подготовки согласования: бриф, подписанта, получателей, предпросмотр, кнопку отправки.
+- В SberDocs при создании документа передаются только подписант (`senderList`), получатели (`recipientList`), автор (`author`) и соавтор (`additionalAuthorList[]`).
+- АС КОДА хранит локально только JSON документа, `Доп. эффекты`, подписанта, получателей и технический status snapshot SberDocs.
+- Основной документ формируется как DOCX, кодируется в base64 и отправляется в `documentFile`; `attachmentList`, `route.executorList` и `restrictions.actions` в MVP не используются.
+- `summary` заполняется из поля `Краткое содержание`.
+- Успешный submit возвращает frontend `documentId`, `systemNumber`, `documentUrl`, mapped status и `lastSyncedAt`.
+- Backend периодически вызывает `GET /public/Gateway/health-check` отдельным мониторинговым процессом; результат используется для диагностики и уведомления поддержки, но не блокирует каждый business-вызов к SberDocs.
+- DOCX в формате base64 не должен превышать лимит SberDocs `10 МБ`.
+- Письмо подписанту отправляется автоматически один раз, когда `approval-sheet` показывает активную задачу `taskType = APPROVAL` и `taskState = IN_WORK`.
+- Адресат письма должен определяться по активной задаче из `approval-sheet`, чтобы корректно обработать возможную замену подписанта в SberDocs.
+- При неизвестном raw status SberDocs или провале фонового health-check backend отправляет email на поддержку АС[СТ, РСП, КОДА, СРО].
+
+### Пользовательские требования к АС КОДА
+
+- Пользователь на host screen доменной сущности видит блок подготовки согласования: бриф, подписанта, получателей, предпросмотр и кнопку отправки.
 - Пока документ не отправлен, пользователь может сохранить или изменить локальную `new`-версию брифа и участников отправки.
-- После отправки пользователь видит номер/ссылку SberDocs, общий статус согласования и дату последней синхронизации; методолог может вручную отправить HTML-уведомление на `av@av.ru`, поимённая история загружается при открытии раздела истории.
+- После отправки пользователь видит номер/ссылку SberDocs, общий статус согласования и дату последней синхронизации; история загружается по запросу.
 - Действия `Согласовать`, `Отклонить`, `Утвердить`, `Подписать` выполняются в SberDocs, а не в АС КОДА.
-- При ошибке создания документа пользователь видит причину из SberDocs и может исправить new-версию брифа/участников отправки и отправить заново.
+- При ошибке создания документа пользователь видит причину из SberDocs и может исправить сохранённую `new`-версию и отправить заново, только если backend однозначно знает, что документ в SberDocs не был создан.
 
-**Критерии приемки**
+### Критерии приемки
 
-1. АС КОДА создаёт локальную `new`-версию брифа и участников отправки до SberDocs, но не создаёт собственный `ApprovalChain` как workflow-движок.
-2. `GET /public/Gateway/health-check` перед созданием документа возвращает `LIVING`, после чего `POST /public/Gateway/document-job` вызывается один раз при подтверждённой отправке и содержит DOCX-бриф, краткое содержание, подписанта, получателей, автора/соавтора и идентификатор внешнего документа.
-3. `GET /public/Gateway/document-job/{jobId}/state` доводит создание документа до `COMPLETED` или ошибки.
+1. АС КОДА создаёт локальную `new`-версию брифа и участников отправки до SberDocs и не создаёт собственный workflow route.
+2. `POST /public/Gateway/document-job` вызывается с DOCX-брифом, `summary`, подписантом, получателями, автором/соавтором и идентификатором внешнего документа.
+3. `POST /submit-to-sberdocs` дожидается `COMPLETED` по `document-job/{jobId}/state` и возвращает frontend `documentId`, `systemNumber`, `documentUrl`, mapped status и `lastSyncedAt`.
 4. `GET /public/Gateway/document/{documentId}/state` обновляет локальный интеграционный статус и `systemNumber`.
-5. `GET /public/Gateway/approval-sheet/{approvalSheetId}` отдаёт поимённую историю согласующих/подписантов и комментарии для отображения в АС КОДА по запросу пользователя; результат не сохраняется локально.
-6. В MVP не отправляем `attachmentList`: бриф передаётся как основной документ `documentFile`, внешние файлы не прикладываются.
-7. Документ создаётся без `restrictions.actions`: в SberDocs допускаются штатные изменения документа и маршрута.
+5. `GET /public/Gateway/approval-sheet/{approvalSheetId}` отдаёт поимённую историю и комментарии для отображения в АС КОДА по запросу пользователя; результат не сохраняется локально.
+6. В MVP не отправляем `attachmentList`: бриф передаётся как основной документ `documentFile`.
+7. Документ создаётся без `restrictions.actions`; в SberDocs допускаются штатные изменения документа и маршрута.
 8. `author` в SberDocs заполняется методологом, который отправил документ на согласование; `additionalAuthorList[]` содержит ПРМа как соавтора.
-9. `senderList` содержит подписанта/утверждающего; `route.executorList` и список согласующих в `DocumentJobRequest` не передаются.
-10. АС КОДА не устанавливает признак `Коммерческая тайна (К2)` через API; после создания документа пользователь устанавливает К2 в интерфейсе SberDocs, submit из АС КОДА из-за К2 не блокируется.
+9. `senderList` содержит подписанта; `route.executorList` и список согласующих в `DocumentJobRequest` не передаются.
+10. АС КОДА не устанавливает признак `Коммерческая тайна (К2)` через API; после создания документа пользователь устанавливает К2 в интерфейсе SberDocs.
 11. SberDocs-статусы маппятся в статусы АС КОДА по таблице в backend pack; unmapped значения не ломают UI и попадают в audit/monitoring.
-12. На этапе polling backend должен отлавливать переход документа к подписанию по `GET /public/Gateway/document/{documentId}/state`: `documentState = ON_APPROVAL` означает, что документ направлен на утверждение/подписание.
-13. Backend хранит справочник значимых подписантов/согласовантов и при каждой отправке HTML-уведомления читает `approval-sheet`, чтобы включить в письмо всех участников из справочника, которые уже приняли участие в согласовании.
-14. Методолог в любой момент после успешного submit в SberDocs может вручную отправить HTML-уведомление на `av@av.ru`; backend читает актуальный `approval-sheet`, включает значимых участников, успевших согласовать к этому моменту, сохраняет manual marker и после этого автоматическое уведомление не отправляет.
-15. Если ручной отправки не было, после `ON_APPROVAL` backend читает `approval-sheet`, ищет активную задачу `taskType = APPROVAL` + `taskState = IN_WORK`, формирует HTML-письмо из JSON + скоркарты + `Доп. эффекты` + значимых участников и отправляет его на `av@av.ru` один раз; `taskType = AGREEMENT` означает задачу согласования и сам по себе email не запускает.
-16. После согласования backend предоставляет отдельный метод получения актуального DOCX-документа из SberDocs, потому что документ мог измениться в SberDocs.
-17. Raw `REJECTED` не переводит локальную цепочку в `new`: АС КОДА оставляет mapped status `on_approval`, показывает raw status/комментарии и направляет пользователя в SberDocs, где документ должен быть исправлен и снова переведён в процесс.
-18. Raw `ON_DELETING` и `DELETED` переводят локальную цепочку в terminal status `cancelled`; возврат в `new` после создания SberDocs-документа в MVP не выполняется.
-19. Raw `CANCELLED` после `approved` не должен понижать локальный статус: АС КОДА сохраняет raw snapshot/audit, но оставляет цепочку согласованной.
-20. Если SberDocs health-check не вернул `LIVING` либо получен неизвестный/unmapped raw status SberDocs, backend фиксирует событие и отправляет email-уведомление на поддержку АС[СТ, РСП, КОДА, СРО].
-21. Страница `Согласования`, package flow и массовые решения в АС КОДА недоступны и не требуются для MVP.
+12. На этапе polling backend отлавливает переход документа к подписанию, читает `approval-sheet` и отправляет письмо, только когда обнаружена активная задача `APPROVAL/IN_WORK`.
+13. Письмо уходит автоматически текущему подписанту; ручной отправки и отдельного UI-статуса письма в MVP нет.
+14. При определении адресата backend ориентируется на активную задачу подписания из `approval-sheet`, а не только на исходный `senderList`.
+15. После согласования backend предоставляет отдельный метод получения актуального DOCX-документа из SberDocs, потому что документ мог измениться в SberDocs.
+16. Raw `REJECTED` не переводит локальную цепочку в `new`: АС КОДА оставляет mapped status `on_approval`, показывает raw status/комментарии и направляет пользователя в SberDocs.
+17. Raw `ON_DELETING` и `DELETED` переводят локальную цепочку в terminal status `cancelled`.
+18. Raw `CANCELLED` после `approved` не должен понижать локальный статус.
+19. Если фоновый SberDocs health-check обнаружил недоступность сервиса либо получен неизвестный/unmapped raw status SberDocs, backend фиксирует событие и отправляет email на поддержку АС[СТ, РСП, КОДА, СРО].
+20. `COMPLETED` по `document-job/{jobId}/state` без обязательных идентификаторов (`documentId`, `systemNumber`) считается интеграционной ошибкой: локальный статус не переходит в `on_approval`, support уведомляется, а автоматический повторный submit блокируется до ручного разбора.
+21. Страница `Согласования`, package flow, ручная отправка письма и массовые решения в АС КОДА недоступны и не требуются для MVP.
 
-**USE CASES**
+### USE CASES
 
-- **осн. сценарий 1** методолог создаёт документ на host screen, заполняет поля документа и `Доп. эффекты`, сохраняет new-версию, проверяет предпросмотр HTML-письма и отправляет документный DOCX в SberDocs; ПРМ передаётся в SberDocs как соавтор.
-- **осн. сценарий 2** АС КОДА получает `jobId`, затем `documentId`, `systemNumber`, URL и переводит доменную сущность в статус ожидания согласования.
-- **осн. сценарий 3** АС КОДА периодически проверяет `health-check`, затем синхронизирует статус создания и статус документа из SberDocs; при `documentState = ON_APPROVAL` читает `approval-sheet`, подтверждает `taskType = APPROVAL` и `taskState = IN_WORK`, после чего, если ручного письма ещё не было, отправляет HTML-письмо на `av@av.ru`.
-- **осн. сценарий 3a** методолог после submit вручную нажимает `Отправить уведомление`; АС КОДА читает актуальный `approval-sheet`, включает значимых участников из справочника, отправляет HTML-письмо на `av@av.ru` и отключает будущую автоматическую отправку.
-- **осн. сценарий 4** пользователь запрашивает актуальный согласованный документ; АС КОДА получает основной DOCX-файл из SberDocs и отдаёт его без локального хранения копии файла.
-- **альт. сценарий 3.1** SberDocs возвращает validation/creation error; АС КОДА оставляет new-версию редактируемой и показывает диагностическое сообщение.
-- **альт. сценарий 3.2** SberDocs возвращает `REJECTED`; АС КОДА остаётся в `on_approval`, отображает raw status/комментарии и предлагает перейти в SberDocs для правок и повторной отправки внутри SberDocs.
-- **альт. сценарий 3.3** методолог-автор или ПРМ-соавтор отзывает/редактирует документ в интерфейсе SberDocs; АС КОДА не предоставляет кнопку отзыва в MVP и только синхронизирует итоговый статус.
-- **альт. сценарий 3.4** SberDocs возвращает `ON_DELETING` или `DELETED`; АС КОДА переводит локальную цепочку в `cancelled` и не открывает повторную отправку из этой версии.
-- **альт. сценарий 3.5** SberDocs health-check не `LIVING` или SberDocs вернул неизвестный raw status; АС КОДА показывает пользователю безопасное сообщение, сохраняет диагностический snapshot и отправляет email на поддержку АС[СТ, РСП, КОДА, СРО].
+- **осн. сценарий 1** методолог создаёт документ на host screen, заполняет поля документа и `Доп. эффекты`, сохраняет `new`-версию, проверяет предпросмотр HTML-письма и отправляет DOCX в SberDocs; ПРМ передаётся в SberDocs как соавтор.
+- **осн. сценарий 2** backend получает `jobId`, дожидается `documentId`, `systemNumber` и URL, после чего frontend сразу переводит экран в read-only состояние ожидания согласования.
+- **осн. сценарий 3** АС КОДА периодически проверяет `document/state`; при `ON_APPROVAL` читает `approval-sheet`, подтверждает `taskType = APPROVAL` и `taskState = IN_WORK`, после чего отправляет письмо текущему подписанту один раз.
+- **осн. сценарий 4** при открытии раздела истории frontend вызывает отдельный метод `approval-sheet` и показывает поимённую историю с комментариями без локального хранения.
+- **альт. сценарий 1** периодический мониторинг фиксирует, что SberDocs недоступен; backend уведомляет поддержку, но business-вызовы не получают отдельный pre-check gate и обрабатывают фактические ошибки SberDocs или транспорта.
+- **альт. сценарий 2** SberDocs возвращает `FAILED` или `VALIDATION_ERROR` на создании документа; backend показывает ошибку, `documentId` не создаётся, пользователь исправляет сохранённую версию и отправляет снова.
+- **альт. сценарий 2а** SberDocs возвращает `COMPLETED`, но без `documentId` или `systemNumber`; backend считает ответ неконсистентным, уведомляет поддержку и не разрешает автоматический повторный submit, чтобы не создать дубль документа.
+- **альт. сценарий 3** SberDocs возвращает raw `REJECTED`; пользователь открывает документ в SberDocs, исправляет его там и запускает повторный процесс уже в интерфейсе SberDocs.
+- **альт. сценарий 4** SberDocs возвращает raw `ON_DELETING` или `DELETED`; локальный статус меняется на `cancelled`.
+- **альт. сценарий 5** SberDocs вернул неизвестный status; UI показывает оригинальный код, backend уведомляет поддержку.
 
-### Функциональные требования
+## Scope и impact для соседних артефактов
 
-#### Реализация для FRONTEND
+### Что меняется в root UX
 
-**Описание UI**
+- оставить только подготовку документа, подписанта/получателей, предпросмотр HTML-письма, submit в SberDocs и read-only мониторинг результата;
+- после submit скрывать форму редактирования и отображать `systemNumber`, ссылку на SberDocs, статус и историю по запросу;
+- не показывать кнопку ручной отправки письма и отдельный статус его доставки;
+- для всех действий по самому документу после отправки предлагать перейти в SberDocs.
 
-| Экран | Результат |
-| --- | --- |
-| Host pages `Pilot` / `Deployment` / релевантная карточка сущности | Отображают подготовку брифа, подписанта/получателей до отправки и read-only SberDocs status после отправки |
+### Что меняется в backend модели
 
-Требования на фронт:
+- хранить `ApprovalChain` как контейнер версий брифа и участников отправки, а не как workflow engine;
+- хранить интеграционные идентификаторы SberDocs, состояние синхронизации и последний snapshot фонового health-check;
+- генерировать DOCX только из документной части JSON и проверять лимит `10 МБ` для base64-представления;
+- реализовать polling `document/state`, определять момент отправки письма по активной задаче `APPROVAL/IN_WORK`, а историю UI читать отдельным методом;
+- реализовать получение актуального DOCX из SberDocs через `document-files`.
 
-- убрать сценарии принятия решений из АС КОДА;
-- оставить только подготовку документа, подписанта/получателей, предпросмотр HTML-письма, submit в SberDocs, ручную отправку AV-уведомления и read-only мониторинг результата;
-- показывать `systemNumber`, ссылку на SberDocs, локальный статус и дату синхронизации; поимённую историю загружать отдельным методом при открытии раздела истории;
-- показывать кнопку `Отправить уведомление` после submit, если backend ещё не зафиксировал ручную или автоматическую отправку на `av@av.ru`;
-- не показывать отдельную страницу `Согласования` и пакетные карточки.
+### Что меняется в доменных связях
 
-Связанный детальный FE pack: `slices/core-process/requirements/frontend.md`
+| Область | Новая роль |
+|---|---|
+| АС КОДА | Подготовка брифа, хранение локальной версии, запуск интеграции, мониторинг статуса |
+| SberDocs | Владелец маршрута, статусов, решений, комментариев и актуального документа |
+| Письмо подписанту | Формируется backend из JSON + скоркарты + `Доп. эффекты`, отправляется автоматически |
+| База данных | `ApprovalChain` + версии брифа/участников отправки + technical status snapshot |
+| Host entity | Блокирует свои действия, пока существует связанный `ApprovalChain` |
 
-#### Реализация BACKEND
+## Аудит и поддержка
 
-Требования на бэк:
-
-- хранить локальный `ApprovalChain` с версиями брифа и участников отправки; изменение брифа, подписанта или получателей создаёт новую версию;
-- хранить бриф как JSON, где скоркарта и `Доп. эффекты` являются данными для письма, но не для SberDocs DOCX; вызывать DOCX Renderer только с документной частью JSON, кодировать DOCX в base64 и передавать как основной `documentFile`;
-- сформировать SberDocs `DocumentJobRequest` и передать краткое содержание в `summary`, подписанта в `senderList`, получателей в `recipientList`, методолога-отправителя в `author`, ПРМа в `additionalAuthorList[]`; `route.executorList` и `restrictions.actions` не передавать;
-- не устанавливать К2 через API; после создания документа показывать пользователю напоминание установить признак `Коммерческая тайна (К2)` в SberDocs;
-- хранить интеграционные идентификаторы SberDocs, состояние синхронизации и последний health-check snapshot;
-- запрещать действия с доменным элементом, пока существует связанный `ApprovalChain`; в ответах статуса возвращать признак блокировки и SberDocs URL при наличии `documentId`;
-- перед submit/polling/on-demand history проверять `GET /public/Gateway/health-check` и продолжать только при `status = LIVING`;
-- реализовать справочник значимых подписантов/согласовантов и при формировании email включать всех участников из этого справочника, которые уже приняли участие в согласовании по данным `approval-sheet`;
-- реализовать polling job state и document state; в polling отлавливать `documentState = ON_APPROVAL`, затем читать `approval-sheet`, не реагировать на `taskType = AGREEMENT`, определять активную задачу подписания по `taskType = APPROVAL` + `taskState = IN_WORK` и, если ручной отправки ещё не было, отправлять HTML-письмо на `av@av.ru`; approval sheet для UI читать отдельным методом по запросу frontend;
-- реализовать ручную отправку уведомления методологом после submit: письмо уходит на `av@av.ru`, включает значимых участников на текущий момент и блокирует последующую автоматическую отправку;
-- реализовать получение актуального основного DOCX-документа из SberDocs отдельным методом после согласования;
-- реализовать маппинг SberDocs статусов на статусы АС КОДА;
-- не реализовывать отзыв из интерфейса АС КОДА в MVP; не создавать новую `new`-версию из raw `REJECTED`, `ON_DELETING` или `DELETED`; удаление документа в SberDocs маппить в `cancelled`;
-- отправлять email-уведомление на поддержку АС[СТ, РСП, КОДА, СРО] при провале health-check SberDocs и при неизвестных/unmapped статусах SberDocs;
-- исключить собственные action endpoints для `approve/reject/ratify` и package workflow из MVP.
-
-Связанный детальный BE pack: `slices/core-process/requirements/backend.md`
-
-| | |
-| --- | --- |
-| **Сервис** | `approval-sberdocs-integration` |
-| ИФТ URL | `уточняется по стенду SberDocs` |
-| База данных | `ApprovalChain` + версии брифа/участников отправки + integration snapshot, без собственного workflow engine |
-| Методы | `см. slices/core-process/requirements/backend.md` |
-
-**Изменения в ролевой модели**
-
-- В АС КОДА нужны только права на подготовку и отправку в SberDocs на host screen; кнопка `Отозвать` в MVP не реализуется.
-- Роли согласующих/подписантов исполняются в SberDocs; АС КОДА передаёт в SberDocs подписанта, получателей, автора и соавтора, но не даёт кнопки решения в своём UI. Отзыв/редактирование документа при необходимости выполняют в SberDocs методолог-автор или ПРМ-соавтор.
-
-**Отправка в Аудит**
-
-- В аудит АС КОДА попадают: сохранение `new`-версии, отправка в SberDocs, `jobId`, `documentId`, `systemNumber`, изменение mapped status, ручная/автоматическая отправка email на `av@av.ru`, список значимых участников, включённых в письмо, провал health-check, неизвестные статусы SberDocs, email-уведомления поддержки, ошибки интеграции и время синхронизации.
-- Итоговый статус попадает в аудит из `document/state`; детальные решения согласующих не копируются в локальный аудит; при необходимости они читаются из approval sheet on demand.
-
-**BUGS (Если есть)**
-
-- Старые требования по `ApprovalChain`, странице `Согласования` и пакетам считаются superseded этим решением.
-
-### Доп. пояснения
-
-- Собственная логика параллельных/последовательных решений в АС КОДА не реализуется в MVP; список согласующих и порядок исполнения маршрута настраиваются и исполняются в SberDocs.
-- В обязательном MVP АС КОДА показывает document state, ссылку/номер документа и загружает поимённый лист согласования из approval sheet отдельным методом.
-
----
-
-## STORY-APPROVALS-002 — Страница Согласования
-
-Slice card: `slices/page/slice.md`
-Детализация FE: `slices/page/requirements/frontend.md`
-Детализация BE: `slices/page/requirements/backend.md`
-Прототип: `slices/page/delivery-prototype/prototype.html` — **устарел, не актуализировать без отдельного решения**
-Planning story: `planning/stories/STORY-APPROVALS-002.md` — требуется отдельная planning-синхронизация.
-
-**Решение по scope**
-
-- От отдельной страницы `Согласования` в АС КОДА отказываемся.
-- Назначения, решения и действия согласующих выполняются в SberDocs.
-- В АС КОДА остаётся только read-only отображение статуса и on-demand истории на host screen сущности, отправленной в SberDocs.
-
-**Критерии приемки отмены**
-
-1. В требованиях нет нового API для списка назначений АС КОДА.
-2. В требованиях нет UI-кнопок `approve`, `reject`, `ratify` в АС КОДА.
-3. Пакетные карточки и массовые действия не входят в MVP.
-4. Delivery prototype страницы `Согласования` помечен как устаревший в `domain-impact.md` / backlog, если не будет синхронизирован сразу.
+- В аудит АС КОДА попадают: сохранение `new`-версии, отправка в SberDocs, `jobId`, `documentId`, `systemNumber`, изменение mapped status, отправка письма подписанту, провал фонового health-check, неизвестные статусы SberDocs, email-уведомления поддержки, ошибки интеграции и время синхронизации.
+- История согласования и комментарии не дублируются в аудит как бизнес-данные: они читаются из SberDocs по запросу.
+- При провале фонового health-check или unknown status backend обязан отправить уведомление на поддержку АС[СТ, РСП, КОДА, СРО].

@@ -1,0 +1,12 @@
+' FEATURE: roles-industrialization
+[Roles industrialization: catalog and compatibility] as [ROLE_IND_CMD_CATALOG] lasts 9 days
+[ROLE_IND_CMD_CATALOG] starts 2026/07/01
+[ROLE_IND_CMD_CATALOG] is colored in LightGreen
+
+[Roles industrialization: endpoint access matrix] as [ROLE_IND_CMD_MATRIX] lasts 11 days
+[ROLE_IND_CMD_MATRIX] starts 2026/07/13
+[ROLE_IND_CMD_MATRIX] is colored in LightBlue
+
+[Roles industrialization: cross-feature enforcement pack] as [ROLE_IND_CMD_PROP] lasts 12 days
+[ROLE_IND_CMD_PROP] starts 2026/07/29
+[ROLE_IND_CMD_PROP] is colored in LightCoral

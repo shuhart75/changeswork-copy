@@ -1,0 +1,12 @@
+' FEATURE: roles-industrialization
+[Roles industrialization: catalog and compatibility] as [ROLE_IND_QP_CATALOG] lasts 7 days
+[ROLE_IND_QP_CATALOG] starts 2026/07/01
+[ROLE_IND_QP_CATALOG] is colored in LightGreen
+
+[Roles industrialization: endpoint access matrix] as [ROLE_IND_QP_MATRIX] lasts 9 days
+[ROLE_IND_QP_MATRIX] starts 2026/07/10
+[ROLE_IND_QP_MATRIX] is colored in LightBlue
+
+[Roles industrialization: cross-feature enforcement pack] as [ROLE_IND_QP_PROP] lasts 10 days
+[ROLE_IND_QP_PROP] starts 2026/07/23
+[ROLE_IND_QP_PROP] is colored in LightCoral

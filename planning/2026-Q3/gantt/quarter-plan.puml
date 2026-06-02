@@ -1,0 +1,31 @@
+@startgantt
+title План на квартал - 2026-Q3
+Project starts 2026-07-01
+saturday are closed
+sunday are closed
+
+printscale daily zoom 1.5
+projectscale daily
+today is colored in LightSalmon
+!$now = %now()
+[Мы сейчас здесь] as [TODAY_MARK] happens %date("YYYY-MM-dd", $now)
+
+<style>
+ganttDiagram {
+  task {
+    BackGroundColor lightblue
+  }
+  milestone {
+    BackGroundColor orange
+    FontColor black
+  }
+}
+</style>
+' План на квартал
+
+!include preamble/common.puml
+
+-- Промышленная ролевая модель --
+!include includes/quarter-plan/FEATURE-roles-industrialization.puml
+
+@endgantt
