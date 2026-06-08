@@ -4,11 +4,11 @@
 ' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
 
 ' Story layer
-' Story STORY-PILOTS-001: virtual, mapping=explicit
+' Story STORY-PILOTS-001: materialized, mapping=inferred
 [PLAN FE Workspace пилотов: артефакты и lifecycle approval] as [STORY_STORY_PILOTS_001] starts 2026/04/01
-[STORY_STORY_PILOTS_001] ends 2026/05/25
-[STORY_STORY_PILOTS_001] is colored in LightSteelBlue
-[STORY_STORY_PILOTS_001] is 55% completed
+[STORY_STORY_PILOTS_001] ends 2026/05/10
+[STORY_STORY_PILOTS_001] is colored in Gainsboro
+[STORY_STORY_PILOTS_001] is 100% completed
 
 ' Execution task layer
 [AN блок артефактов (FE): пилоты] as [TASK_AN_FE_PILOT_ART] on {A2} starts 2026/04/01
@@ -26,7 +26,13 @@
 [TASK_FE_PILOT_ART] is colored in LightCoral
 [TASK_FE_PILOT_ART] is 100% completed
 
-[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/05/19
-[TASK_BE_PILOT_LC_AP] ends 2026/05/25
+[RSCON-2487 BE Доработки по пилотам(БД, АПИ) для симуляции конфига пилотов] as [TASK_RSCON_2487] on {B2} starts 2026/05/08
+[TASK_RSCON_2487] ends 2026/05/10
+[TASK_RSCON_2487] is colored in LightBlue
+[TASK_RSCON_2487] is 100% completed
+
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/06/18
+[TASK_BE_PILOT_LC_AP] ends 2026/06/24
 [TASK_BE_PILOT_LC_AP] is colored in LightBlue
 [TASK_BE_PILOT_LC_AP] is 0% completed
+' Shifted not-started task from stale/non-open plan: BE_PILOT_LC_AP

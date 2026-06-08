@@ -2,7 +2,7 @@
 
 Feature: `../../../feature.md`  
 Slice: `../../slice.md`  
-Дата обновления: `2026-04-23`
+Дата обновления: `2026-06-08`
 
 ## Jira
 RSCON-2410
@@ -24,14 +24,14 @@ BE3
 - Finish: 2026-04-30
 
 ## Actual dates
-- Start:
-- Finish:
+- Start: 2026-04-24
+- Finish: 2026-05-14
 
 ## Status
-planned
+done
 
 ## Progress
-- `0%`
+- `100%`
 
 ## Description
 Фактическая backlog-задача для lifecycle внедрений в новой структуре execution tracking.
@@ -46,4 +46,4 @@ planned
 - `../../requirements/backend.md`
 
 ## Notes
-Импортировано из actualized gantt как прямой execution item.
+По входящему actual-progress snapshot задача завершена `2026-05-14`.

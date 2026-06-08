@@ -2,7 +2,7 @@
 
 Feature: `../../feature.md`  
 Slice: `../slice.md`  
-Дата обновления: `2026-05-08`
+Дата обновления: `2026-06-08`
 
 ## Правила
 - Summary по возможности совпадает с Jira summary.
@@ -17,7 +17,7 @@ Slice: `../slice.md`
 | RSCON-2432 | RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции | real | BE | 3 | B2 | 2026-04-27 | 2026-04-29 | 2026-05-06 | 2026-05-07 | done | 100 | STORY-TABULAR-RISK-PARAMETERS-001 | `tasks/RSCON-2432.md` |
 | RSCON-2452 | RSCON-2452 BE Табличные риск-параметры - шедулер очистки файлов | real | BE | 3 | FE2 | 2026-04-29 | 2026-05-04 | 2026-04-29 | 2026-05-04 | done | 100 | STORY-TABULAR-RISK-PARAMETERS-001 | `tasks/RSCON-2452.md` |
 | RSCON-2429 | RSCON-2429 FE Переделка формы для изменения риск-параметров | real | FE | 10 | FE1 | 2026-04-20 | 2026-05-04 | 2026-04-20 | 2026-04-27 | done | 100 | STORY-TABULAR-RISK-PARAMETERS-002 | `tasks/RSCON-2429.md` |
-| QA_TABULAR_RISK_PARAMETERS | QA Табличные риск-параметры | virtual | QA | 4 | Q1 | 2026-05-04 | 2026-05-07 | 2026-05-04 |  | in_progress | 50 | STORY-TABULAR-RISK-PARAMETERS-002 | `tasks/QA_TABULAR_RISK_PARAMETERS.md` |
+| QA_TABULAR_RISK_PARAMETERS | QA Табличные риск-параметры | virtual | QA | 4 | Q1 | 2026-05-04 | 2026-05-07 | 2026-05-04 | 2026-05-08 | done | 100 | STORY-TABULAR-RISK-PARAMETERS-002 | `tasks/QA_TABULAR_RISK_PARAMETERS.md` |
 
 ## Notes
 Импортировано из `mvp_gantt_chart_current_actualized_aggressive.puml` и user updates по `RSCON-2452`.
@@ -25,6 +25,7 @@ Slice: `../slice.md`
 `RSCON-2429` закрыта фактом `2026-04-27`; виртуальный QA-хвост `QA_TABULAR_RISK_PARAMETERS` стартует `2026-05-04`, потому что QA-задачи в этом контуре должны начинаться после завершения FE-потока.
 Новый backlog `RSCON-2452` продолжает тот же backend-stream табличных РП и не выносится в отдельную feature.
 `RSCON-2432` обновлена по пользовательскому факту от `2026-05-08`: завершена `2026-05-07` со 100% прогресса; исполнитель нормализован как `B2` по ранее зафиксированному назначению на `BE2`.
+`QA_TABULAR_RISK_PARAMETERS` обновлена по входящему actual-progress snapshot: завершена `2026-05-08`.
 
 ## Legacy references
 - `planning/2026-Q2/imported-source/tasks/mvp_tasks_list_no_analytics.md`

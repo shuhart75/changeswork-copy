@@ -4,7 +4,7 @@
 Фича: `deployments`
 Срез: `db-api`
 Область: `MVP`
-Дата обновления: `2026-05-22`
+Дата обновления: `2026-06-08`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Цель среза
@@ -36,7 +36,7 @@
 DeploymentMode: [GENERAL, SIMULATION_BASED]
 DeploymentStatus: [NEW, ON_APPROVAL, REJECTED, DEPLOYED, ARCHIVED]
 DeploymentCriticality: [HIGH, LOW]
-DeploymentAction: [submitForApproval, edit, approve, reject, deploy, toArchive]
+DeploymentAction: [submitForApproval, edit, deploy, toArchive]
 ```
 
 ### `CreateDeployment`
@@ -124,6 +124,7 @@ properties:
 | Создание | первая строка имеет `version=1`, `status=NEW`, `is_last=true` |
 | Редактирование `NEW` | создаётся новая строка в `deployments`, `version` увеличивается, новый `status=NEW` |
 | Редактирование `ON_APPROVAL` | создаётся новая строка в `deployments`, `version` увеличивается, новый `status=NEW` |
+| Согласование | решения и комментарии выполняются в SberDocs через `features/approvals`, а не локальными действиями `approve`/`reject` Deployments |
 | `deployment_type` | обязательно в БД; значение из `DeploymentMode` |
 | `criticality` | обязательно в БД, по умолчанию `LOW`; вручную в запросах создания/обновления не передаётся |
 | Связь со скоркартами | живёт в контуре скоркарт, привязка через `entityType=deployment`, `entityId` |
@@ -174,5 +175,5 @@ PUT /api/v1/deployment/DEP-001/action?id=550e8400-e29b-41d4-a716-446655440000&ac
 - [ ] `CreateDeployment` не требует скоркарт/артефактов.
 - [ ] `UpdateDeployment` не содержит скоркарт/артефактов.
 - [ ] В БД для внедрений используется только таблица `deployments`, без отдельной таблицы версий.
-- [ ] В перечислениях API нет `draft`, `approved`, `ratified`, `cancelled`, `recall`, `start_ratification`.
+- [ ] В перечислениях API нет `draft`, `approved`, `ratified`, `cancelled`, `recall`, `start_ratification`, локальных `approve`/`reject`.
 - [ ] Для методолога API внедрений не разрешает создание, обновление и действия ЖЦ, кроме связанных операций артефактов в общем контуре.

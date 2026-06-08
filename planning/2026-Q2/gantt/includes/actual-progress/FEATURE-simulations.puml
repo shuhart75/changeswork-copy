@@ -10,13 +10,74 @@
 [STORY_STORY_SIMULATIONS_001] is colored in Gainsboro
 [STORY_STORY_SIMULATIONS_001] is 100% completed
 
+' Story STORY-SIMULATIONS-002: mixed, mapping=inferred
+[PLAN BE Конфигурация пилотов] as [STORY_STORY_SIMULATIONS_002] starts 2026/05/12
+[STORY_STORY_SIMULATIONS_002] ends 2026/06/30
+[STORY_STORY_SIMULATIONS_002] is colored in Gainsboro
+[STORY_STORY_SIMULATIONS_002] is 21% completed
+
 ' Execution task layer
 [RSCON-2439 FE Раздел Документы СИМУЛЯЦИЯ: добавить артефакты] as [TASK_RSCON_2439] on {F1} starts 2026/04/25
 [TASK_RSCON_2439] ends 2026/04/29
 [TASK_RSCON_2439] is colored in LightCoral
 [TASK_RSCON_2439] is 100% completed
 
+[AN Симуляция конфигурации пилотов] as [TASK_AN_SIM_ART] on {A2} starts 2026/05/04
+[TASK_AN_SIM_ART] ends 2026/05/05
+[TASK_AN_SIM_ART] is colored in LightGreen
+[TASK_AN_SIM_ART] is 100% completed
+
 [RSCON-2490 BE Интеграция с ФП Симуляция: создание доков с jiraId при обновлении деталки] as [TASK_RSCON_2490] on {B2} starts 2026/05/08
 [TASK_RSCON_2490] ends 2026/05/08
 [TASK_RSCON_2490] is colored in LightBlue
 [TASK_RSCON_2490] is 100% completed
+
+[RSCON-2473 BE Доработки по симуляции (логика + апи) для симуляции конфига пилотов] as [TASK_RSCON_2473] on {B2} starts 2026/05/12
+[TASK_RSCON_2473] ends 2026/05/18
+[TASK_RSCON_2473] is colored in LightBlue
+[TASK_RSCON_2473] is 100% completed
+
+[RSCON-2501 BE Симуляция конфигурации пилотов. RSCON-CONFIG. Выдать АПИ] as [TASK_RSCON_2501] on {B2} starts 2026/05/13
+[TASK_RSCON_2501] ends 2026/05/14
+[TASK_RSCON_2501] is colored in LightBlue
+[TASK_RSCON_2501] is 100% completed
+
+[RSCON-2474 BE Симуляция конфига пилотов. Интеграция с ФП Симуляция: запуск, деталка] as [TASK_RSCON_2474] on {B1} starts 2026/06/16
+[TASK_RSCON_2474] ends 2026/06/18
+[TASK_RSCON_2474] is colored in LightBlue
+[TASK_RSCON_2474] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2474
+' Auto-assigned B1 (auto from TBD_B): RSCON-2474
+
+[QA Симуляция конфигурации пилотов] as [TASK_QA_SIM_CONFIG] on {Q1} starts 2026/06/16
+[TASK_QA_SIM_CONFIG] ends 2026/06/29
+[TASK_QA_SIM_CONFIG] is colored in Gold
+[TASK_QA_SIM_CONFIG] is 0% completed
+' Shifted not-started task from stale/non-open plan: QA_SIM_CONFIG
+
+[RSCON-2475 BE Симуляция конфигурации пилотов. RSCON-CONFIG] as [TASK_RSCON_2475] on {B3} starts 2026/06/17
+[TASK_RSCON_2475] ends 2026/06/22
+[TASK_RSCON_2475] is colored in LightBlue
+[TASK_RSCON_2475] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2475
+' Auto-assigned B3 (auto from TBD_B): RSCON-2475
+
+[RSCON-2488 BE Новый метод апи для симуляции конифугарации пилотов] as [TASK_RSCON_2488] on {B1} starts 2026/06/19
+[TASK_RSCON_2488] ends 2026/06/19
+[TASK_RSCON_2488] is colored in LightBlue
+[TASK_RSCON_2488] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2488
+' Auto-assigned B1 (auto from TBD_B): RSCON-2488
+
+[RSCON-2471 FE Уведомления в пилотах о симуляции] as [TASK_RSCON_2471] on {F1} starts 2026/06/19
+[TASK_RSCON_2471] ends 2026/06/22
+[TASK_RSCON_2471] is colored in LightCoral
+[TASK_RSCON_2471] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2471
+' Auto-assigned F1 (auto from TBD_F): RSCON-2471
+
+[RSCON-2472 FE Симуляция конфигурации пилотов] as [TASK_RSCON_2472] on {F1} starts 2026/06/23
+[TASK_RSCON_2472] ends 2026/06/30
+[TASK_RSCON_2472] is colored in LightCoral
+[TASK_RSCON_2472] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2472

@@ -4,63 +4,43 @@
 ' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
 
 ' Story layer
-' Story STORY-APPROVALS-001: virtual, mapping=explicit
+' Story STORY-APPROVALS-001: materialized, mapping=inferred
 [PLAN BE Approval core и интеграция с ЖЦ] as [STORY_STORY_APPROVALS_001] starts 2026/04/01
-[STORY_STORY_APPROVALS_001] ends 2026/06/01
-[STORY_STORY_APPROVALS_001] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_001] ends 2026/06/15
+[STORY_STORY_APPROVALS_001] is colored in Gainsboro
 [STORY_STORY_APPROVALS_001] is 0% completed
 
-' Story STORY-APPROVALS-002: virtual, mapping=explicit
+' Story STORY-APPROVALS-002: materialized, mapping=inferred
 [PLAN FE Страница "Согласования"] as [STORY_STORY_APPROVALS_002] starts 2026/04/06
-[STORY_STORY_APPROVALS_002] ends 2026/06/05
-[STORY_STORY_APPROVALS_002] is colored in LightSteelBlue
+[STORY_STORY_APPROVALS_002] ends 2026/06/23
+[STORY_STORY_APPROVALS_002] is colored in Gainsboro
 [STORY_STORY_APPROVALS_002] is 0% completed
 
 ' Execution task layer
-[AN процесс согласования/утверждения (BE core)] as [TASK_AN_AP_CORE] on {A1} starts 2026/05/08
-[TASK_AN_AP_CORE] ends 2026/05/12
-[TASK_AN_AP_CORE] is colored in LightGreen
-[TASK_AN_AP_CORE] is 0% completed
-' Shifted not-started task from stale/non-open plan: AN_AP_CORE
+[RSCON-2518 BE БД + API + Логика цепочки согласований] as [TASK_RSCON_2518] on {B1} starts 2026/06/08
+[TASK_RSCON_2518] ends 2026/06/15
+[TASK_RSCON_2518] is colored in LightBlue
+[TASK_RSCON_2518] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2518
+' Auto-assigned B1 (auto from TBD_B): RSCON-2518
 
-[AN страница "Согласования" (FE): UX/компоненты/edge-cases] as [TASK_AN_AP_PAGE_FE] on {A2} starts 2026/05/08
-[TASK_AN_AP_PAGE_FE] ends 2026/05/08
-[TASK_AN_AP_PAGE_FE] is colored in LightGreen
-[TASK_AN_AP_PAGE_FE] is 0% completed
-' Shifted not-started task from stale/non-open plan: AN_AP_PAGE_FE
+[RSCON-2519 BE Получение списка пользователей для цепочки согласования] as [TASK_RSCON_2519] on {B2} starts 2026/06/08
+[TASK_RSCON_2519] ends 2026/06/09
+[TASK_RSCON_2519] is colored in LightBlue
+[TASK_RSCON_2519] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2519
+' Auto-assigned B2 (auto from TBD_B): RSCON-2519
 
-[BE процесс согласования и утверждения - БД+логика] as [TASK_BE_AP_CORE] on {B1} starts 2026/05/08
-[TASK_BE_AP_CORE] ends 2026/05/22
-[TASK_BE_AP_CORE] is colored in LightBlue
-[TASK_BE_AP_CORE] is 0% completed
-' Shifted not-started task from stale/non-open plan: BE_AP_CORE
+[RSCON-2520 BE История изменений для цепочки согласования] as [TASK_RSCON_2520] on {B3} starts 2026/06/08
+[TASK_RSCON_2520] ends 2026/06/11
+[TASK_RSCON_2520] is colored in LightBlue
+[TASK_RSCON_2520] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2520
+' Auto-assigned B3 (auto from TBD_B): RSCON-2520
 
-[AN ЖЦ пилота: согласование/утверждение (BE)] as [TASK_AN_PILOT_LC_AP] on {A2} starts 2026/05/12
-[TASK_AN_PILOT_LC_AP] ends 2026/05/12
-[TASK_AN_PILOT_LC_AP] is colored in LightGreen
-[TASK_AN_PILOT_LC_AP] is 0% completed
-' Shifted not-started task from stale/non-open plan: AN_PILOT_LC_AP
-
-[AN страница "Согласования" (BE): контракты/фильтры/действия] as [TASK_AN_AP_PAGE_BE] on {A1} starts 2026/05/13
-[TASK_AN_AP_PAGE_BE] ends 2026/05/13
-[TASK_AN_AP_PAGE_BE] is colored in LightGreen
-[TASK_AN_AP_PAGE_BE] is 0% completed
-' Shifted not-started task from stale/non-open plan: AN_AP_PAGE_BE
-
-[FE страница "Согласования"] as [TASK_FE_AP_PAGE] on {F1} starts 2026/05/14
-[TASK_FE_AP_PAGE] ends 2026/05/27
-[TASK_FE_AP_PAGE] is colored in LightCoral
-[TASK_FE_AP_PAGE] is 0% completed
-' Shifted not-started task from stale/non-open plan: FE_AP_PAGE
-
-[BE страница "Согласования" - API, логика] as [TASK_BE_AP_PAGE] on {B1} starts 2026/05/25
-[TASK_BE_AP_PAGE] ends 2026/06/05
-[TASK_BE_AP_PAGE] is colored in LightBlue
-[TASK_BE_AP_PAGE] is 0% completed
-' Shifted not-started task from stale/non-open plan: BE_AP_PAGE
-
-[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/05/26
-[TASK_BE_PILOT_LC_AP] ends 2026/06/01
-[TASK_BE_PILOT_LC_AP] is colored in LightBlue
-[TASK_BE_PILOT_LC_AP] is 0% completed
-' Shifted not-started task from stale/non-open plan: BE_PILOT_LC_AP
+[RSCON-2521 FE Цепочка согласования] as [TASK_RSCON_2521] on {F2} starts 2026/06/11
+[TASK_RSCON_2521] ends 2026/06/23
+[TASK_RSCON_2521] is colored in LightCoral
+[TASK_RSCON_2521] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2521
+' Auto-assigned F2 (auto from TBD_F): RSCON-2521

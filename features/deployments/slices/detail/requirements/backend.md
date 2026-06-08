@@ -4,12 +4,12 @@
 Фича: `deployments`
 Срез: `detail`
 Область: `MVP`
-Дата обновления: `2026-05-22`
+Дата обновления: `2026-06-08`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Цель среза
 
-Отдать проекцию детальной карточки внедрения для фронта: актуальную версию, статус, доступные действия и связи для блоков только для чтения.
+Отдать проекцию детальной карточки внедрения для фронта: актуальную версию, статус, доступные действия, связь со SberDocs-согласованием и блоки только для чтения.
 
 ## Контракт API
 
@@ -41,7 +41,8 @@ paths:
 | `deploymentType`, `lineageSimulation` | тип и блок исходной симуляции |
 | `status` | чип статуса и действия |
 | `criticality` | чип критичности |
-| `availableActions` | кнопки действий |
+| `availableActions` | кнопки действий; не включает локальные `approve`/`reject` для SberDocs-сценария |
+| `approvalLink` / `sberdocsSystemNumber` или связанный approval snapshot | ссылка/номер SberDocs для `ON_APPROVAL`, если эти данные отдаются через контур `features/approvals` |
 | `version`, `isLast` | версия строки в единственной таблице `deployments` |
 | `initialCreateDateTime`, `createdDateTime`, `updateDateTime`, `authorEmployee`, `employeeNumber` | аудит/метаданные |
 
@@ -51,6 +52,7 @@ paths:
 - Артефакты: возвращаются общим контуром артефактов по сущности deployment.
 - Связанные сущности: вычисление только для чтения на основании скоркарт и исходной симуляции; ручных связей в API детальной карточки не требуем.
 - `availableActions` рассчитываются бэкендом по статусу, роли и ЖЦ. Для методолога действия внедрений не возвращаются; он может только редактировать артефакты через права общего контура артефактов.
+- В `ON_APPROVAL` детали согласования, комментарии и решения остаются в SberDocs/`features/approvals`; карточка внедрения показывает только read-only status/link/snapshot.
 
 ## Ошибки
 
@@ -65,6 +67,7 @@ paths:
 - [ ] `GET /api/v1/deployment/{number}` возвращает последнюю версию.
 - [ ] `GET /api/v1/deployment/id/{id}` возвращает конкретную версию.
 - [ ] `availableActions` меняются при смене статуса.
+- [ ] Для `ON_APPROVAL` backend не возвращает локальные действия `approve`/`reject`.
 - [ ] `DeploymentStatus` не содержит старые значения `draft`, `approved`, `ratified`, `cancelled`.
 - [ ] Для `SIMULATION_BASED` поле `lineageSimulation` заполнено, если задан `lineageSimulationId`.
 - [ ] Для отсутствующих связанных блоков API/UI дают пустой список, а не ошибку.

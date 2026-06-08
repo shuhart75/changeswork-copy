@@ -12,9 +12,9 @@
 
 ' Story STORY-TABULAR-RISK-PARAMETERS-002: materialized, mapping=explicit
 [PLAN FE Frontend форма изменения табличных риск-параметров] as [STORY_STORY_TABULAR_RISK_PARAMETERS_002] starts 2026/04/20
-[STORY_STORY_TABULAR_RISK_PARAMETERS_002] ends 2026/05/07
+[STORY_STORY_TABULAR_RISK_PARAMETERS_002] ends 2026/05/08
 [STORY_STORY_TABULAR_RISK_PARAMETERS_002] is colored in Gainsboro
-[STORY_STORY_TABULAR_RISK_PARAMETERS_002] is 86% completed
+[STORY_STORY_TABULAR_RISK_PARAMETERS_002] is 100% completed
 
 ' Execution task layer
 [RSCON-2430 BE Табличные риск-параметры: API, БД, логика] as [TASK_RSCON_2430] on {B2} starts 2026/04/17
@@ -33,9 +33,9 @@
 [TASK_RSCON_2452] is 100% completed
 
 [QA Табличные риск-параметры] as [TASK_QA_TABULAR_RISK_PARAMETERS] on {Q1} starts 2026/05/04
-[TASK_QA_TABULAR_RISK_PARAMETERS] ends 2026/05/07
+[TASK_QA_TABULAR_RISK_PARAMETERS] ends 2026/05/08
 [TASK_QA_TABULAR_RISK_PARAMETERS] is colored in Gold
-[TASK_QA_TABULAR_RISK_PARAMETERS] is 50% completed
+[TASK_QA_TABULAR_RISK_PARAMETERS] is 100% completed
 
 [RSCON-2432 BE Интеграция с ФП Симуляция: доработать передачу табличных РП при запуске симуляции] as [TASK_RSCON_2432] on {B2} starts 2026/05/06
 [TASK_RSCON_2432] ends 2026/05/07

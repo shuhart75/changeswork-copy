@@ -4,12 +4,12 @@
 Фича: `deployments`
 Срез: `lifecycle`
 Область: `MVP`
-Дата обновления: `2026-05-22`
+Дата обновления: `2026-06-08`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Цель среза
 
-Синхронизировать требования с реализованной машиной состояний из отчёта `2026-05-13-deployment-state-machine-summary.md`.
+Синхронизировать требования с реализованной машиной состояний и новым решением о SberDocs как владельце согласования.
 
 ## Статусы
 
@@ -29,8 +29,7 @@
 NEW --> NEW : EDIT
 NEW --> ON_APPROVAL : SUBMIT_FOR_APPROVAL
 ON_APPROVAL --> NEW : EDIT
-ON_APPROVAL --> DEPLOYED : APPROVE
-ON_APPROVAL --> REJECTED : REJECT
+ON_APPROVAL --> DEPLOYED : DEPLOY after SberDocs approved
 DEPLOYED --> ARCHIVED : TO_ARCHIVE
 REJECTED --> [*]
 ARCHIVED --> [*]
@@ -49,8 +48,7 @@ ARCHIVED --> [*]
    - edit из `NEW`: `NEW`;
    - edit из `ON_APPROVAL`: `NEW`;
    - submit: `ON_APPROVAL`;
-   - approve: `DEPLOYED`;
-   - reject: `REJECTED`;
+   - deploy: `DEPLOYED`, только если связанный SberDocs-процесс подтверждён как approved;
    - архивация: `ARCHIVED`.
 
 ## Маршрут действия
@@ -72,7 +70,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [submitForApproval, approve, reject, deploy, toArchive]
+            enum: [submitForApproval, deploy, toArchive]
 ```
 
 `edit` есть в `DeploymentAction`/`availableActions`, но выполняется через маршрут обновления, а не через маршрут действий.
@@ -81,6 +79,9 @@ paths:
 
 - Правило второй руки: согласующий не должен быть автором внедрения, если правило включено бэкендом.
 - Для `SIMULATION_BASED` перед согласованием симуляция должна быть `COMPLETED`.
+- `submitForApproval` запускает связанный процесс `features/approvals` / SberDocs; решения согласования, отклонение, отзыв, комментарии и правки маршрута выполняются в SberDocs.
+- Raw `REJECTED` из SberDocs не переводит внедрение в `REJECTED` автоматически: локально сохраняется `ON_APPROVAL`, пользователь видит raw status/комментарии и ссылку на SberDocs.
+- `deploy` разрешён только после подтверждённого mapped approved status из `features/approvals`.
 - После `DEPLOYED` редактирование запрещено; доступна только архивация, если бэкенд вернул `toArchive`.
 - `REJECTED` и `ARCHIVED` — конечные состояния.
 
@@ -98,7 +99,9 @@ paths:
 - [ ] Все переходы из диаграммы покрыты тестами.
 - [ ] Невалидные переходы возвращают `409`, а не молча меняют статус.
 - [ ] При каждом переходе создаётся новая строка в `deployments` и корректно обновляется `isLast`.
+- [ ] Внедрение не принимает локальные действия `approve`/`reject`; они выполняются в SberDocs.
+- [ ] `deploy` недоступен до подтверждённого SberDocs approved status.
 - [ ] `REJECTED` и `ARCHIVED` не имеют дальнейших действий.
 - [ ] `DEPLOYED` нельзя редактировать через маршрут обновления.
 - [ ] Редактирование из `ON_APPROVAL` возвращает новую версию в `NEW`.
-- [ ] Старые действия `recall`, `start_ratification`, `archive` в snake_case не принимаются как действия Deployments.
+- [ ] Старые действия `recall`, `start_ratification`, `archive` в snake_case, а также локальные `approve`/`reject` не принимаются как действия Deployments.

@@ -1,6 +1,6 @@
 # Domain Impact — simulation-bt-agent
 
-Дата обновления: `2026-05-07`
+Дата обновления: `2026-06-08`
 Baseline target: `baseline/current/domain/`
 
 ## Decision registry
@@ -17,6 +17,7 @@ Baseline target: `baseline/current/domain/`
 | DEC-2026-04-30-SIMULATION-BT-AGENT-009 | `session_id` создаёт backend АС КОДА; frontend передаёт его параметром запроса для продолжения сессии, а отсутствие `session_id` означает создание новой/сброс текущей UI-сессии; status response сокращён до `session_id`, `can_send_message`, `dialog_status`, `error` | accepted | domain-wide | `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-28-SIMULATION-BT-AGENT-005, DEC-2026-04-30-SIMULATION-BT-AGENT-008 |  |
 | DEC-2026-05-05-SIMULATION-BT-AGENT-010 | Согласованным контрактом RAIN считается `agent_openapi_1.yaml`, его полная версия включена в общие требования; `message` ограничен 3000 символами; frontend/backend API не использует признак изменения истории: после terminal status frontend сам запрашивает latest page истории и локально решает, обновлять низ чата или показать индикатор нового сообщения; frontend-facing ошибки имеют `error.code` и явно описанный источник кода; АС КОДА не отправляет отдельный `context/contextPrompt`; результат БТ берётся из `artifacts[]` | accepted | domain-wide | `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`, `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/*/requirements/*.md` | DEC-2026-04-29-SIMULATION-BT-AGENT-007, DEC-2026-04-30-SIMULATION-BT-AGENT-008, DEC-2026-04-30-SIMULATION-BT-AGENT-009 |  |
 | DEC-2026-05-07-SIMULATION-BT-AGENT-011 | АС КОДА интегрируется с REST-фасадом RAIN; ошибки фасада отделяются от ошибок агента: retry допустим только для retryable ошибок фасада/transport до `202 Accepted`, после `202 Accepted` выполняется только polling фасада, а terminal `failed`/`timeout` агента не retry-ятся; при agent timeout пользователь перезапускает сессию с новым `session_id` | accepted | domain-wide | `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/dialog-session/requirements/*.md`, `features/simulation-bt-agent/slices/bt-publication/requirements/*.md` | DEC-2026-05-05-SIMULATION-BT-AGENT-010 |  |
+| DEC-2026-05-14-SIMULATION-BT-AGENT-012 | BT-сценарий доступен только для завершённой симуляции, доступной к выводу в ПРОМ, без изменённых табличных риск-параметров, без изменений только "Верхней границы" и без изменений только "Действует с" (дата); prompt для RAIN формируется по ФИО пользователя и изменённым "Нижним границам" скалярных риск-параметров; неподходящие изменения дают `bt_context_not_available` или `bt_risk_params_invalid` | accepted | domain-wide | `/home/reutov/Downloads/coda_docs/coda-docs_features_simulation-bt-agent_requirements.md`, `/home/reutov/Downloads/coda_docs/coda_docs_features_simulation_bt_agent_slices_bt_publication_requirements.md`, `features/simulation-bt-agent/requirements.md`, `features/simulation-bt-agent/slices/bt-publication/requirements/*.md` | DEC-2026-05-07-SIMULATION-BT-AGENT-011 |  |
 
 ## Status values
 - `proposed` — решение сформулировано, но ещё не принято.
@@ -58,6 +59,11 @@ Baseline target: `baseline/current/domain/`
 - `DialogError`
 - `RAIN facade error`
 - `agent terminal error`
+- `bt_risk_params_invalid`
+- `changed_lower_bound`
+- `changed_upper_bound`
+- `date_only_change`
+- `tabular risk parameter`
 - `acknowledged_latest_message_id`
 - `current_latest_message_id`
 - `pending_new_message`
@@ -96,10 +102,14 @@ Baseline target: `baseline/current/domain/`
 - виртуализация истории может выгружать body сообщений и страницы, удалённые от viewport, но не должна выгружать session-level anchors текущей UI-сессии;
 - пользовательский `message` ограничен `3000` символами и валидируется на frontend/backend до вызова RAIN;
 - действие по БТ доступно только для конкретной завершённой симуляции с доступной опцией вывода в ПРОМ;
+- BT-сценарий недоступен, если в симуляции изменялись табличные риск-параметры;
+- BT-сценарий недоступен, если у скалярного риск-параметра изменялась только "Верхняя граница";
+- BT-сценарий недоступен, если у риск-параметра изменялось только поле "Действует с" (дата) без изменения значений границ;
 - в Q2 поддерживается продукт `Кредитные карты`;
 - черновик запроса вставляется в поле ввода, но не отправляется автоматически;
 - для доступности BT-сценария и риск-параметров используется уже реализованный `GET /api/v1/simulation/{number}`;
 - backend проверяет доступность симуляции и собирает/валидирует `risk_params` перед вызовом RAIN;
+- backend формирует prompt для RAIN по шаблону `Меня зовут %username%.` и optional блоком `Поменяй значение риск-параметров:` только по изменённым "Нижним границам" скалярных риск-параметров;
 - backend не отправляет в RAIN отдельное поле `context` или `contextPrompt`; для БТ используются только согласованные поля `simulation_id`, `risk_params`, `start_datetime`, `fio` и `message`;
 - terminal status run, история и агентский контекст принадлежат RAIN;
 - после успешной публикации URL на БТ отображается из структурированных `artifacts[]` результата RAIN run, если он присутствует;
@@ -123,6 +133,7 @@ Baseline target: `baseline/current/domain/`
 - retry policy server-to-server RAIN ограничена retryable ошибками фасада до `202 Accepted`; после `202 Accepted` статус и timeout агента читаются только через polling фасада;
 - полный OpenAPI-контракт RAIN продублирован в общих требованиях для handoff и остаётся синхронизированным с `context/change-requests/simulation-bt-agent/agent_openapi_1.yaml`;
 - existing simulation detail API `GET /api/v1/simulation/{number}` переиспользуется как источник данных страницы для BT-сценария;
+- frontend-facing `POST /dialog/message` должен возвращать `bt_risk_params_invalid`, если изменённые риск-параметры не соответствуют условиям формирования БТ;
 - `btUrl` как отдельное поле frontend API АС КОДА не требуется; ссылка на БТ берётся из `artifacts[]` результата RAIN run;
 - аудит и защищённый транспорт для межсервисного обмена остаются обязательными.
 
@@ -137,9 +148,9 @@ Baseline target: `baseline/current/domain/`
 | `features/simulation-bt-agent/slices/dialog-session/slice.md` | обновлена цель slice под async run через фасад, polling, RAIN-owned историю, latest-page refresh после terminal status, разделение ошибок фасада/агента и лимит `message=3000` | propagated |
 | `features/simulation-bt-agent/slices/dialog-session/requirements/frontend.md` | описаны async run, polling без признака изменения истории, terminal statuses, blocked composer, history window, anchor-based индикатор новых сообщений при виртуализации, источники frontend error codes и перезапуск сессии при agent timeout | propagated |
 | `features/simulation-bt-agent/slices/dialog-session/requirements/backend.md` | описаны backend async facade без path `session_id`, session status endpoint, run storage, history pagination, `message=3000`, RAIN OpenAPI source, разделение ошибок фасада/агента и timeout/retry policy до `202 Accepted` | propagated |
-| `features/simulation-bt-agent/slices/bt-publication/slice.md` | обновлена цель slice под `risk_params`, `simulation_id`, `message.content`, `artifacts[]` результата RAIN run и запрет retry после `202 Accepted` | propagated |
-| `features/simulation-bt-agent/slices/bt-publication/requirements/frontend.md` | обновлены inline action БТ, async run, отсутствие скрытого retry после `202 Accepted`, перезапуск сессии при timeout агента, чтение URL из `artifacts[]`, отсутствие отдельного `btUrl` и источники frontend error codes | propagated |
-| `features/simulation-bt-agent/slices/bt-publication/requirements/backend.md` | обновлены проверка симуляции, сбор `risk_params`, ссылка на полный RAIN OpenAPI, вызов RAIN `POST /chat/runs`, чтение result/artifacts, разделение ошибок фасада/агента и retry только до `202 Accepted` | propagated |
+| `features/simulation-bt-agent/slices/bt-publication/slice.md` | обновлена цель slice под eligibility по табличным параметрам/верхней границе/`Действует с`, prompt по "Нижней границе", `risk_params`, `simulation_id`, `message.content`, `artifacts[]` результата RAIN run и запрет retry после `202 Accepted` | propagated |
+| `features/simulation-bt-agent/slices/bt-publication/requirements/frontend.md` | обновлены inline action БТ, предварительная блокировка по доступным frontend признакам риск-параметров, prompt draft по "Нижней границе", async run, отсутствие скрытого retry после `202 Accepted`, перезапуск сессии при timeout агента, чтение URL из `artifacts[]`, отсутствие отдельного `btUrl` и источники frontend error codes | propagated |
+| `features/simulation-bt-agent/slices/bt-publication/requirements/backend.md` | обновлены проверка симуляции, validation изменённых риск-параметров, prompt по "Нижней границе", сбор `risk_params`, ссылка на полный RAIN OpenAPI, вызов RAIN `POST /chat/runs`, чтение result/artifacts, разделение ошибок фасада/агента и retry только до `202 Accepted` | propagated |
 | `features/roles/slices/rbac/requirements/frontend.md` | при необходимости формализовать права на глобальное окно агента и действие по БТ | open |
 
 ## Affected baseline artifacts
@@ -147,17 +158,17 @@ Baseline target: `baseline/current/domain/`
 | Path | Impact | Sync status |
 |---|---|---|
 | `baseline/current/domain/contexts/research-and-execution.md` | отразить окно агента, async run и сценарий БТ | open |
-| `baseline/current/domain/business-rules.md` | новые правила UI-сессии, readiness block, run lock, `message=3000`, latest-page refresh после terminal status, разделения ошибок фасада/агента, retry только до `202 Accepted`, ручного копирования URL и отсутствия автосохранения | open |
+| `baseline/current/domain/business-rules.md` | новые правила UI-сессии, readiness block, run lock, `message=3000`, latest-page refresh после terminal status, разделения ошибок фасада/агента, retry только до `202 Accepted`, eligibility по риск-параметрам, prompt по "Нижней границе", ручного копирования URL и отсутствия автосохранения | open |
 | `baseline/current/domain/contexts/identity-and-access.md` | канонизировать права на окно агента, действие по БТ и server-to-server OTT/mTLS | open |
-| `baseline/current/api/README.md` | описать frontend API АС КОДА без `session_id` в path, без признака изменения истории в status response, `message=3000`, `error.code` model, server-to-server RAIN facade async runs/history/result, health endpoints и retry policy до `202 Accepted` | open |
-| `baseline/current/ui/README.md` | зафиксировать status chip, blocked composer, async run/session polling, paginated history, latest-page refresh после terminal status, локальный new-message indicator, inline action БТ и перезапуск сессии при agent timeout | open |
+| `baseline/current/api/README.md` | описать frontend API АС КОДА без `session_id` в path, без признака изменения истории в status response, `message=3000`, `error.code` model включая `bt_risk_params_invalid`, server-to-server RAIN facade async runs/history/result, health endpoints и retry policy до `202 Accepted` | open |
+| `baseline/current/ui/README.md` | зафиксировать status chip, blocked composer, async run/session polling, paginated history, latest-page refresh после terminal status, локальный new-message indicator, inline action БТ с причинами недоступности по риск-параметрам и перезапуск сессии при agent timeout | open |
 
 ## Affected prototypes
 
 ### Scope prototypes
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/simulation-bt-agent/prototype.html` | требует синхронизации под async run/session polling, health status readiness block, paginated history, локальный new-message indicator, `message=3000` и `artifacts[]` результата RAIN run | defer-ok |
+| `features/simulation-bt-agent/prototype.html` | требует синхронизации под async run/session polling, health status readiness block, paginated history, локальный new-message indicator, `message=3000`, eligibility по риск-параметрам и `artifacts[]` результата RAIN run | defer-ok |
 | `features/simulation-bt-agent/prototype-notes.md` | требует обновления заметок после новой интеграционной модели | defer-ok |
 | `features/simulation-bt-agent/planning/scope-prototype/prototype.html` | legacy scope prototype не используется как канонический артефакт для текущей feature | obsolete |
 
@@ -166,7 +177,7 @@ Baseline target: `baseline/current/domain/`
 |---|---|---|
 | `features/simulation-bt-agent/slices/agent-entrypoint/delivery-prototype/prototype.html` | требует синхронизации под health/readiness status и отсутствие вызова RAIN при открытии | defer-ok |
 | `features/simulation-bt-agent/slices/dialog-session/delivery-prototype/prototype.html` | требует синхронизации под async run, session polling, terminal statuses, paginated history, new-message indicator и restart-session UX при agent timeout | defer-ok |
-| `features/simulation-bt-agent/slices/bt-publication/delivery-prototype/prototype.html` | требует синхронизации под inline action, `risk_params/simulation_id`, запрет скрытого retry и URL из `artifacts[]` | defer-ok |
+| `features/simulation-bt-agent/slices/bt-publication/delivery-prototype/prototype.html` | требует синхронизации под inline action, prompt по изменённой "Нижней границе", блокировки по табличным/верхней границе/`Действует с`, `risk_params/simulation_id`, запрет скрытого retry и URL из `artifacts[]` | defer-ok |
 
 ## Prototype sync status values
 - `must-update-now` — prototype is an active handoff/scope artifact and must be updated.

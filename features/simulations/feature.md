@@ -2,7 +2,7 @@
 
 Статус: **импортировано как existing baseline coverage**  
 Квартал: `2026-Q2`  
-Дата обновления: `2026-04-24`
+Дата обновления: `2026-06-08`
 
 ## Цель
 Собрать в отдельной feature уже существующий контур симуляций, чтобы simulation scope был виден не только в `baseline/current/`, но и в `features/` как нормализованный legacy-workspace с понятными slices и ссылками на источники.
@@ -35,6 +35,7 @@
 
 ## Planning stories
 - `planning/stories/STORY-SIMULATIONS-001.md` — точечная story-опора для slice `artifacts-related`, добавленная ради materialization в `actual-progress`;
+- `planning/stories/STORY-SIMULATIONS-002.md` — точечная story-опора для фактических задач конфигурации пилотов, добавленная из входящего actual-progress snapshot;
 - остальная часть feature по-прежнему живёт как normalization of existing coverage без отдельного квартального planning-слоя.
 
 ## Риски и зависимости

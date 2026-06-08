@@ -2,7 +2,7 @@
 
 Feature: `../../../feature.md`  
 Slice: `../../slice.md`  
-Дата обновления: `2026-05-08`
+Дата обновления: `2026-06-08`
 
 ## Jira
 RSCON-2449
@@ -24,14 +24,14 @@ B3
 - Finish: 2026-05-14
 
 ## Actual dates
-- Start:
-- Finish:
+- Start: 2026-05-08
+- Finish: 2026-05-08
 
 ## Status
-planned
+done
 
 ## Progress
-- `0%`
+- `100%`
 
 ## Description
 Backend-задача на связь `Deployment` со скоркартами для detail/related-блоков внедрения.
@@ -46,4 +46,4 @@ Backend-задача на связь `Deployment` со скоркартами д
 - `../../requirements/backend.md`
 
 ## Notes
-Добавлено по пользовательскому обновлению от `2026-05-08`: исполнитель `B3`, оценка `2` дня, прогресс `0%`.
+Добавлено по пользовательскому обновлению от `2026-05-08`; по входящему actual-progress snapshot задача завершена `2026-05-08`.

@@ -2,7 +2,7 @@
 
 Статус: **для передачи команде**
 Область: MVP
-Дата обновления: 2026-03-18
+Дата обновления: 2026-06-08
 
 ## Оглавление
 1. [Стора с фичей (ссылка на Jira)](#стора-с-фичей-ссылка-на-jira)
@@ -37,6 +37,15 @@
 ### Контекст
 
 Страница `Пилоты` является инструментом для управления контролируемыми экспериментами с реальными клиентами. Пилот проходит через несколько этапов: черновик → согласование → утверждение → активация → завершение/корректировка.
+
+### Дельта 2026-06-08: тип процесса
+
+Связанный requirements-пакет `features/pilots-config-type/` добавляет поле `processType`:
+- wire-level значения: `online`, `offline`, `online+offline`;
+- пользовательские подписи: `Онлайн`, `Офлайн`, `Онлайн+Офлайн`;
+- default при создании: `online`;
+- редактирование доступно только в тех же статусах и ролях, где доступно редактирование пилота;
+- деталка пилота должна показывать read-only значение типа процесса.
 
 ## Пользовательские требования к АС КОДА
 
@@ -202,6 +211,7 @@
 - Форма создания нового пилота
 - Валидация полей
 - Выбор инициативы, скоркарт, подпродуктов
+- Выбор типа процесса `processType` со значением `online` по умолчанию
 - Указание параметров эксперимента
 - Отправка данных на сервер
 
@@ -209,11 +219,13 @@
 - Форма редактирования пилота
 - Аналогична CreatePilotDialog, но с предзаполненными данными
 - Доступна для draft и requires_correction
+- Поле `processType` редактируется вместе с остальными редактируемыми полями
 
 #### PilotDetailDialog (детальное окно)
 - Отображает детальную информацию о пилоте
 - Содержит вкладки с разными аспектами
 - Предоставляет кнопки для управления жизненным циклом
+- Показывает `processType` в читаемом виде
 
 #### PilotMetricsView (просмотр метрик)
 - Отображает целевые метрики и их значения
@@ -287,6 +299,7 @@ interface PilotVersion {
   version: number;
   status: PilotStatus;
   priority: 'critical' | 'high' | 'medium' | 'low';
+  processType: ProcessType;
   experimentParams: ExperimentParams;
   targetMetrics: TargetMetric[];
   scorecards: ScorecardRef[];
@@ -306,6 +319,8 @@ type PilotStatus =
   | 'active'
   | 'requires_correction'
   | 'completed';
+
+type ProcessType = 'online' | 'offline' | 'online+offline';
 
 // Параметры эксперимента
 interface ExperimentParams {
@@ -397,6 +412,7 @@ interface CreatePilotData {
   description: string;
   initiativeId: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
+  processType: ProcessType;
   experimentParams: ExperimentParams;
   targetMetrics: TargetMetric[];
   scorecardIds: string[];
@@ -453,6 +469,7 @@ interface CreatePilotData {
   - Название (TextField, обязательное)
   - Описание (TextField multiline, обязательное)
   - Критичность (Select, обязательное)
+  - Тип процесса (Select, обязательное; Online/Offline/Online+Offline; default Online)
   - Скоркарты (Autocomplete multiple, обязательное, минимум 1)
   - Подпродукты (Autocomplete multiple, опциональное)
   - Параметры эксперимента:
@@ -556,6 +573,11 @@ interface CreatePilotData {
 - Кнопка "Завершить" (только для active)
 - Кнопка "Требует корректировки" (только для active)
 - Кнопка "Закрыть"
+
+**Тип процесса:**
+- поле отображается в форме создания/редактирования как обязательный select;
+- в деталке отображается read-only рядом с основными параметрами пилота;
+- unknown value из API считается ошибкой данных и не сохраняется молча.
 
 #### Меню действий (PilotActionsMenu)
 
@@ -965,6 +987,7 @@ export default function MetricsChart({ data, metricNames }: MetricsChartProps) {
   "description": "Description",
   "initiative_id": "uuid",
   "priority": "high",
+  "processType": "online",
   "experiment_params": {
     "sample_size": 1000,
     "duration": 90,
@@ -1008,6 +1031,7 @@ export default function MetricsChart({ data, metricNames }: MetricsChartProps) {
   "name": "New Name",
   "description": "New description",
   "priority": "critical",
+  "processType": "online+offline",
   "experiment_params": {
     "sample_size": 1500,
     "duration": 120
@@ -1266,6 +1290,12 @@ export default function MetricsChart({ data, metricNames }: MetricsChartProps) {
 - Одно из значений: critical/high/medium/low
 - Сообщение: "Выберите критичность"
 
+#### Тип процесса
+- Обязательное поле
+- Одно из значений: online/offline/online+offline
+- Значение по умолчанию при создании: online
+- Сообщение: "Выберите тип процесса"
+
 #### Размер выборки
 - Обязательное поле
 - Целое число > 0
@@ -1328,6 +1358,7 @@ interface CreatePilotFormData {
   description: string;
   initiativeId: string;
   priority: 'critical' | 'high' | 'medium' | 'low';
+  processType: 'online' | 'offline' | 'online+offline';
   experimentParams: {
     sampleSize: number;
     duration: number;
@@ -1352,6 +1383,7 @@ function CreatePilotDialog({ onClose, onCreate }: Props) {
     formState: { errors }
   } = useForm<CreatePilotFormData>({
     defaultValues: {
+      processType: 'online',
       targetMetrics: [{ name: '', targetValue: 0, unit: '' }]
     }
   });

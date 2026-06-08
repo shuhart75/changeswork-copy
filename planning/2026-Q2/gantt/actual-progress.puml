@@ -15,6 +15,7 @@ today is colored in LightSalmon
 !$now = %now()
 [Мы сейчас здесь] as [TODAY_MARK] happens %date("YYYY-MM-dd", $now)
 2026/05/21 is colored in LightSteelBlue
+2026/06/18 is colored in LightSteelBlue
 
 <style>
 ganttDiagram {
@@ -33,7 +34,7 @@ ganttDiagram {
 
 !include preamble/actual-progress.puml
 
--- Согласования --
+-- Согласования через SberDocs --
 !include includes/actual-progress/FEATURE-approvals.puml
 
 -- Артефакты --

@@ -1,13 +1,13 @@
 # Domain Impact — pilots
 
-Дата обновления: `2026-04-23`
+Дата обновления: `2026-06-08`
 Baseline target: `baseline/current/domain/`
 
 ## Decision registry
 
 | Decision ID | Summary | Status | Consistency level | Source | Supersedes | Reverted by |
 |---|---|---|---|---|---|---|
-| DEC-YYYY-MM-DD-<FEATURE>-001 | <short decision> | proposed | local | <requirement/change request> |  |  |
+| DEC-2026-05-13-PILOTS-CONFIG-TYPE | Добавить `processType`/`process_type` для пилотов/экспериментов | proposed | cross-feature | `/home/reutov/Downloads/coda_docs` |  |  |
 
 ## Status values
 - `proposed` — решение сформулировано, но ещё не принято.
@@ -24,43 +24,82 @@ Baseline target: `baseline/current/domain/`
 
 ## Changed bounded contexts
 
+- `Pilot Service` / experiment service: добавлено persisted поле типа процесса.
+
 ## New or changed aggregates
+
+- `Experiment`: новое поле `process_type`.
+- `Pilot` workspace: отображает и редактирует `processType` как пользовательское представление поля эксперимента.
 
 ## New or changed entities
 
+- `experiments`: добавлено `process_type`.
+
 ## New or changed value objects
+
+- `ProcessType`: enum `online`, `offline`, `online+offline`.
 
 ## New or changed domain events
 
 ## Business rules and invariants
 
+- Значение `processType` обязательно для пилота/эксперимента.
+- Default при создании: `online`.
+- Backfill существующих записей: `online`.
+- Допустимые значения: `online`, `offline`, `online+offline`.
+- Права редактирования наследуются от существующих правил редактирования пилота.
+- Внешнюю фильтрацию конфигураций выполняет Config Service только в `/api/v3/config`.
+- `/api/v2/config` не расширяется в рамках этой дельты.
+
 ## State transitions
 
+- Не меняются.
+
 ## API and integration impact
+
+- Внутренние experiment endpoints должны принимать/возвращать `processType`:
+  - `POST /api/v1/experiment`
+  - `PUT /api/v1/experiment/{id}`
+  - `POST /api/v1/experiments`
+  - `POST /api/v1/experimentsExtended`
+  - `POST /api/v1/experimentsWithSampleHistory`
+  - `GET /api/v1/experiment/{number}`
+- Canonical `context/source-materials/current-system/requirements/raw/docs/coda_api.yaml` заявлен во входящих материалах, но отсутствует в текущем repo.
+- Внешний `/api/v3/config` должен принимать optional `processType` и возвращать отфильтрованные конфигурации.
+- Внешний `/api/v2/config` не меняется в рамках этой дельты.
 
 ## Affected requirements
 
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/<feature>/slices/<slice>/requirements/backend.md` | <what must change> | open |
+| `features/pilots/requirements.md` | Root workspace синхронизирован с дельтой `processType` | propagated |
+| `features/pilots/slices/workspace/slice.md` | Добавлены ссылки на related config requirements | propagated |
+| `features/pilots/slices/workspace/requirements/frontend.md` | Добавлены UI/type/API требования по `processType` | propagated |
+| `features/pilots/slices/workspace/requirements/backend.md` | Добавлены model/API/open-question требования по `processType` | propagated |
+| `features/pilots-config-type/requirements.md` | Создан отдельный requirements-пакет из входящей папки | propagated |
+| `features/pilots-config-type/slices/config/requirements/frontend.md` | Создан детальный FE pack | propagated |
+| `features/pilots-config-type/slices/config/requirements/backend.md` | Создан детальный BE pack | propagated |
 
 ## Affected baseline artifacts
 
 | Path | Impact | Sync status |
 |---|---|---|
-| `baseline/current/domain/<file>.md` | <what must change> | open |
+| `baseline/current/domain/` | Добавить `ProcessType` и связь pilot/experiment | open |
+| `baseline/current/data/` | Добавить migration/backfill для `experiments.process_type` | open |
+| `baseline/current/api/` | Обновить experiment OpenAPI и внешний `/api/v3/config`; `/api/v2/config` не менять | open |
 
 ## Affected prototypes
 
 ### Scope prototypes
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/<feature>/planning/scope-prototype/prototype.html` | <what might be outdated> | defer-ok |
+| `features/pilots/planning/scope-prototype/prototype.html` | Может не показывать `processType` в форме/деталке | defer-ok |
 
 ### Delivery prototypes
 | Path | Impact | Sync status |
 |---|---|---|
-| `features/<feature>/slices/<slice>/delivery-prototype/prototype.html` | <what might be outdated> | defer-ok |
+| `features/pilots/slices/workspace/delivery-prototype/prototype.html` | Нужно добавить поле `Тип процесса` после переключения в prototype mode | defer-ok |
+| `features/pilots-config-type/slices/config/delivery-prototype/prototype.html` | Входящий prototype не импортирован в режиме `requirements` | defer-ok |
 
 ## Prototype sync status values
 - `must-update-now` — prototype is an active handoff/scope artifact and must be updated.
@@ -69,11 +108,11 @@ Baseline target: `baseline/current/domain/`
 - `obsolete` — prototype should no longer be treated as current.
 
 ## Required consistency actions
-- [ ] local feature requirements updated
-- [ ] neighboring feature requirements updated or backlog item created
-- [ ] domain impact reviewed by main agent
-- [ ] baseline impact updated or backlog item created
-- [ ] affected prototypes listed
+- [x] local feature requirements updated
+- [x] neighboring feature requirements updated or backlog item created
+- [x] domain impact reviewed by main agent
+- [x] baseline impact updated or backlog item created
+- [x] affected prototypes listed
 - [ ] release package updated when applicable
 
 ## Rollback notes

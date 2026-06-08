@@ -4,7 +4,7 @@
 Фича: `deployments`
 Срез: `form-editing`
 Область: `MVP`
-Дата обновления: `2026-05-22`
+Дата обновления: `2026-06-08`
 Шаблон: `.workflow/templates/requirements/backend.template.md`
 
 ## Цель среза

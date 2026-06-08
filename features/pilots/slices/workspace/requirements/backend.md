@@ -21,6 +21,13 @@
 
 ### Бизнес-правила
 
+#### БП-0: Тип процесса Пилота
+- Пилот/эксперимент имеет обязательный тип процесса `processType`
+- Допустимые значения: `online`, `offline`, `online+offline`
+- Значение по умолчанию при создании: `online`
+- Существующие записи мигрируются в `online`
+- Внутренняя модель входящей дельты хранит значение в `experiments.process_type`; пользовательское представление остаётся "Пилот"
+
 #### БП-1: Создание и управление Пилотами
 - Пилот создаётся в статусе `draft`
 - Пилот должен быть связан минимум с одной Скоркартой
@@ -412,6 +419,7 @@
 6. `initiatives` — инициативы (связь с Пилотом)
 7. `scorecards` — скоркарты (связь с Пилотом)
 8. `approval_instances` — процесс согласования (связь с PilotVersion)
+9. `experiments` — внутренняя таблица экспериментов; для дельты `pilots-config-type` содержит `process_type`
 
 **Связи:**
 - `pilots` → `pilot_versions` (1:N)
@@ -420,6 +428,7 @@
 - `pilot_versions` → `approval_instances` (1:1, через target_type='PILOT_VERSION')
 - `pilot_source` → `simulation_versions` (отслеживание происхождения)
 - `pilot_versions` → `pilot_metrics` (1:N)
+- `experiments.process_type` используется входящей дельтой как persisted field для пользовательского `processType`
 
 ### Структура данных
 
@@ -470,6 +479,25 @@
 - INDEX `(pilot_id, version)` — для получения версий
 - INDEX `(status)` — для фильтрации по статусу
 - INDEX `(activated_at)` — для фильтрации по дате активации
+
+---
+
+#### Таблица: experiments (связанная дельта processType)
+
+Входящие материалы `pilots-config-type` фиксируют, что внутреннее хранение типа процесса находится в таблице `experiments`, а не в legacy-таблицах `pilots`/`pilot_versions`.
+
+| Поле | Тип | Обяз. | Описание |
+|------|-----|-------|----------|
+| process_type | VARCHAR(32) | да | Тип процесса: `online`, `offline`, `online+offline`; default `online` |
+
+**Ограничения:**
+- CHECK `process_type IN ('online', 'offline', 'online+offline')`
+- `process_type IS NOT NULL`
+
+**Миграция:**
+- Добавить колонку `process_type`
+- Проставить всем существующим экспериментам `online`
+- Сохранить обратную совместимость для клиентов, которые не передают `processType`
 
 ---
 
@@ -563,6 +591,7 @@
         "version": 1,
         "status": "draft",
         "criticality": "HIGH",
+        "processType": "online",
         "scorecards": [
           { "id": "uuid", "name": "Скоркарта Premium v2.0" }
         ]
@@ -612,6 +641,7 @@
     "version": 1,
     "status": "draft",
     "criticality": "HIGH",
+    "processType": "online",
     "testScope": "Клиенты сегмента Premium",
     "plannedDurationDays": 90,
     "scorecards": [...],
@@ -665,6 +695,7 @@
   "description": "...",
   "initiativeId": "uuid",
   "criticality": "HIGH",
+  "processType": "offline",
   "testScope": "Клиенты сегмента Premium",
   "plannedDurationDays": 90,
   "scorecardIds": ["uuid1", "uuid2"]
@@ -685,7 +716,7 @@
 3. Проверить права: пользователь может создавать Пилоты только для своего продукта
 4. Проверить, что выбрана минимум одна Скоркарта
 5. Создать Pilot
-6. Создать PilotVersion (version=1, status='draft')
+6. Создать PilotVersion (version=1, status='draft') и сохранить `processType` в `experiments.process_type` для связанной внутренней модели эксперимента
 7. Создать связи со Скоркартами (pilot_scorecards)
 8. Автоматически создать связи lineage (pilot_source) если Скоркарты имеют источники
 9. Вернуть созданный Пилот
@@ -696,6 +727,7 @@
 - Initiative принадлежит продукту пользователя (для ПРМ/Методолога)
 - Выбрана минимум одна Скоркарта
 - Все обязательные поля заполнены
+- `processType`, если передан, входит в enum `online | offline | online+offline`
 
 **Ошибки:**
 - `401` — не аутентифицирован
@@ -717,6 +749,7 @@
   "name": "Новое название",
   "description": "Новое описание",
   "criticality": "CRITICAL",
+  "processType": "online+offline",
   "testScope": "Обновлённый периметр",
   "plannedDurationDays": 120,
   "scorecardIds": ["uuid1", "uuid2", "uuid3"]
@@ -737,7 +770,7 @@
 3. Проверить, что текущая версия в статусе `draft`
 4. Проверить права: пользователь — создатель или Админ
 5. Обновить поля Pilot (name, description)
-6. Обновить поля PilotVersion (criticality, testScope, plannedDurationDays)
+6. Обновить поля PilotVersion (criticality, testScope, plannedDurationDays) и `experiments.process_type`, если изменён `processType`
 7. Обновить связи со Скоркартами (если изменились)
 8. Проверить, что осталась минимум одна Скоркарта
 9. Обновить lineage (если изменились Скоркарты)
@@ -748,6 +781,7 @@
 - Текущая версия в статусе `draft`
 - Пользователь — создатель или Админ
 - Если изменяются Скоркарты, минимум одна должна остаться
+- `processType`, если передан, входит в enum `online | offline | online+offline`
 
 **Ошибки:**
 - `401` — не аутентифицирован
@@ -1156,6 +1190,25 @@
 ---
 
 ### АПИ ссылка
+
+### Связанная дельта: внутренние experiment endpoints для processType
+
+Входящий пакет `pilots-config-type` требует обновить следующие внутренние endpoints и схемы OpenAPI:
+
+| Endpoint | Изменение |
+|---|---|
+| `POST /api/v1/experiment` | `CreateExperiment.processType` |
+| `PUT /api/v1/experiment/{id}` | `UpdateExperiment.processType` |
+| `POST /api/v1/experiments` | `ExperimentRecord.processType` |
+| `POST /api/v1/experimentsExtended` | `ExtendedExperimentRecordWithSamplesDto.processType` |
+| `POST /api/v1/experimentsWithSampleHistory` | `ExperimentWithSampleHistory.processType` |
+| `GET /api/v1/experiment/{number}` | `Experiment.processType` |
+
+Canonical файл `context/source-materials/current-system/requirements/raw/docs/coda_api.yaml` заявлен во входящих материалах, но в текущем repo не найден. До появления canonical OpenAPI требования фиксируются в `features/pilots-config-type/slices/config/requirements/backend.md`.
+
+### Внешняя фильтрация конфигураций
+
+Уточнение от 2026-06-08: фильтрацию выполняет Config Service, причём только в `/api/v3/config`. `/api/v3/config` принимает optional `processType`; `/api/v2/config` не расширяется в рамках этой дельты. Splitter для `/api/v3/config` получает уже отфильтрованный результат и не выполняет самостоятельную фильтрацию по `process_type`.
 
 **Swagger/OpenAPI документация:**
 - Локальная разработка: `http://localhost:8080/swagger-ui.html`

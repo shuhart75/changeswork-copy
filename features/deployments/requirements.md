@@ -3,8 +3,9 @@
 Статус: **актуализировано после реализации**
 Фича: `features/deployments/feature.md`
 Квартал: `2026-Q2`
-Дата обновления: `2026-05-22`
+Дата обновления: `2026-06-08`
 Шаблон: `.workflow/templates/requirements/feature-requirements.template.md`
+Связанное решение: `DEC-2026-06-08-DEPLOYMENTS-SBERDOCS-006`
 
 ## Как читать документ
 
@@ -14,6 +15,7 @@
 - Актуальный контракт API берём из `/home/reutov/Downloads/rscon-api.yaml`, тег `Deployments`.
 - Реальная модель данных берётся из `/home/reutov/Downloads/111.xlsx`: единственная таблица внедрений — `deployments`.
 - Актуальное описание реализованного ЖЦ берём из `/home/reutov/Downloads/2026-05-13-deployment-state-machine-summary.md`.
+- Согласование выполняется через `features/approvals` и SberDocs: внедрение хранит только mapped status `ON_APPROVAL`, а решения согласования, комментарии, отзыв и правки маршрута выполняются в SberDocs.
 
 ## Оглавление
 
@@ -48,8 +50,8 @@ rectangle "Скоркарты" as F
 rectangle "Артефакты" as G
 rectangle "submitForApproval" as H
 rectangle "ON_APPROVAL" as I
-rectangle "approve" as J
-rectangle "reject" as K
+rectangle "SberDocs approval" as J
+rectangle "SberDocs rejected/cancelled" as K
 rectangle "DEPLOYED" as L
 rectangle "REJECTED" as M
 rectangle "toArchive" as N
@@ -64,8 +66,8 @@ D --> H
 H --> I
 I --> J
 I --> K
-J --> L
-K --> M
+J --> L : deploy after approved
+K --> I : stay ON_APPROVAL or cancel in approvals
 L --> N
 N --> O
 @enduml
@@ -79,7 +81,7 @@ N --> O
 | Поля создания | только поля самого внедрения | скоркарты и артефакты на форме создания |
 | Скоркарты | доступны после сохранения внедрения, через редактирование | обязательная скоркарта до первого сохранения |
 | Артефакты | доступны после сохранения внедрения, через редактирование | создание артефактов до появления `deployment.id` |
-| ЖЦ | `NEW -> ON_APPROVAL -> DEPLOYED/REJECTED`, затем `DEPLOYED -> ARCHIVED` | `draft`, `ratified`, `cancelled`, `recall`, `start_ratification` как статусы/действия внедрения |
+| ЖЦ | `NEW -> ON_APPROVAL`; дальше SberDocs является источником согласования, а `DEPLOYED` допускается только после подтверждённого согласования и разрешённого бэкендом действия | `draft`, `ratified`, `cancelled`, `recall`, `start_ratification`, локальные `approve/reject` как действия внедрения |
 | Статус в UI | показываем статус бэкенда русским названием | локальную машину состояний фронта поверх бэкенда |
 
 ## Порядок срезов для контроля
@@ -186,7 +188,7 @@ N --> O
 | `prm` | свои и другие продукты | свой продукт | свой продукт, если действие вернул бэкенд | свой продукт |
 | `methodologist` | все продукты | не создаёт и не редактирует поля внедрения | нет действий ЖЦ во внедрениях | только редактирует артефакты в разрешённом продуктовом контуре |
 | `admin` | все продукты | все продукты | все действия, разрешённые бэкендом | все продукты |
-| `approver/ratifier` | через свои экраны согласования | нет | `approve`/`reject` через согласование/действие Deployment по назначению | нет |
+| `approver/ratifier` | через SberDocs/экраны согласования | нет | решения выполняются в SberDocs, не через действие Deployment | нет |
 
 ---
 
@@ -202,6 +204,8 @@ N --> O
 | `DEPLOYED` | Внедрено | нет | нет | можно архивировать |
 | `ARCHIVED` | Архив | нет | да | конечный статус |
 
+`ON_APPROVAL` означает, что для внедрения есть связанный процесс `features/approvals` / SberDocs. АС КОДА не показывает локальные действия согласующего по внедрению: согласовать, отклонить, отозвать, изменить документ или маршрут нужно в SberDocs. Raw `REJECTED` из SberDocs не должен автоматически переводить внедрение в `REJECTED`: пользователь видит `ON_APPROVAL`, raw status/комментарии и ссылку на SberDocs для исправления. Raw `ON_DELETING`/`DELETED` обрабатывается в контуре `features/approvals`; если для внедрения понадобится отдельный terminal status отмены, это должно быть новым изменением требований к Deployments/OpenAPI.
+
 ### Матрица переходов
 
 ```plantuml
@@ -210,8 +214,7 @@ N --> O
 NEW --> NEW : edit
 NEW --> ON_APPROVAL : submitForApproval
 ON_APPROVAL --> NEW : edit
-ON_APPROVAL --> DEPLOYED : approve
-ON_APPROVAL --> REJECTED : reject
+ON_APPROVAL --> DEPLOYED : deploy after SberDocs approved
 DEPLOYED --> ARCHIVED : toArchive
 REJECTED --> [*]
 ARCHIVED --> [*]
@@ -221,13 +224,12 @@ ARCHIVED --> [*]
 | Текущий статус | Действие | Новый статус | Что проверить |
 |---|---|---|---|
 | `NEW` | `edit` | `NEW` | создаётся новая строка в `deployments`, статус сохраняется |
-| `NEW` | `submitForApproval` | `ON_APPROVAL` | доступно только если заполнены обязательные поля и права |
-| `ON_APPROVAL` | `edit` | `NEW` | редактирование снимает с согласования и возвращает внедрение в черновое состояние |
-| `ON_APPROVAL` | `approve` | `DEPLOYED` | подтверждение второй рукой: согласующий не должен быть автором, если правило включено бэкендом |
-| `ON_APPROVAL` | `reject` | `REJECTED` | статус конечный |
+| `NEW` | `submitForApproval` | `ON_APPROVAL` | запускает интеграцию `features/approvals` / SberDocs; happy path возвращает ссылку/номер SberDocs в контуре согласований |
+| `ON_APPROVAL` | `edit` | `NEW` | доступно только если бэкенд явно разрешил сброс согласования; штатные правки уже созданного документа выполняются в SberDocs |
+| `ON_APPROVAL` | `deploy` | `DEPLOYED` | доступно только после подтверждённого mapped approved status из SberDocs и если бэкенд вернул `deploy` |
 | `DEPLOYED` | `toArchive` | `ARCHIVED` | статус конечный |
 
-Примечание по `deploy`: действие есть в перечислении OpenAPI. UI показывает `deploy` только если бэкенд вернул его в `availableActions`; отдельный сценарий `ratified`/`startRatification` в требованиях внедрений не строим.
+Примечание: старые локальные действия `approve`/`reject` больше не являются требованиями к Deployments. Если они остаются в старом OpenAPI-перечислении, UI и backend не должны использовать их для нового SberDocs-сценария без отдельного решения.
 
 ---
 
@@ -254,7 +256,7 @@ DeploymentStatus:
 
 DeploymentAction:
   type: string
-  enum: [submitForApproval, edit, approve, reject, deploy, toArchive]
+  enum: [submitForApproval, edit, deploy, toArchive]
 
 CreateDeployment:
   required: [spaceCode, name]
@@ -317,6 +319,7 @@ Content-Type: application/json
 1. Все экраны внедрений используют одинаковые названия статусов.
 2. Действия показываются по `availableActions`/разрешениям бэкенда.
 3. После сохранения нового внедрения доступны переход в детальную карточку и редактирование.
+4. В `ON_APPROVAL` экран показывает связь со SberDocs и не предлагает локальные действия согласования.
 
 ## STORY-DEPLOYMENTS-002 — Список внедрений
 
@@ -366,8 +369,8 @@ Content-Type: application/json
 
 **Критерии приемки**
 
-1. ЖЦ соответствует схеме `NEW -> ON_APPROVAL -> DEPLOYED/REJECTED`, `ON_APPROVAL edit -> NEW`, `DEPLOYED -> ARCHIVED`.
-2. Старые `draft`, `recall`, `start_ratification`, `ratified`, `cancelled` не требуются в UI/API внедрений.
+1. ЖЦ соответствует схеме `NEW -> ON_APPROVAL`, `ON_APPROVAL -> DEPLOYED` только после подтверждённого SberDocs approved status, `ON_APPROVAL edit -> NEW` только при явном разрешении бэкенда, `DEPLOYED -> ARCHIVED`.
+2. Старые `draft`, `recall`, `start_ratification`, `ratified`, `cancelled`, локальные `approve`/`reject` не требуются в UI/API внедрений.
 3. Версионирование сохраняет `version` и `isLast` в единственной таблице `deployments`.
 
 ---
@@ -386,6 +389,6 @@ Content-Type: application/json
 
 ## Открытые вопросы и допущения
 
-- `deploy` присутствует в перечислении OpenAPI, но отчёт по машине состояний показывает основной путь `approve -> DEPLOYED`; UI должен доверять `availableActions`, а не жёстко заданной логике утверждения.
+- `deploy` присутствует в перечислении OpenAPI; UI должен доверять `availableActions`, а не жёстко заданной логике утверждения. Действие допустимо только после подтверждённого согласования в SberDocs.
 - Контракт артефактов находится в общей фиче `artifacts`, а не в теге `Deployments` текущего OpenAPI.
-- Если бэкенд позже вернёт отдельную модель согласования/утверждения для внедрений, это должно быть новым изменением требований, а не восстановлением старого текста.
+- Если бэкенд позже вернёт отдельную модель согласования/утверждения для внедрений, это должно быть новым изменением требований, а не восстановлением старого текста. Текущая модель согласования живёт в `features/approvals` и SberDocs.

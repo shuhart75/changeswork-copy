@@ -7,4 +7,4 @@ Feature: `features/pilots/feature.md`
 
 | Story ID | Summary | Analyst anchor, дн | Team estimate, дн | Agreed estimate, дн | Agreed total, дн | Notes |
 |---|---|---|---|---|---:|---|
-| STORY-PILOTS-001 | Workspace пилотов: артефакты и lifecycle approval | `2 / 4 / 5 / 0` | `2 / 4 / 5 / 0` | `2 / 4 / 5 / 0` | 11 | Actualized пока virtual items `AN_FE_PILOT_ART`, `FE_PILOT_ART`, `AN_PILOT_LC_AP`, `BE_PILOT_LC_AP` |
+| STORY-PILOTS-001 | Workspace пилотов: артефакты и lifecycle approval | `2 / 4 / 5 / 0` | `2 / 4 / 5 / 0` | `2 / 4 / 5 / 0` | 11 | Actualized через imported virtual items и real-задачу `RSCON-2487` из входящего actual-progress snapshot |

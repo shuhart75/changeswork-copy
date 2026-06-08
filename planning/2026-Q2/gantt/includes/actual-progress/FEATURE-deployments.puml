@@ -6,15 +6,15 @@
 ' Story layer
 ' Story STORY-DEPLOYMENTS-001: materialized, mapping=explicit
 [PLAN BE Backend foundation для внедрений] as [STORY_STORY_DEPLOYMENTS_001] starts 2026/04/14
-[STORY_STORY_DEPLOYMENTS_001] ends 2026/04/29
+[STORY_STORY_DEPLOYMENTS_001] ends 2026/05/08
 [STORY_STORY_DEPLOYMENTS_001] is colored in Gainsboro
-[STORY_STORY_DEPLOYMENTS_001] is 49% completed
+[STORY_STORY_DEPLOYMENTS_001] is 100% completed
 
 ' Story STORY-DEPLOYMENTS-002: materialized, mapping=explicit
 [PLAN BE Жизненный цикл внедрений] as [STORY_STORY_DEPLOYMENTS_002] starts 2026/04/15
-[STORY_STORY_DEPLOYMENTS_002] ends 2026/05/25
+[STORY_STORY_DEPLOYMENTS_002] ends 2026/05/14
 [STORY_STORY_DEPLOYMENTS_002] is colored in Gainsboro
-[STORY_STORY_DEPLOYMENTS_002] is 0% completed
+[STORY_STORY_DEPLOYMENTS_002] is 100% completed
 
 ' Story STORY-DEPLOYMENTS-003: materialized, mapping=explicit
 [PLAN FE Список внедрений] as [STORY_STORY_DEPLOYMENTS_003] starts 2026/04/06
@@ -29,10 +29,10 @@
 [STORY_STORY_DEPLOYMENTS_004] is 100% completed
 
 ' Story STORY-DEPLOYMENTS-005: mixed, mapping=inferred
-[PLAN FE Детальная страница и связанные блоки] as [STORY_STORY_DEPLOYMENTS_005] starts 2026/04/21
-[STORY_STORY_DEPLOYMENTS_005] ends 2026/05/29
+[PLAN FE Детальная страница и связанные блоки] as [STORY_STORY_DEPLOYMENTS_005] starts 2026/04/13
+[STORY_STORY_DEPLOYMENTS_005] ends 2026/06/17
 [STORY_STORY_DEPLOYMENTS_005] is colored in Gainsboro
-[STORY_STORY_DEPLOYMENTS_005] is 0% completed
+[STORY_STORY_DEPLOYMENTS_005] is 35% completed
 
 ' Execution task layer
 [RSCON-2346 FE список внедрений] as [TASK_RSCON_2346] on {F1} starts 2026/04/06
@@ -40,10 +40,20 @@
 [TASK_RSCON_2346] is colored in LightCoral
 [TASK_RSCON_2346] is 100% completed
 
+[RSCON-2347 FE детальная внедрения] as [TASK_RSCON_2347] starts 2026/04/13
+[TASK_RSCON_2347] ends 2026/05/14
+[TASK_RSCON_2347] is colored in LightCoral
+[TASK_RSCON_2347] is 100% completed
+
 [RSCON-2349 BE внедрений БД + API] as [TASK_RSCON_2349] on {B3} starts 2026/04/17
-[TASK_RSCON_2349] ends 2026/04/21
+[TASK_RSCON_2349] ends 2026/05/08
 [TASK_RSCON_2349] is colored in LightBlue
-[TASK_RSCON_2349] is 15% completed
+[TASK_RSCON_2349] is 100% completed
+
+[RSCON-2410 BE ЖЦ внедрений] as [TASK_RSCON_2410] on {B3} starts 2026/04/24
+[TASK_RSCON_2410] ends 2026/05/14
+[TASK_RSCON_2410] is colored in LightBlue
+[TASK_RSCON_2410] is 100% completed
 
 [RSCON-2445 BE Базовая функциональность для внедрений] as [TASK_RSCON_2445] on {B3} starts 2026/04/28
 [TASK_RSCON_2445] ends 2026/04/29
@@ -55,48 +65,34 @@
 [TASK_RSCON_2348] is colored in LightCoral
 [TASK_RSCON_2348] is 100% completed
 
-[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {A3} starts 2026/05/08
-[TASK_AN_CHD1] ends 2026/05/15
+[RSCON-2449 BE Связь внедрения и скоркарт] as [TASK_RSCON_2449] on {B3} starts 2026/05/08
+[TASK_RSCON_2449] ends 2026/05/08
+[TASK_RSCON_2449] is colored in LightBlue
+[TASK_RSCON_2449] is 100% completed
+
+[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {A3} starts 2026/06/08
+[TASK_AN_CHD1] ends 2026/06/15
 [TASK_AN_CHD1] is colored in LightGreen
 [TASK_AN_CHD1] is 0% completed
 ' Shifted not-started task from stale/non-open plan: AN-CHD1
 ' Auto-assigned A3 (auto from TBD_A): AN-CHD1
 
-[BE детальная страница Внедрения] as [TASK_BE_CHD1] on {B3} starts 2026/05/12
-[TASK_BE_CHD1] ends 2026/05/18
+[BE детальная страница Внедрения] as [TASK_BE_CHD1] on {B2} starts 2026/06/10
+[TASK_BE_CHD1] ends 2026/06/17
 [TASK_BE_CHD1] is colored in LightBlue
 [TASK_BE_CHD1] is 0% completed
 ' Shifted not-started task from stale/non-open plan: BE-CHD1
-' Auto-assigned B3 (auto from TBD_B): BE-CHD1
+' Auto-assigned B2 (auto from TBD_B): BE-CHD1
 
-[RSCON-2347 FE детальная внедрения] as [TASK_RSCON_2347] on {F2} starts 2026/05/15
-[TASK_RSCON_2347] ends 2026/05/21
-[TASK_RSCON_2347] is colored in LightCoral
-[TASK_RSCON_2347] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2347
-' Auto-assigned F2 (auto from TBD_F): RSCON-2347
-
-[RSCON-2410 BE ЖЦ внедрений] as [TASK_RSCON_2410] on {B3} starts 2026/05/19
-[TASK_RSCON_2410] ends 2026/05/25
-[TASK_RSCON_2410] is colored in LightBlue
-[TASK_RSCON_2410] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2410
-
-[RSCON-2440 FE К Внедрениям привязать реализованный функционал Документы] as [TASK_RSCON_2440] on {F2} starts 2026/05/22
-[TASK_RSCON_2440] ends 2026/05/22
-[TASK_RSCON_2440] is colored in LightCoral
-[TASK_RSCON_2440] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2440
-' Auto-assigned F2 (auto from TBD_F): RSCON-2440
-
-[RSCON-2450 BE Связь внедрения и артефактов] as [TASK_RSCON_2450] on {B3} starts 2026/05/26
-[TASK_RSCON_2450] ends 2026/05/27
+[RSCON-2450 BE Связь внедрения и артефактов] as [TASK_RSCON_2450] on {B3} starts 2026/06/15
+[TASK_RSCON_2450] ends 2026/06/16
 [TASK_RSCON_2450] is colored in LightBlue
 [TASK_RSCON_2450] is 0% completed
 ' Shifted not-started task from stale/non-open plan: RSCON-2450
 
-[RSCON-2449 BE Связь внедрения и скоркарт] as [TASK_RSCON_2449] on {B3} starts 2026/05/28
-[TASK_RSCON_2449] ends 2026/05/29
-[TASK_RSCON_2449] is colored in LightBlue
-[TASK_RSCON_2449] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2449
+[RSCON-2440 FE К Внедрениям привязать реализованный функционал Документы] as [TASK_RSCON_2440] on {F1} starts 2026/06/16
+[TASK_RSCON_2440] ends 2026/06/16
+[TASK_RSCON_2440] is colored in LightCoral
+[TASK_RSCON_2440] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2440
+' Auto-assigned F1 (auto from TBD_F): RSCON-2440

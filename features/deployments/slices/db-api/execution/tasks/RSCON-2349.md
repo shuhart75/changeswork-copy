@@ -2,7 +2,7 @@
 
 Feature: `../../../feature.md`  
 Slice: `../../slice.md`  
-Дата обновления: `2026-04-23`
+Дата обновления: `2026-06-08`
 
 ## Jira
 RSCON-2349
@@ -25,13 +25,13 @@ BE3
 
 ## Actual dates
 - Start: 2026-04-17
-- Finish:
+- Finish: 2026-05-08
 
 ## Status
-in_progress
+done
 
 ## Progress
-- `15%`
+- `100%`
 
 ## Description
 Фактическая backlog-задача по backend foundation для внедрений: БД, API и основная логика feature-level workspace.
@@ -46,4 +46,4 @@ in_progress
 - `../../requirements/backend.md`
 
 ## Notes
-По legacy actualized gantt задача была отмечена как ~15% completed на snapshot `2026-04-17`.
+По входящему actual-progress snapshot задача завершена `2026-05-08`.
