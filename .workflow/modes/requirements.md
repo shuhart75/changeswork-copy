@@ -40,12 +40,17 @@ Selection rules:
 - `features/*/slices/*/requirements/frontend.md`
 - `features/*/slices/*/requirements/backend.md`
 - `features/*/domain-impact.md`
+- `features/*/context-summary.md`
+- `features/*/artifact-map.md`
+- `features/*/slices/*/context-summary.md`
+- optional `features/*/.research/*` and `features/*/slices/*/.research/*`
 
 ## Source-of-truth rule
 
 - `features/<feature>/requirements.md` is the primary and authoritative requirements document for the feature.
 - Slice cards and FE/BE packs are derived artifacts. They are not authored as independent parallel truths.
 - If a slice pack reveals a missing rule, contradiction, or new requirement, update the root feature document first and only then re-derive the slice artifacts.
+- Context summaries, artifact maps and `.research/` files are auxiliary. Accepted findings must be transferred into the root feature document, slice packs, `domain-impact.md` or `.workflow/consistency-backlog.md`.
 
 ## Writing order
 
@@ -93,6 +98,20 @@ If the change affects domain rules, lifecycle, roles, API semantics, data model,
 - list affected requirements and prototypes;
 - update `.workflow/consistency-backlog.md` when propagation is deferred;
 - do not silently mutate `baseline/current/` unless the active task explicitly includes baseline update.
+
+## Small-context requirements rules
+
+For `делаем требования`, `актуализируй требования`, `разложи требования на срезы` and `подготовь детальные требования по срезам`, the assistant must automatically:
+
+- read existing feature/slice context summaries and artifact map when present;
+- create or refresh `features/<feature>/context-summary.md` after substantial root requirement changes;
+- create or refresh `features/<feature>/artifact-map.md` when authored, derived or auxiliary artifacts change;
+- create or refresh `features/<feature>/slices/<slice>/context-summary.md` when a slice card or FE/BE pack is created or materially changed;
+- run role-based research from `.workflow/research-policy.md` when requirements are large, ambiguous, cross-cutting, or code/source-material inspection is needed;
+- run the completeness checklist before presenting slice requirements as ready;
+- update a checkpoint before and after long decomposition or derivation passes.
+
+Do not expose `собери контекст`, `исследуй срез` or `проверь полноту среза` as required user commands. Ask the user only when research finds a contradiction, missing business decision, prototype mismatch, neighboring-feature impact or required root requirement change.
 
 ## Forbidden without mode switch
 

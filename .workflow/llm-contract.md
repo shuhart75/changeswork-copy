@@ -11,18 +11,37 @@ Before changing artifacts, read:
 3. `.workflow/agent-delegation.md`
 4. `.workflow/skills-policy.md`
 5. `.workflow/tooling-policy.md`
-6. `.workflow/active-mode.md`
-7. `.workflow/modes/<active-mode>.md`
-8. `.workflow/team.md` before planning resources or regenerating actual-progress
-9. relevant `.workflow/overrides/*.md`
-10. `.workflow/templates/intake/` when the user brings a candidate new feature
-11. `.workflow/templates/requirements/` when working in requirements mode
-12. `.workflow/templates/prototypes/` when working in prototype modes
-13. `baseline/current/` for the canonical deployed state when it exists
-14. relevant `features/<feature>/feature.md`, root requirements, root prototype, slice artifacts, planning stories, execution tasks and gantt includes
-15. relevant `releases/` artifacts when finalizing a delivered change
+6. `.workflow/context-policy.md`
+7. `.workflow/research-policy.md`
+8. `.workflow/active-mode.md`
+9. `.workflow/modes/<active-mode>.md`
+10. `.workflow/team.md` before planning resources or regenerating actual-progress
+11. relevant `.workflow/overrides/*.md`
+12. `.workflow/templates/intake/` when the user brings a candidate new feature
+13. `.workflow/templates/requirements/` when working in requirements mode
+14. `.workflow/templates/prototypes/` when working in prototype modes
+15. `.workflow/templates/context/` when creating or refreshing feature/slice context
+16. `.workflow/templates/research/` when role-based research is needed
+17. `baseline/current/` for the canonical deployed state when it exists
+18. relevant `features/<feature>/context-summary.md` and `artifact-map.md` when present
+19. relevant `features/<feature>/feature.md`, root requirements, root prototype, slice artifacts, planning stories, execution tasks and gantt includes
+20. relevant `releases/` artifacts when finalizing a delivered change
 
 If the user points to a folder with current-system docs/screenshots/change requests, inspect that folder first and keep source references in the produced artifacts.
+
+
+## Small-context operating rules
+
+Treat context management as an internal harness responsibility. Users should not have to request context summaries, checkpoints, research, completeness sweeps, or prototype/slice alignment checks.
+
+When work is broad, long-running, or likely to exceed a small context window:
+- read existing `context-summary.md`, `artifact-map.md`, planning context and run-state files before broad source artifacts;
+- create or refresh feature/slice/planning/execution context summaries when source-of-truth artifacts change substantially;
+- update `.workflow/run-state/current.md` or an equivalent checkpoint before and after long passes;
+- keep facts, inferences, assumptions and open questions separate;
+- transfer accepted research findings into authoritative artifacts instead of leaving them only in `.research/` or chat.
+
+External memory systems are optional accelerators. Repository markdown remains the source of truth.
 
 
 ## Command interpretation rules

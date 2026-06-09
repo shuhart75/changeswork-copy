@@ -1,17 +1,12 @@
 # changeswork-copy
 
-Это копия и раскладка legacy-проекта `changesWork` под новый workflow.
+Рабочий проект, использующий `analyst-harness` для планирования, требований, прототипов, актуализации факта и релизной фиксации.
 
-## Быстрый вход для работы с LLM
+## Как работать с обвязкой
 
-Смотри в первую очередь:
+Начинать с `AGENTS.md` и `.workflow/llm-contract.md`. Активный режим хранится в `.workflow/active-mode.md`; режим является границей допустимых правок.
 
-- `.workflow/command-cheatsheet.md` - готовые формулировки команд
-- `.workflow/command-catalog.md` - как LLM должна их интерпретировать
-- `.workflow/templates/intake/` - шаблон preflight для команды `новая фича`
-- `.workflow/templates/requirements/` - шаблоны requirement packs
-
-Базовые команды:
+Основные пользовательские команды:
 
 - `новая фича`
 - `занимаемся планированием`
@@ -21,41 +16,45 @@
 - `обновляем прогресс`
 - `финализируем релиз`
 
-Пример:
+Дополнительные команды по ролям:
 
-```text
-новая фича
-Источник: `/home/reutov/Documents/AI/simulations_AI_agent`
-Квартал: `2026-Q2`
+- `спланируй фичу`
+- `возьми срез в разработку`
+- `разбери срез по коду`
+- `предложи план реализации`
+- `подготовь проверки по срезу`
+- `собери негативные сценарии`
+- `сверь проверки с требованиями`
+
+Полный список фраз: `.workflow/command-catalog.md` и `.workflow/command-cheatsheet.md`.
+
+## Работа с малым контекстным окном
+
+Пользователь не должен вручную просить LLM собрать контекст, обновить чекпойнт или исследовать срез. Обвязка делает это автоматически под предметные команды.
+
+Основные вспомогательные артефакты:
+
+- `features/<feature>/context-summary.md`
+- `features/<feature>/artifact-map.md`
+- `features/<feature>/planning/planning-context.md`
+- `features/<feature>/slices/<slice>/context-summary.md`
+- `features/<feature>/slices/<slice>/.research/summary.md`
+- `features/<feature>/slices/<slice>/implementation-handoff.md`
+- `features/<feature>/slices/<slice>/execution/implementation-plan.md`
+- `features/<feature>/slices/<slice>/testing/test-plan.md`
+
+Эти файлы помогают LLM продолжать работу на больших требованиях, но не заменяют источник истины. Принятые решения должны переноситься в требования, планирование, прототипы, задачи, релизный пакет или baseline.
+
+## Проверки
+
+```bash
+python .workflow/tools/validate-structure.py .
+python .workflow/tools/validate-links.py .
+python .workflow/tools/validate-context.py .
 ```
 
-```text
-обновляем прогресс
-RSCON-2445 завершена вчера.
-Добавь milestone релиза на 2026-04-30 и обнови actual-progress.
+После изменений gantt:
+
+```bash
+python .workflow/tools/sync-quarter-gantt.py planning/2026-Q2/gantt
 ```
-
-## Что теперь есть в структуре
-- `baseline/current/` — каноническое описание текущей системы
-- `planning/` — квартальные планы и gantt
-- `planning/intake/` — preflight-заметки до создания новой feature
-- `features/` — рабочие дельты: требования, прототипы, execution tracking
-- `releases/` — итоговые релизные пакеты перед промоушеном в baseline
-- `context/source-materials/` — сырые импортированные материалы и evidence
-
-## Что уже сделано
-- raw snapshot legacy-репозитория перенесён полностью в `context/source-materials/legacy/changeswork-full/`
-- полнота snapshot перепроверена сравнением с `/home/reutov/Documents/AI/changesWork`
-- current-system requirements / diagrams / prototypes разложены в `context/source-materials/current-system/`
-- основные feature и slice-контейнеры, включая `features/simulations/`, созданы в `features/`
-- legacy planning-артефакты вынесены в `planning/2026-Q2/imported-source/`
-- canonical baseline domain model разложена в `baseline/current/domain/`
-- добавлены обзорные baseline summaries для `requirements`, `ui`, `api`, `data`, `decisions`
-- нормализованы planning support layers: `planning/2026-Q2/quality-assurance/`, `planning/2026-Q2/retrospectives/`, `planning/2026-Q2/cross-cutting/`, `planning/2026-Q2/task-catalog/`
-- release package skeleton добавлен для `releases/2026-Q2/rscon-2438/`
-
-## Что ещё требует доработки
-- дальнейшая детализация baseline/current на уровне full post-page contracts при необходимости
-- promotion итоговых delivered требований из feature-level living docs в canonical baseline
-- заполнение release package по фактическим delivered изменениям
-- при желании можно дополнительно поднять отдельный canonical workspace под delivered notifications, но planning-layer смысл этого потока уже сохранён
