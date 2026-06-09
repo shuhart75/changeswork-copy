@@ -30,7 +30,7 @@ ganttDiagram {
 
 !include preamble/common.puml
 
--- Согласования --
+-- Согласования через SberDocs --
 !include includes/quarter-plan/FEATURE-approvals.puml
 
 -- Артефакты --
@@ -38,9 +38,6 @@ ganttDiagram {
 
 -- Внедрения --
 !include includes/quarter-plan/FEATURE-deployments.puml
-
--- Пакеты --
-!include includes/quarter-plan/FEATURE-packages.puml
 
 -- Пилоты --
 !include includes/quarter-plan/FEATURE-pilots.puml

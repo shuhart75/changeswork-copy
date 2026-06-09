@@ -17,7 +17,7 @@
 ## Главные streams
 - roles;
 - artifacts;
-- approvals / ratification / packages;
+- approvals / ratification;
 - deployments;
 - scorecards;
 - notifications;

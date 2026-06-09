@@ -31,8 +31,8 @@
 [TASK_RSCON_2487] is colored in LightBlue
 [TASK_RSCON_2487] is 100% completed
 
-[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/06/18
-[TASK_BE_PILOT_LC_AP] ends 2026/06/24
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/06/17
+[TASK_BE_PILOT_LC_AP] ends 2026/06/23
 [TASK_BE_PILOT_LC_AP] is colored in LightBlue
 [TASK_BE_PILOT_LC_AP] is 0% completed
 ' Shifted not-started task from stale/non-open plan: BE_PILOT_LC_AP

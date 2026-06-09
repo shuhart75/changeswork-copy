@@ -11,7 +11,7 @@ Feature: `features/packages/feature.md`
 
 ## Связанные planning stories
 
-- `STORY-PACKAGES-001` — требуется отдельная planning-синхронизация.
+- `STORY-PACKAGES-001` — снята с Q2 baseline и оставлена только как legacy trace.
 
 ## Источники
 
@@ -30,4 +30,4 @@ Feature: `features/packages/feature.md`
 
 ## Связанные execution-артефакты
 
-- `execution/tasks.md` — не актуализируется в requirements mode.
+- `execution/tasks.md` — active execution layer отсутствует, virtual tasks сняты вместе с исключением feature из MVP.

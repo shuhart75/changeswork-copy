@@ -13,13 +13,13 @@ Slice: `../slice.md`
 
 | Jira | Summary | Kind | Role | Estimate (дн) | Executor | Planned Start | Planned Finish | Actual Start | Actual Finish | Status | Progress % | Related Stories | Details |
 |---|---|---|---|---:|---|---|---|---|---|---|---:|---|---|
-| AN_AP_CORE | AN процесс согласования/утверждения (BE core) | virtual | AN | 2 | A1 | 2026-04-01 | 2026-04-02 |  |  | superseded | 0 | STORY-APPROVALS-001 |  |
-| BE_AP_CORE | BE процесс согласования и утверждения - БД+логика | virtual | BE | 10 | B1 | 2026-04-06 | 2026-04-17 |  |  | superseded | 0 | STORY-APPROVALS-001 |  |
-| AN_PILOT_LC_AP | AN ЖЦ пилота: согласование/утверждение (BE) | virtual | AN | 1 | A2 | 2026-04-05 | 2026-04-05 |  |  | superseded | 0 | STORY-APPROVALS-001 |  |
-| BE_PILOT_LC_AP | BE ЖЦ пилота - согласование/утверждение | virtual | BE | 5 | B2 | 2026-05-20 | 2026-05-26 |  |  | superseded | 0 | STORY-APPROVALS-001 |  |
-| RSCON-2518 | RSCON-2518 BE БД + API + Логика цепочки согласований | real | BE | 5 | TBD_BE | 2026-05-20 | 2026-05-26 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
-| RSCON-2519 | RSCON-2519 BE Получение списка пользователей для цепочки согласования | real | BE | 2 | TBD_BE | 2026-05-20 | 2026-05-21 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
-| RSCON-2520 | RSCON-2520 BE История изменений для цепочки согласования | real | BE | 4 | TBD_BE | 2026-05-20 | 2026-05-25 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
+| RSCON-2649 | RSCON-2649 BE API для согласований | real | BE | 3 | B3 | 2026-06-03 | 2026-06-05 | 2026-06-03 | 2026-06-05 | done | 100 | STORY-APPROVALS-001 | Факт закрытия зафиксирован 2026-06-08; точные даты не были переданы, задача разложена как 3 рабочих дня до старта RSCON-2630. |
+| RSCON-2629 | RSCON-2629 BE Получение справочника согласующих и утверждающих | real | BE | 3 | TBD_BE | 2026-06-08 | 2026-06-10 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
+| RSCON-2630 | RSCON-2630 BE БД для согласования | real | BE | 3 | B3 | 2026-06-08 | 2026-06-10 | 2026-06-08 |  | in_progress | 20 | STORY-APPROVALS-001 | Started today. |
+| RSCON-2631 | RSCON-2631 BE Сохранение документа | real | BE | 2 | TBD_BE | 2026-06-08 | 2026-06-09 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
+| RSCON-2633 | RSCON-2633 BE Отправка документа в SberDocs | real | BE | 3 | TBD_BE | 2026-06-08 | 2026-06-10 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
+| RSCON-2634 | RSCON-2634 BE Polling из SberDocs и комбинация статусов | real | BE | 3 | TBD_BE | 2026-06-08 | 2026-06-10 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
+| RSCON-2635 | RSCON-2635 BE HTML preview и отправка письма | real | BE | 3 | TBD_BE | 2026-06-08 | 2026-06-10 |  |  | planned | 0 | STORY-APPROVALS-001 |  |
 
 ## Notes
-Импортировано из legacy gantt baseline; по входящему actual-progress snapshot 2026-06-08 virtual chunks superseded, active layer переведён на `RSCON-2518..2520`.
+По входящему actual-progress snapshot 2026-06-08 прежние virtual chunks и старый набор `RSCON-2518..2520` исключены из active registry. Scope закрывается реальными задачами `RSCON-2629..2635` и `RSCON-2649`.

@@ -4,43 +4,83 @@
 ' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
 
 ' Story layer
-' Story STORY-APPROVALS-001: materialized, mapping=inferred
+' Story STORY-APPROVALS-001: materialized, mapping=explicit
 [PLAN BE Approval core и интеграция с ЖЦ] as [STORY_STORY_APPROVALS_001] starts 2026/04/01
-[STORY_STORY_APPROVALS_001] ends 2026/06/15
+[STORY_STORY_APPROVALS_001] ends 2026/06/17
 [STORY_STORY_APPROVALS_001] is colored in Gainsboro
-[STORY_STORY_APPROVALS_001] is 0% completed
+[STORY_STORY_APPROVALS_001] is 18% completed
 
-' Story STORY-APPROVALS-002: materialized, mapping=inferred
+' Story STORY-APPROVALS-002: materialized, mapping=explicit
 [PLAN FE Страница "Согласования"] as [STORY_STORY_APPROVALS_002] starts 2026/04/06
-[STORY_STORY_APPROVALS_002] ends 2026/06/23
+[STORY_STORY_APPROVALS_002] ends 2026/07/06
 [STORY_STORY_APPROVALS_002] is colored in Gainsboro
 [STORY_STORY_APPROVALS_002] is 0% completed
 
 ' Execution task layer
-[RSCON-2518 BE БД + API + Логика цепочки согласований] as [TASK_RSCON_2518] on {B1} starts 2026/06/08
-[TASK_RSCON_2518] ends 2026/06/15
-[TASK_RSCON_2518] is colored in LightBlue
-[TASK_RSCON_2518] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2518
-' Auto-assigned B1 (auto from TBD_B): RSCON-2518
+[RSCON-2649 BE API для согласований] as [TASK_RSCON_2649] on {B3} starts 2026/06/03
+[TASK_RSCON_2649] ends 2026/06/05
+[TASK_RSCON_2649] is colored in LightBlue
+[TASK_RSCON_2649] is 100% completed
 
-[RSCON-2519 BE Получение списка пользователей для цепочки согласования] as [TASK_RSCON_2519] on {B2} starts 2026/06/08
-[TASK_RSCON_2519] ends 2026/06/09
-[TASK_RSCON_2519] is colored in LightBlue
-[TASK_RSCON_2519] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2519
-' Auto-assigned B2 (auto from TBD_B): RSCON-2519
+[RSCON-2630 BE БД для согласования] as [TASK_RSCON_2630] on {B3} starts 2026/06/08
+[TASK_RSCON_2630] ends 2026/06/10
+[TASK_RSCON_2630] is colored in LightBlue
+[TASK_RSCON_2630] is 20% completed
 
-[RSCON-2520 BE История изменений для цепочки согласования] as [TASK_RSCON_2520] on {B3} starts 2026/06/08
-[TASK_RSCON_2520] ends 2026/06/11
-[TASK_RSCON_2520] is colored in LightBlue
-[TASK_RSCON_2520] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2520
-' Auto-assigned B3 (auto from TBD_B): RSCON-2520
+[RSCON-2629 BE Получение справочника согласующих и утверждающих] as [TASK_RSCON_2629] on {B1} starts 2026/06/09
+[TASK_RSCON_2629] ends 2026/06/11
+[TASK_RSCON_2629] is colored in LightBlue
+[TASK_RSCON_2629] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2629
+' Auto-assigned B1 (auto from TBD_B): RSCON-2629
 
-[RSCON-2521 FE Цепочка согласования] as [TASK_RSCON_2521] on {F2} starts 2026/06/11
-[TASK_RSCON_2521] ends 2026/06/23
-[TASK_RSCON_2521] is colored in LightCoral
-[TASK_RSCON_2521] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2521
-' Auto-assigned F2 (auto from TBD_F): RSCON-2521
+[RSCON-2631 BE Сохранение документа] as [TASK_RSCON_2631] on {B2} starts 2026/06/09
+[TASK_RSCON_2631] ends 2026/06/10
+[TASK_RSCON_2631] is colored in LightBlue
+[TASK_RSCON_2631] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2631
+' Auto-assigned B2 (auto from TBD_B): RSCON-2631
+
+[RSCON-2636 FE Карточка новой сущности, новая вкладка и экшены] as [TASK_RSCON_2636] on {F2} starts 2026/06/09
+[TASK_RSCON_2636] ends 2026/06/25
+[TASK_RSCON_2636] is colored in LightCoral
+[TASK_RSCON_2636] is 0% completed
+
+[RSCON-2633 BE Отправка документа в SberDocs] as [TASK_RSCON_2633] on {B2} starts 2026/06/11
+[TASK_RSCON_2633] ends 2026/06/16
+[TASK_RSCON_2633] is colored in LightBlue
+[TASK_RSCON_2633] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2633
+' Auto-assigned B2 (auto from TBD_B): RSCON-2633
+
+[RSCON-2634 BE Polling из SberDocs и комбинация статусов] as [TASK_RSCON_2634] on {B3} starts 2026/06/11
+[TASK_RSCON_2634] ends 2026/06/16
+[TASK_RSCON_2634] is colored in LightBlue
+[TASK_RSCON_2634] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2634
+' Auto-assigned B3 (auto from TBD_B): RSCON-2634
+
+[RSCON-2635 BE HTML preview и отправка письма] as [TASK_RSCON_2635] on {B1} starts 2026/06/15
+[TASK_RSCON_2635] ends 2026/06/17
+[TASK_RSCON_2635] is colored in LightBlue
+[TASK_RSCON_2635] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2635
+' Auto-assigned B1 (auto from TBD_B): RSCON-2635
+
+[RSCON-2637 FE Превью Email] as [TASK_RSCON_2637] on {F2} starts 2026/06/26
+[TASK_RSCON_2637] ends 2026/07/02
+[TASK_RSCON_2637] is colored in LightCoral
+[TASK_RSCON_2637] is 0% completed
+' Auto-assigned F2 (auto from TBD_F): RSCON-2637
+
+[QA Карточка новой сущности, новая вкладка и экшены] as [TASK_QA_APPROVALS_CARD] on {Q2} starts 2026/06/26
+[TASK_QA_APPROVALS_CARD] ends 2026/07/01
+[TASK_QA_APPROVALS_CARD] is colored in Gold
+[TASK_QA_APPROVALS_CARD] is 0% completed
+' Auto-assigned Q2 (auto from TBD_Q): QA-APPROVALS-CARD
+
+[QA Превью Email] as [TASK_QA_APPROVALS_EMAIL_PREVIEW] on {Q3} starts 2026/07/03
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] ends 2026/07/06
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] is colored in Gold
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] is 0% completed
+' Auto-assigned Q3 (auto from TBD_Q): QA-APPROVALS-EMAIL-PREVIEW

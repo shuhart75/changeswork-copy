@@ -41,13 +41,19 @@ Approval core и интеграция с жизненными циклами
 - Total: 18 человеко-дней
 
 ## Actualization state
-- `virtual`
+- `materialized`
 
 ## Mapping mode
 - `explicit`
 
 ## Replaced by implementation tasks
-- none yet
+- `RSCON-2629`
+- `RSCON-2630`
+- `RSCON-2631`
+- `RSCON-2633`
+- `RSCON-2634`
+- `RSCON-2635`
+- `RSCON-2649`
 
 ## Residual virtual tasks on actual-progress
 - none
@@ -57,4 +63,4 @@ Approval core и интеграция с жизненными циклами
 - статусы Pilot/Deployment уже определены в доменной модели и lifecycle docs.
 
 ## Notes for quarter planning
-Импортировано из legacy-комбинации `AN_AP_CORE`, `BE_AP_CORE`, `AN_PILOT_LC_AP`, `BE_PILOT_LC_AP`.
+На actual-progress 2026-06-08 story закрывается реальными задачами SberDocs integration scope; прежние virtual chunks удалены из execution registry.

@@ -1,6 +1,6 @@
 # Active Mode
 
-mode: execution-update
+mode: planning
 
 ## Mode File
-.workflow/modes/execution-update.md
+.workflow/modes/planning.md

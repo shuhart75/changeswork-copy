@@ -48,46 +48,86 @@ ganttDiagram {
 ' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
 
 ' Story layer
-' Story STORY-APPROVALS-001: materialized, mapping=inferred
+' Story STORY-APPROVALS-001: materialized, mapping=explicit
 [PLAN BE Approval core и интеграция с ЖЦ] as [STORY_STORY_APPROVALS_001] starts 2026/04/01
-[STORY_STORY_APPROVALS_001] ends 2026/06/15
+[STORY_STORY_APPROVALS_001] ends 2026/06/17
 [STORY_STORY_APPROVALS_001] is colored in Gainsboro
-[STORY_STORY_APPROVALS_001] is 0% completed
+[STORY_STORY_APPROVALS_001] is 18% completed
 
-' Story STORY-APPROVALS-002: materialized, mapping=inferred
+' Story STORY-APPROVALS-002: materialized, mapping=explicit
 [PLAN FE Страница "Согласования"] as [STORY_STORY_APPROVALS_002] starts 2026/04/06
-[STORY_STORY_APPROVALS_002] ends 2026/06/23
+[STORY_STORY_APPROVALS_002] ends 2026/07/06
 [STORY_STORY_APPROVALS_002] is colored in Gainsboro
 [STORY_STORY_APPROVALS_002] is 0% completed
 
 ' Execution task layer
-[RSCON-2518 BE БД + API + Логика цепочки согласований] as [TASK_RSCON_2518] on {B1} starts 2026/06/08
-[TASK_RSCON_2518] ends 2026/06/15
-[TASK_RSCON_2518] is colored in LightBlue
-[TASK_RSCON_2518] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2518
-' Auto-assigned B1 (auto from TBD_B): RSCON-2518
+[RSCON-2649 BE API для согласований] as [TASK_RSCON_2649] on {B3} starts 2026/06/03
+[TASK_RSCON_2649] ends 2026/06/05
+[TASK_RSCON_2649] is colored in LightBlue
+[TASK_RSCON_2649] is 100% completed
 
-[RSCON-2519 BE Получение списка пользователей для цепочки согласования] as [TASK_RSCON_2519] on {B2} starts 2026/06/08
-[TASK_RSCON_2519] ends 2026/06/09
-[TASK_RSCON_2519] is colored in LightBlue
-[TASK_RSCON_2519] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2519
-' Auto-assigned B2 (auto from TBD_B): RSCON-2519
+[RSCON-2630 BE БД для согласования] as [TASK_RSCON_2630] on {B3} starts 2026/06/08
+[TASK_RSCON_2630] ends 2026/06/10
+[TASK_RSCON_2630] is colored in LightBlue
+[TASK_RSCON_2630] is 20% completed
 
-[RSCON-2520 BE История изменений для цепочки согласования] as [TASK_RSCON_2520] on {B3} starts 2026/06/08
-[TASK_RSCON_2520] ends 2026/06/11
-[TASK_RSCON_2520] is colored in LightBlue
-[TASK_RSCON_2520] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2520
-' Auto-assigned B3 (auto from TBD_B): RSCON-2520
+[RSCON-2629 BE Получение справочника согласующих и утверждающих] as [TASK_RSCON_2629] on {B1} starts 2026/06/09
+[TASK_RSCON_2629] ends 2026/06/11
+[TASK_RSCON_2629] is colored in LightBlue
+[TASK_RSCON_2629] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2629
+' Auto-assigned B1 (auto from TBD_B): RSCON-2629
 
-[RSCON-2521 FE Цепочка согласования] as [TASK_RSCON_2521] on {F2} starts 2026/06/11
-[TASK_RSCON_2521] ends 2026/06/23
-[TASK_RSCON_2521] is colored in LightCoral
-[TASK_RSCON_2521] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2521
-' Auto-assigned F2 (auto from TBD_F): RSCON-2521
+[RSCON-2631 BE Сохранение документа] as [TASK_RSCON_2631] on {B2} starts 2026/06/09
+[TASK_RSCON_2631] ends 2026/06/10
+[TASK_RSCON_2631] is colored in LightBlue
+[TASK_RSCON_2631] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2631
+' Auto-assigned B2 (auto from TBD_B): RSCON-2631
+
+[RSCON-2636 FE Карточка новой сущности, новая вкладка и экшены] as [TASK_RSCON_2636] on {F2} starts 2026/06/09
+[TASK_RSCON_2636] ends 2026/06/25
+[TASK_RSCON_2636] is colored in LightCoral
+[TASK_RSCON_2636] is 0% completed
+
+[RSCON-2633 BE Отправка документа в SberDocs] as [TASK_RSCON_2633] on {B2} starts 2026/06/11
+[TASK_RSCON_2633] ends 2026/06/16
+[TASK_RSCON_2633] is colored in LightBlue
+[TASK_RSCON_2633] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2633
+' Auto-assigned B2 (auto from TBD_B): RSCON-2633
+
+[RSCON-2634 BE Polling из SberDocs и комбинация статусов] as [TASK_RSCON_2634] on {B3} starts 2026/06/11
+[TASK_RSCON_2634] ends 2026/06/16
+[TASK_RSCON_2634] is colored in LightBlue
+[TASK_RSCON_2634] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2634
+' Auto-assigned B3 (auto from TBD_B): RSCON-2634
+
+[RSCON-2635 BE HTML preview и отправка письма] as [TASK_RSCON_2635] on {B1} starts 2026/06/15
+[TASK_RSCON_2635] ends 2026/06/17
+[TASK_RSCON_2635] is colored in LightBlue
+[TASK_RSCON_2635] is 0% completed
+' Shifted not-started task from stale/non-open plan: RSCON-2635
+' Auto-assigned B1 (auto from TBD_B): RSCON-2635
+
+[RSCON-2637 FE Превью Email] as [TASK_RSCON_2637] on {F2} starts 2026/06/26
+[TASK_RSCON_2637] ends 2026/07/02
+[TASK_RSCON_2637] is colored in LightCoral
+[TASK_RSCON_2637] is 0% completed
+' Auto-assigned F2 (auto from TBD_F): RSCON-2637
+
+[QA Карточка новой сущности, новая вкладка и экшены] as [TASK_QA_APPROVALS_CARD] on {Q2} starts 2026/06/26
+[TASK_QA_APPROVALS_CARD] ends 2026/07/01
+[TASK_QA_APPROVALS_CARD] is colored in Gold
+[TASK_QA_APPROVALS_CARD] is 0% completed
+' Auto-assigned Q2 (auto from TBD_Q): QA-APPROVALS-CARD
+
+[QA Превью Email] as [TASK_QA_APPROVALS_EMAIL_PREVIEW] on {Q3} starts 2026/07/03
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] ends 2026/07/06
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] is colored in Gold
+[TASK_QA_APPROVALS_EMAIL_PREVIEW] is 0% completed
+' Auto-assigned Q3 (auto from TBD_Q): QA-APPROVALS-EMAIL-PREVIEW
 ' END INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-approvals.puml
 
 -- Артефакты --
@@ -155,9 +195,9 @@ ganttDiagram {
 
 ' Story STORY-DEPLOYMENTS-005: mixed, mapping=inferred
 [PLAN FE Детальная страница и связанные блоки] as [STORY_STORY_DEPLOYMENTS_005] starts 2026/04/13
-[STORY_STORY_DEPLOYMENTS_005] ends 2026/06/17
+[STORY_STORY_DEPLOYMENTS_005] ends 2026/05/14
 [STORY_STORY_DEPLOYMENTS_005] is colored in Gainsboro
-[STORY_STORY_DEPLOYMENTS_005] is 35% completed
+[STORY_STORY_DEPLOYMENTS_005] is 100% completed
 
 ' Execution task layer
 [RSCON-2346 FE список внедрений] as [TASK_RSCON_2346] on {F1} starts 2026/04/06
@@ -190,70 +230,16 @@ ganttDiagram {
 [TASK_RSCON_2348] is colored in LightCoral
 [TASK_RSCON_2348] is 100% completed
 
+[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {A3} starts 2026/05/08
+[TASK_AN_CHD1] ends 2026/05/08
+[TASK_AN_CHD1] is colored in LightGreen
+[TASK_AN_CHD1] is 100% completed
+
 [RSCON-2449 BE Связь внедрения и скоркарт] as [TASK_RSCON_2449] on {B3} starts 2026/05/08
 [TASK_RSCON_2449] ends 2026/05/08
 [TASK_RSCON_2449] is colored in LightBlue
 [TASK_RSCON_2449] is 100% completed
-
-[AN детальная страница Внедрения] as [TASK_AN_CHD1] on {A3} starts 2026/06/08
-[TASK_AN_CHD1] ends 2026/06/15
-[TASK_AN_CHD1] is colored in LightGreen
-[TASK_AN_CHD1] is 0% completed
-' Shifted not-started task from stale/non-open plan: AN-CHD1
-' Auto-assigned A3 (auto from TBD_A): AN-CHD1
-
-[BE детальная страница Внедрения] as [TASK_BE_CHD1] on {B2} starts 2026/06/10
-[TASK_BE_CHD1] ends 2026/06/17
-[TASK_BE_CHD1] is colored in LightBlue
-[TASK_BE_CHD1] is 0% completed
-' Shifted not-started task from stale/non-open plan: BE-CHD1
-' Auto-assigned B2 (auto from TBD_B): BE-CHD1
-
-[RSCON-2450 BE Связь внедрения и артефактов] as [TASK_RSCON_2450] on {B3} starts 2026/06/15
-[TASK_RSCON_2450] ends 2026/06/16
-[TASK_RSCON_2450] is colored in LightBlue
-[TASK_RSCON_2450] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2450
-
-[RSCON-2440 FE К Внедрениям привязать реализованный функционал Документы] as [TASK_RSCON_2440] on {F1} starts 2026/06/16
-[TASK_RSCON_2440] ends 2026/06/16
-[TASK_RSCON_2440] is colored in LightCoral
-[TASK_RSCON_2440] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2440
-' Auto-assigned F1 (auto from TBD_F): RSCON-2440
 ' END INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-deployments.puml
-
--- Пакеты --
-' BEGIN INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-packages.puml
-' FEATURE: packages
-' Actual-progress overlay:
-' - STORY rows are commander-plan stories actualized by linked execution tasks
-' - TASK rows are current execution tasks rendered once, with many-to-many links kept in markdown
-
-' Story layer
-' Story STORY-PACKAGES-001: virtual, mapping=explicit
-[PLAN FE Страница Пакеты и пакетирование awaiting ratification] as [STORY_STORY_PACKAGES_001] starts 2026/04/07
-[STORY_STORY_PACKAGES_001] ends 2026/07/07
-[STORY_STORY_PACKAGES_001] is colored in LightSteelBlue
-[STORY_STORY_PACKAGES_001] is 13% completed
-
-' Execution task layer
-[AN страница Пакеты (BE): контракты и массовые действия] as [TASK_AN_PKG_BE] on {A3} starts 2026/04/09
-[TASK_AN_PKG_BE] ends 2026/04/09
-[TASK_AN_PKG_BE] is colored in LightGreen
-[TASK_AN_PKG_BE] is 80% completed
-
-[AN страница Пакеты (FE): UX, компоненты и edge cases] as [TASK_AN_PKG_FE] on {A3} starts 2026/04/10
-[TASK_AN_PKG_FE] ends 2026/04/10
-[TASK_AN_PKG_FE] is colored in LightGreen
-[TASK_AN_PKG_FE] is 80% completed
-
-[FE страница Пакеты] as [TASK_FE_PKG_PAGE] on {F2} starts 2026/06/24
-[TASK_FE_PKG_PAGE] ends 2026/07/07
-[TASK_FE_PKG_PAGE] is colored in LightCoral
-[TASK_FE_PKG_PAGE] is 0% completed
-' Shifted not-started task from stale/non-open plan: FE_PKG_PAGE
-' END INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-packages.puml
 
 -- Пилоты --
 ' BEGIN INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-pilots.puml
@@ -290,8 +276,8 @@ ganttDiagram {
 [TASK_RSCON_2487] is colored in LightBlue
 [TASK_RSCON_2487] is 100% completed
 
-[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/06/18
-[TASK_BE_PILOT_LC_AP] ends 2026/06/24
+[BE ЖЦ пилота - согласование/утверждение] as [TASK_BE_PILOT_LC_AP] on {B2} starts 2026/06/17
+[TASK_BE_PILOT_LC_AP] ends 2026/06/23
 [TASK_BE_PILOT_LC_AP] is colored in LightBlue
 [TASK_BE_PILOT_LC_AP] is 0% completed
 ' Shifted not-started task from stale/non-open plan: BE_PILOT_LC_AP
@@ -391,21 +377,21 @@ ganttDiagram {
 ' Story layer
 ' Story STORY-SIMULATION-BT-AGENT-001: materialized, mapping=inferred
 [PLAN BE Точка входа и контекст запуска БТ] as [STORY_STORY_SIMULATION_BT_AGENT_001] starts 2026/04/28
-[STORY_STORY_SIMULATION_BT_AGENT_001] ends 2026/05/15
+[STORY_STORY_SIMULATION_BT_AGENT_001] ends 2026/05/21
 [STORY_STORY_SIMULATION_BT_AGENT_001] is colored in Gainsboro
-[STORY_STORY_SIMULATION_BT_AGENT_001] is 71% completed
+[STORY_STORY_SIMULATION_BT_AGENT_001] is 100% completed
 
 ' Story STORY-SIMULATION-BT-AGENT-002: materialized, mapping=inferred
 [PLAN BE Сессия диалога и оркестрация AI-агента] as [STORY_STORY_SIMULATION_BT_AGENT_002] starts 2026/04/28
-[STORY_STORY_SIMULATION_BT_AGENT_002] ends 2026/05/15
+[STORY_STORY_SIMULATION_BT_AGENT_002] ends 2026/05/21
 [STORY_STORY_SIMULATION_BT_AGENT_002] is colored in Gainsboro
-[STORY_STORY_SIMULATION_BT_AGENT_002] is 71% completed
+[STORY_STORY_SIMULATION_BT_AGENT_002] is 100% completed
 
 ' Story STORY-SIMULATION-BT-AGENT-003: materialized, mapping=inferred
 [PLAN BE Публикация БТ, сохранение ссылки и аудит] as [STORY_STORY_SIMULATION_BT_AGENT_003] starts 2026/04/28
-[STORY_STORY_SIMULATION_BT_AGENT_003] ends 2026/06/15
+[STORY_STORY_SIMULATION_BT_AGENT_003] ends 2026/06/04
 [STORY_STORY_SIMULATION_BT_AGENT_003] is colored in Gainsboro
-[STORY_STORY_SIMULATION_BT_AGENT_003] is 53% completed
+[STORY_STORY_SIMULATION_BT_AGENT_003] is 100% completed
 
 ' Execution task layer
 [RSCON-2480 FE агент AI - БТ по симуляции] as [TASK_RSCON_2480] on {F1} starts 2026/04/28
@@ -414,15 +400,14 @@ ganttDiagram {
 [TASK_RSCON_2480] is 100% completed
 
 [RSCON-2479 BE агент AI - БТ по симуляции] as [TASK_RSCON_2479] on {B1} starts 2026/05/04
-[TASK_RSCON_2479] ends 2026/05/07
+[TASK_RSCON_2479] ends 2026/05/21
 [TASK_RSCON_2479] is colored in LightBlue
-[TASK_RSCON_2479] is 0% completed
+[TASK_RSCON_2479] is 100% completed
 
-[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} starts 2026/06/08
-[TASK_QA_SIM_BT_AGENT] ends 2026/06/15
+[QA агент AI - БТ по симуляции] as [TASK_QA_SIM_BT_AGENT] on {Q1} starts 2026/05/29
+[TASK_QA_SIM_BT_AGENT] ends 2026/06/04
 [TASK_QA_SIM_BT_AGENT] is colored in Gold
-[TASK_QA_SIM_BT_AGENT] is 0% completed
-' Shifted not-started task from stale/non-open plan: QA_SIM_BT_AGENT
+[TASK_QA_SIM_BT_AGENT] is 100% completed
 ' END INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-simulation-bt-agent.puml
 
 -- Симуляции --
@@ -441,9 +426,9 @@ ganttDiagram {
 
 ' Story STORY-SIMULATIONS-002: mixed, mapping=inferred
 [PLAN BE Конфигурация пилотов] as [STORY_STORY_SIMULATIONS_002] starts 2026/05/12
-[STORY_STORY_SIMULATIONS_002] ends 2026/06/30
+[STORY_STORY_SIMULATIONS_002] ends 2026/06/23
 [STORY_STORY_SIMULATIONS_002] is colored in Gainsboro
-[STORY_STORY_SIMULATIONS_002] is 21% completed
+[STORY_STORY_SIMULATIONS_002] is 70% completed
 
 ' Execution task layer
 [RSCON-2439 FE Раздел Документы СИМУЛЯЦИЯ: добавить артефакты] as [TASK_RSCON_2439] on {F1} starts 2026/04/25
@@ -466,50 +451,41 @@ ganttDiagram {
 [TASK_RSCON_2473] is colored in LightBlue
 [TASK_RSCON_2473] is 100% completed
 
+[RSCON-2488 BE Новый метод апи для симуляции конифугарации пилотов] as [TASK_RSCON_2488] starts 2026/05/13
+[TASK_RSCON_2488] ends 2026/05/13
+[TASK_RSCON_2488] is colored in LightBlue
+[TASK_RSCON_2488] is 100% completed
+
 [RSCON-2501 BE Симуляция конфигурации пилотов. RSCON-CONFIG. Выдать АПИ] as [TASK_RSCON_2501] on {B2} starts 2026/05/13
 [TASK_RSCON_2501] ends 2026/05/14
 [TASK_RSCON_2501] is colored in LightBlue
 [TASK_RSCON_2501] is 100% completed
 
-[RSCON-2474 BE Симуляция конфига пилотов. Интеграция с ФП Симуляция: запуск, деталка] as [TASK_RSCON_2474] on {B1} starts 2026/06/16
-[TASK_RSCON_2474] ends 2026/06/18
-[TASK_RSCON_2474] is colored in LightBlue
-[TASK_RSCON_2474] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2474
-' Auto-assigned B1 (auto from TBD_B): RSCON-2474
+[RSCON-2472 FE Симуляция конфигурации пилотов] as [TASK_RSCON_2472] on {F1} starts 2026/05/15
+[TASK_RSCON_2472] ends 2026/05/26
+[TASK_RSCON_2472] is colored in LightCoral
+[TASK_RSCON_2472] is 100% completed
 
-[QA Симуляция конфигурации пилотов] as [TASK_QA_SIM_CONFIG] on {Q1} starts 2026/06/16
-[TASK_QA_SIM_CONFIG] ends 2026/06/29
+[RSCON-2475 BE Симуляция конфигурации пилотов. RSCON-CONFIG] as [TASK_RSCON_2475] starts 2026/05/16
+[TASK_RSCON_2475] ends 2026/05/21
+[TASK_RSCON_2475] is colored in LightBlue
+[TASK_RSCON_2475] is 100% completed
+
+[RSCON-2474 BE Симуляция конфига пилотов. Интеграция с ФП Симуляция: запуск, деталка] as [TASK_RSCON_2474] starts 2026/05/24
+[TASK_RSCON_2474] ends 2026/05/26
+[TASK_RSCON_2474] is colored in LightBlue
+[TASK_RSCON_2474] is 100% completed
+
+[RSCON-2471 FE Уведомления в пилотах о симуляции] as [TASK_RSCON_2471] starts 2026/05/27
+[TASK_RSCON_2471] ends 2026/05/28
+[TASK_RSCON_2471] is colored in LightCoral
+[TASK_RSCON_2471] is 100% completed
+
+[QA Симуляция конфигурации пилотов] as [TASK_QA_SIM_CONFIG] on {Q1} starts 2026/06/09
+[TASK_QA_SIM_CONFIG] ends 2026/06/23
 [TASK_QA_SIM_CONFIG] is colored in Gold
 [TASK_QA_SIM_CONFIG] is 0% completed
 ' Shifted not-started task from stale/non-open plan: QA_SIM_CONFIG
-
-[RSCON-2475 BE Симуляция конфигурации пилотов. RSCON-CONFIG] as [TASK_RSCON_2475] on {B3} starts 2026/06/17
-[TASK_RSCON_2475] ends 2026/06/22
-[TASK_RSCON_2475] is colored in LightBlue
-[TASK_RSCON_2475] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2475
-' Auto-assigned B3 (auto from TBD_B): RSCON-2475
-
-[RSCON-2488 BE Новый метод апи для симуляции конифугарации пилотов] as [TASK_RSCON_2488] on {B1} starts 2026/06/19
-[TASK_RSCON_2488] ends 2026/06/19
-[TASK_RSCON_2488] is colored in LightBlue
-[TASK_RSCON_2488] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2488
-' Auto-assigned B1 (auto from TBD_B): RSCON-2488
-
-[RSCON-2471 FE Уведомления в пилотах о симуляции] as [TASK_RSCON_2471] on {F1} starts 2026/06/19
-[TASK_RSCON_2471] ends 2026/06/22
-[TASK_RSCON_2471] is colored in LightCoral
-[TASK_RSCON_2471] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2471
-' Auto-assigned F1 (auto from TBD_F): RSCON-2471
-
-[RSCON-2472 FE Симуляция конфигурации пилотов] as [TASK_RSCON_2472] on {F1} starts 2026/06/23
-[TASK_RSCON_2472] ends 2026/06/30
-[TASK_RSCON_2472] is colored in LightCoral
-[TASK_RSCON_2472] is 0% completed
-' Shifted not-started task from stale/non-open plan: RSCON-2472
 ' END INCLUDE: /home/reutov/Documents/AI/changeswork-copy/planning/2026-Q2/gantt/includes/actual-progress/FEATURE-simulations.puml
 
 -- Табличные риск-параметры --

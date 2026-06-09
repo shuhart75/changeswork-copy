@@ -9,7 +9,7 @@
 
 ## Основные блоки
 - artifacts;
-- approvals / packages;
+- approvals;
 - deployments;
 - scorecards;
 - notifications;

@@ -41,20 +41,24 @@ Feature: `features/approvals/feature.md`
 - Total: 22 человеко-дней
 
 ## Actualization state
-- `virtual`
+- `materialized`
 
 ## Mapping mode
 - `explicit`
 
 ## Replaced by implementation tasks
-- none yet
+- `RSCON-2636`
+- `QA-APPROVALS-CARD`
+- `RSCON-2637`
+- `QA-APPROVALS-EMAIL-PREVIEW`
 
 ## Residual virtual tasks on actual-progress
 - none
 
 ## Dependencies and assumptions
 - зависит от готового approval core;
-- часть package-логики опирается на договорённости с feature `packages`.
+- package flow исключён из MVP текущего квартала и не является зависимостью этой story.
+- actual-progress FE/QA слой стартует после backend scope `STORY-APPROVALS-001`.
 
 ## Notes for quarter planning
-Импортировано из alignment и legacy docs `AN_AP_PAGE_BE`, `BE_AP_PAGE`, `AN_AP_PAGE_FE`, `FE_AP_PAGE`.
+На actual-progress 2026-06-08 story закрывается реальными FE/QA задачами по карточке новой сущности, экшенам и Email preview; прежние virtual chunks удалены из execution registry.

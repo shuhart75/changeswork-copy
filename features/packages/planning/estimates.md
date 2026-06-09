@@ -7,4 +7,4 @@ Feature: `features/packages/feature.md`
 
 | Story ID | Summary | Analyst anchor, дн | Team estimate, дн | Agreed estimate, дн | Agreed total, дн | Notes |
 |---|---|---|---|---|---:|---|
-| STORY-PACKAGES-001 | Страница Пакеты и пакетирование awaiting ratification | `2 / 10 / 0 / 0` | `2 / 10 / 0 / 0` | `2 / 10 / 0 / 0` | 12 | Собрано из alignment `AN_PKG_BE`, `AN_PKG_FE`, `FE_PKG_PAGE`; execution пока без реальных Jira-ключей |
+| STORY-PACKAGES-001 | Страница Пакеты и пакетирование awaiting ratification | `2 / 10 / 0 / 0` | `2 / 10 / 0 / 0` | `2 / 10 / 0 / 0` | 12 | Legacy estimate retained only for traceability; story removed from Q2 MVP baseline on 2026-06-09. |

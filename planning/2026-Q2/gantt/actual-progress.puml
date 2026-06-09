@@ -43,9 +43,6 @@ ganttDiagram {
 -- Внедрения --
 !include includes/actual-progress/FEATURE-deployments.puml
 
--- Пакеты --
-!include includes/actual-progress/FEATURE-packages.puml
-
 -- Пилоты --
 !include includes/actual-progress/FEATURE-pilots.puml
 

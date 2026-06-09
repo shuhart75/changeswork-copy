@@ -2,7 +2,7 @@
 
 Статус: **исключено из MVP**  
 Квартал: `2026-Q2`  
-Дата обновления: `2026-05-25`
+Дата обновления: `2026-06-09`
 
 ## Цель
 
@@ -42,11 +42,10 @@ Feature была импортирована из `changesWork` как стран
 
 ## Planning stories
 
-- `planning/stories/STORY-PACKAGES-001.md` — требует planning-синхронизации/отмены вне текущего requirements-mode изменения.
+- `planning/stories/STORY-PACKAGES-001.md` — отменена для `2026-Q2` и оставлена только как legacy trace.
 
 ## Риски и зависимости
 
-- planning/execution artifacts всё ещё могут содержать старые virtual tasks;
 - baseline и прототипы требуют отдельной синхронизации;
 - возврат package flow возможен только отдельным решением после оценки SberDocs coverage.
 

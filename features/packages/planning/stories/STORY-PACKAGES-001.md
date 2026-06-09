@@ -1,8 +1,8 @@
 # STORY-PACKAGES-001
 
 Feature: `features/packages/feature.md`  
-Статус: **импортировано из legacy-плана**  
-Дата обновления: `2026-04-23`
+Статус: **исключено из MVP / снято с Q2 baseline**  
+Дата обновления: `2026-06-09`
 
 ## Summary
 Страница Пакеты и пакетирование awaiting ratification
@@ -14,12 +14,7 @@ Feature: `features/packages/feature.md`
 Единый workspace для пакетного ratification-потока, включая queue, текущие активные пакеты, rejected/history bucket и переходы в связанные доменные сущности.
 
 ## MVP scope
-- queue элементов для пакетирования;
-- локальный выбор 2+ элементов;
-- brief пакета;
-- создание пакета без backend draft;
-- `Мои пакеты`;
-- read-only деталка пакета.
+- Не входит в MVP текущего квартала.
 
 ## Analyst anchor estimate
 - AN: 2 человеко-дней
@@ -43,21 +38,20 @@ Feature: `features/packages/feature.md`
 - Total: 12 человеко-дней
 
 ## Actualization state
-- `virtual`
+- `cancelled`
 
 ## Mapping mode
 - `explicit`
 
 ## Replaced by implementation tasks
-- none yet
+- none
 
 ## Residual virtual tasks on actual-progress
 - none
 
 ## Dependencies and assumptions
-- зависит от approval core и страницы `Согласования`;
-- backend API для пакетов и queue уже зафиксирован в requirement packs;
-- execution-перенос в реальные Jira-задачи ещё не выполнен.
+- story снята из Q2 quarter/commander baseline после перехода approvals в SberDocs;
+- возврат package flow возможен только отдельным будущим intake и новым квартальным scope.
 
 ## Notes for quarter planning
-Planning story агрегирует текущий HLE-срез `packages` без дробления по ролям; execution-слой под story пока отражён virtual tasks `AN_PKG_BE`, `AN_PKG_FE`, `FE_PKG_PAGE`.
+Story оставлена только как след legacy-planning и не должна присутствовать в Q2 gantt или actual-progress.
